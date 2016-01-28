@@ -307,8 +307,8 @@ bool DiffAnalysisContext::findJsonFile(const char * initial_path, const char * f
 {
 	const size_t max_len = 1024;
 	int depth_counter = 0;
-	char resolv_name[max_len];
-	char test_path[max_len];
+	char * resolv_name = new char[max_len];
+	char * test_path = new char[max_len];
 	struct stat buffer;
 
 	strncpy(test_path, initial_path, max_len);
@@ -344,6 +344,9 @@ bool DiffAnalysisContext::findJsonFile(const char * initial_path, const char * f
 
 	if (json_found)
 		printf(" Found json config at %s\n", json_fn.Data());
+
+	delete [] resolv_name;
+	delete [] test_path;
 
 	return json_found;
 }

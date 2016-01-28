@@ -918,6 +918,9 @@ TH2** DiffAnalysisFactory::getSigsArray(size_t & size)
 
 bool DiffAnalysisFactory::copyHistogram(TH1 * src, TH1 * dst)
 {
+	if (!src or !dst)
+		return false;
+
 	size_t bins_x = src->GetXaxis()->GetNbins();
 	size_t bins_y = src->GetYaxis()->GetNbins();
 
