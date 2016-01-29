@@ -69,7 +69,8 @@ DiffAnalysisFactory::DiffAnalysisFactory() :
 	hSliceXYFitQA(nullptr), cSliceXYFitQA(nullptr),
 	hSliceXYChi2NDF(nullptr), cSliceXYChi2NDF(nullptr), cSliceXYprojX(nullptr),
 	hSliceXYDiff(nullptr), cSliceXYDiff(nullptr),
-	objectsDiffs(nullptr), objectsSlices(nullptr), objectsFits(nullptr)
+	objectsDiffs(nullptr), objectsSlices(nullptr), objectsFits(nullptr),
+	fitCallback(nullptr)
 {
 	prepare();
 }
@@ -85,7 +86,8 @@ DiffAnalysisFactory::DiffAnalysisFactory(const DiffAnalysisContext & context) :
 	hSliceXYFitQA(nullptr), cSliceXYFitQA(nullptr),
 	hSliceXYChi2NDF(nullptr), cSliceXYChi2NDF(nullptr), cSliceXYprojX(nullptr),
 	hSliceXYDiff(nullptr), cSliceXYDiff(nullptr),
-	objectsDiffs(nullptr), objectsSlices(nullptr), objectsFits(nullptr)
+	objectsDiffs(nullptr), objectsSlices(nullptr), objectsFits(nullptr),
+	fitCallback(nullptr)
 {
 	prepare();
 }
@@ -101,7 +103,8 @@ DiffAnalysisFactory::DiffAnalysisFactory(const DiffAnalysisContext * context) :
 	hSliceXYFitQA(nullptr), cSliceXYFitQA(nullptr),
 	hSliceXYChi2NDF(nullptr), cSliceXYChi2NDF(nullptr), cSliceXYprojX(nullptr),
 	hSliceXYDiff(nullptr), cSliceXYDiff(nullptr),
-	objectsDiffs(nullptr), objectsSlices(nullptr), objectsFits(nullptr)
+	objectsDiffs(nullptr), objectsSlices(nullptr), objectsFits(nullptr),
+	fitCallback(nullptr)
 {
 	prepare();
 }
@@ -886,7 +889,6 @@ void DiffAnalysisFactory::applyAngDists(TH2 * h, double a2, double a4, double co
 	if (f_corr) f_corr->Delete();
 }
 
-
 // TODO move away
 void DiffAnalysisFactory::applyBinomErrors(TH2* N)
 {
@@ -940,7 +942,8 @@ bool DiffAnalysisFactory::copyHistogram(TH1 * src, TH1 * dst)
 
 void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only)
 {
-	FitResultData res;
+// 	FitResultData res;
+	bool res;
 
 	for (uint i = 0; i < ctx.cx.bins; ++i)
 	{
@@ -967,28 +970,32 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 					else
 					{
 						if (fflags == FitterFactory::USE_FOUND)
-							printf("+ Fitting %s Invariant Mass with custom function\n", hDiscreteXYDiff[i][j]->GetName());
+							printf("+ Fitting %s with custom function\n", hDiscreteXYDiff[i][j]->GetName());
 						else
-							printf("+ Fitting %s Invariant Mass with standard function\n", hDiscreteXYDiff[i][j]->GetName());
+							printf("+ Fitting %s with standard function\n", hDiscreteXYDiff[i][j]->GetName());
 
 						res = fitDiffHist(hDiscreteXYDiff[i][j], hfp);
 
-						if (res.fit_ok)
+						if (res)
 							ff.updateParams(hDiscreteXYDiff[i][j], hfp);
 
-						std::cout << "    Signal: " << res.signal << " +/- " << res.signal_err << std::endl;
+						if (fitCallback)
+							(*fitCallback)(this, res, hDiscreteXYDiff[i][j], i, j);
 
-						hSliceXYDiff[i]->SetBinContent(1+j, res.signal);
-						hSliceXYDiff[i]->SetBinError(1+j, res.signal_err);
-						hDiscreteXYSig->SetBinContent(1+i, 1+j, res.signal);
-						hDiscreteXYSig->SetBinError(1+i, 1+j, res.signal_err);
+// 						FIXME
+// 						std::cout << "    Signal: " << res.signal << " +/- " << res.signal_err << std::endl;
 
-						if (res.mean != 0)
-						{
-							hSliceXYFitQA[i]->SetBinContent(1+j, res.mean);
-							hSliceXYFitQA[i]->SetBinError(1+j, res.sigma);
-							hSliceXYChi2NDF[i]->SetBinContent(1+j, res.chi2/res.ndf);
-						}
+// 						hSliceXYDiff[i]->SetBinContent(1+j, res.signal);
+// 						hSliceXYDiff[i]->SetBinError(1+j, res.signal_err);
+// 						hDiscreteXYSig->SetBinContent(1+i, 1+j, res.signal);
+// 						hDiscreteXYSig->SetBinError(1+i, 1+j, res.signal_err);
+
+// 						if (res.mean != 0)
+// 						{
+// 							hSliceXYFitQA[i]->SetBinContent(1+j, res.mean);
+// 							hSliceXYFitQA[i]->SetBinError(1+j, res.sigma);
+// 							hSliceXYChi2NDF[i]->SetBinContent(1+j, res.chi2/res.ndf);
+// 						}
 					}
 				}
 				else
@@ -998,18 +1005,19 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 			}
 			else
 			{
-				res.signal = hDiscreteXYDiff[i][j]->Integral();
-
-				if (res.signal < 0)  // FIXME old value 500
-				{
-					res.signal = 0;
-				}
-
-				res.signal_err = RootTools::calcTotalError( hDiscreteXYDiff[i][j], 1, hDiscreteXYDiff[i][j]->GetNbinsX() );
-				hSliceXYDiff[i]->SetBinContent(1+j, res.signal);
-				hSliceXYDiff[i]->SetBinError(1+j, res.signal_err);
-				hDiscreteXYSig->SetBinContent(1+i, 1+j, res.signal);
-				hDiscreteXYSig->SetBinError(1+i, 1+j, res.signal_err);
+// 				FIXME
+// 				res.signal = hDiscreteXYDiff[i][j]->Integral();
+// 
+// 				if (res.signal < 0)  // FIXME old value 500
+// 				{
+// 					res.signal = 0;
+// 				}
+// 
+// 				res.signal_err = RootTools::calcTotalError( hDiscreteXYDiff[i][j], 1, hDiscreteXYDiff[i][j]->GetNbinsX() );
+// 				hSliceXYDiff[i]->SetBinContent(1+j, res.signal);
+// 				hSliceXYDiff[i]->SetBinError(1+j, res.signal_err);
+// 				hDiscreteXYSig->SetBinContent(1+i, 1+j, res.signal);
+// 				hDiscreteXYSig->SetBinError(1+i, 1+j, res.signal_err);
 			}
 
 			Double_t hmax = hDiscreteXYDiff[i][j]->GetBinContent(hDiscreteXYDiff[i][j]->GetMaximumBin());
@@ -1033,7 +1041,7 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 	printf("Raw/fine binning counts:  %f / %f  for %s\n", hDiscreteXY->Integral(), hDiscreteXYSig->Integral(), ctx.histPrefix.Data());
 }
 
-FitResultData DiffAnalysisFactory::fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries)
+bool DiffAnalysisFactory::fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries)
 {
 	Int_t bin_l = hist->FindBin(hfp.fun_l);
 	Int_t bin_u = hist->FindBin(hfp.fun_u);
@@ -1042,15 +1050,12 @@ FitResultData DiffAnalysisFactory::fitDiffHist(TH1 * hist, HistFitParams & hfp, 
 	if (hfp.rebin != 0)
 		hist->Rebin(hfp.rebin);
 
-	// return structure
-	FitResultData frd = { false, 0, 0, 0, 0, 0, 0 };
-
 	// if no data in requested range, nothing to do here
 	if (hist->Integral(bin_l, bin_u) == 0)
-		return frd;
+		return false;
 
-	// remove all saved function, potentially risky if
-	// has stored other functions than fit functions
+	// remove all saved function, potentially risky move
+	// if has stored other functions than fit functions
 	hist->GetListOfFunctions()->Clear();
 
 	// declare functions for fit and signal
@@ -1068,41 +1073,10 @@ FitResultData DiffAnalysisFactory::fitDiffHist(TH1 * hist, HistFitParams & hfp, 
 		tfLambdaSig = (TF1*)hist->GetListOfFunctions()->At(1);
 	}
 	else
-		return frd;
+		return false;
 
 	// do not draw Sig function in the histogram
 	tfLambdaSig->SetBit(TF1::kNotDraw);
 
-	// get signal and mean value from fit
-	// parameters are determined here, sadly no place for flexibility
-	double signal = tfLambdaSig->GetParameter(0);
-	double mean = tfLambdaSig->GetParameter(1);
-	// relative fractions
-	double r = tfLambdaSig->GetParameter(4);
-	double q = 1.0 - r;
-
-	// sigmas
-	double s1 = TMath::Abs(tfLambdaSig->GetParameter(2));
-	double s2 = TMath::Abs(tfLambdaSig->GetParameter(5));
-
-	// averaged width
-	double width = (r*s1*s1 + q*s2*s2)/(r*s1 + q*s2);
-
-	// errors
-	double signal_err = tfLambdaSig->GetParError(0);
-
-	// find bin width at the mean value
-	int fSBmean = hist->FindBin(mean);
-	double bin_width = hist->GetBinWidth(fSBmean);
-
-	// fil return structure and say 'bye bye'
-	frd.fit_ok = true;
-	frd.mean = mean;
-	frd.sigma = width;
-	frd.signal = signal / bin_width;
-	frd.signal_err = signal_err / bin_width;
-	frd.chi2 = tfLambdaSum->GetChisquare();
-	frd.ndf = tfLambdaSum->GetNDF();
-
-	return frd;
+	return res;
 }

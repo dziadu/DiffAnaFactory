@@ -43,16 +43,9 @@ class TH2D;
 class TStyle;
 class TVirtualPad;
 
-struct FitResultData
-{
-	bool fit_ok;
-	float mean;
-	float sigma;
-	float chi2;
-	int ndf;
-	float signal;
-	float signal_err;
-};
+class DiffAnalysisFactory;
+
+typedef void (FitCallback)(DiffAnalysisFactory * fac, bool fit_res, TH1 * h, int x_pos, int y_pos);
 
 class DiffAnalysisFactory : public TObject, public SmartFactory {
 public:
@@ -80,7 +73,7 @@ public:
 	void niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 
 	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
-	static FitResultData fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
+	static bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
 
 	const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
 
@@ -94,6 +87,8 @@ public:
 	static void applyBinomErrors(TH2 * q, TH2 * N);
 
 	TH2 ** getSigsArray(size_t & size);
+
+	inline void setFitCallback(FitCallback * cb) { fitCallback = cb; }
 
 private:
 	void prepare();
@@ -134,6 +129,9 @@ public:
 	TObjArray * objectsFits;		//!
 
 	ClassDef(DiffAnalysisFactory, 1);
+
+private:
+	FitCallback * fitCallback;
 };
 
 #endif // DIFFANALYSISFACTORY_H
