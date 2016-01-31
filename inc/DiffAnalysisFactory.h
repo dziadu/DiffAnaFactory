@@ -73,7 +73,7 @@ public:
 	void niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 
 	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
-	static bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
+	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
 
 	const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
 

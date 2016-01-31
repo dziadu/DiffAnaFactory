@@ -693,6 +693,7 @@ void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
 		gPad->Update();
 	}
 
+	gStyle->SetPaintTextFormat(".3g");
 	if (cDiscreteXY)
 	{
 		cDiscreteXY->cd(0);
@@ -721,10 +722,12 @@ void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
 		cDiscreteXYSigFull->cd(0);
 		TH2I * h2 = (TH2I *)hSignalWithCutsXY->DrawCopy("colz");
 		hDiscreteXYSig->SetMarkerSize(1.4);
+		// 	if (flag_details)
 		hDiscreteXYSig->Draw(coltopts+",same");
 		RootTools::NoPalette(h2);
 		gPad->Update();
 	}
+	gStyle->SetPaintTextFormat("g");
 
 	float qa_min = 0.;
 	float qa_max = 0.;
@@ -975,7 +978,14 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 			{
 				HistFitParams hfp = stdfit;
 				FitterFactory::FIND_FLAGS fflags = ff.findParams(hDiscreteXYDiff[i][j], hfp, true);
-				bool hasfunc = ( fflags == FitterFactory::USE_FOUND);
+
+				if (fflags == FitterFactory::NOT_FOUND)
+				{
+					hfp.setNewName(hDiscreteXYDiff[i][j]->GetName());
+					ff.insertParameters(hfp);
+				}
+// 				bool hasfunc = ( fflags == FitterFactory::USE_FOUND);
+				bool hasfunc = true;
 
 				if ( ((!hasfunc) or (hasfunc and !hfp.fit_disabled)) /*and*/ /*(hDiscreteXYDiff[i][j]->GetEntries() > 50)*//* and (hDiscreteXYDiff[i][j]->GetRMS() < 15)*/ )
 				{
@@ -1048,7 +1058,9 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 	hDiscreteXYSig->SetMarkerColor(kWhite);
 
 // 	if (flag_details)
-		hDiscreteXYSig->Draw("colz,text10");
+// 		gStyle->SetPaintTextFormat(".3g");
+// 		hDiscreteXYSig->Draw("colz,text10");
+// 		gStyle->SetPaintTextFormat("g");
 // 	else
 // 		hDiscreteXYSig->Draw("colz");
 
