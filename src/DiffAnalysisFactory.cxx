@@ -395,7 +395,8 @@ void DiffAnalysisFactory::Proceed()
 	hSignalXY->Fill(*ctx.x.var, *ctx.y.var, *ctx.var_weight);
 	if (ctx.useClip() and
 			*ctx.x.var > ctx.cx.min and *ctx.x.var < ctx.cx.max and
-			*ctx.y.var > ctx.cy.min and *ctx.y.var < ctx.cy.max) {
+			*ctx.y.var > ctx.cy.min and *ctx.y.var < ctx.cy.max)
+	{
 		const Int_t xcbin = Int_t( (*ctx.x.var - ctx.cx.min)/ctx.cx.delta );
 		const Int_t ycbin = Int_t( (*ctx.y.var - ctx.cy.min)/ctx.cy.delta );
 
@@ -404,10 +405,12 @@ void DiffAnalysisFactory::Proceed()
 		isInRange = kTRUE;
 	}
 
-	if (ctx.useCuts() and *ctx.z.var > ctx.cutMin and *ctx.z.var < ctx.cutMax) {
+	if (ctx.useCuts() and *ctx.z.var > ctx.cutMin and *ctx.z.var < ctx.cutMax)
+	{
 		hSignalWithCutsXY->Fill(*ctx.x.var, *ctx.y.var, *ctx.var_weight);
 
-		if (isInRange) {
+		if (isInRange)
+		{
 			hDiscreteXY->Fill(*ctx.x.var, *ctx.y.var, *ctx.var_weight);
 		}
 	}
@@ -419,20 +422,25 @@ void DiffAnalysisFactory::binnorm()
 	if (hSignalXY) hSignalXY->Scale( 1.0 / ( hSignalXY->GetXaxis()->GetBinWidth(1) * hSignalXY->GetYaxis()->GetBinWidth(1) ) );
 
 	// Signal with cut
-	if (ctx.useCuts()) {
+	if (ctx.useCuts())
+	{
 // 		PR( hSignalWithCutsXY->GetXaxis()->GetBinWidth(1) * hSignalWithCutsXY->GetYaxis()->GetBinWidth(1));
 		if (hSignalWithCutsXY) hSignalWithCutsXY->Scale( 1.0 / ( hSignalWithCutsXY->GetXaxis()->GetBinWidth(1) * hSignalWithCutsXY->GetYaxis()->GetBinWidth(1) ) );
 	}
 
-	if (ctx.useClip()) {
+	if (ctx.useClip())
+	{
 // 		PR(hDiscreteXY->GetXaxis()->GetBinWidth(1) * hDiscreteXY->GetYaxis()->GetBinWidth(1));
 // 		PR(hDiscreteXYSig->GetXaxis()->GetBinWidth(1) * hDiscreteXYSig->GetYaxis()->GetBinWidth(1));
 		if (hDiscreteXY) hDiscreteXY->Scale( 1.0 / ( hDiscreteXY->GetXaxis()->GetBinWidth(1) * hDiscreteXY->GetYaxis()->GetBinWidth(1) ) );
 		if (hDiscreteXYSig) hDiscreteXYSig->Scale( 1.0 / ( hDiscreteXYSig->GetXaxis()->GetBinWidth(1) * hDiscreteXYSig->GetYaxis()->GetBinWidth(1) ) );
 
-// 		if (ctx.useDiff()) {
-// 			for (uint i = 0; i < ctx.cx.bins; ++i) {
-// 				for (uint j = 0; j < ctx.cy.bins; ++j) {
+// 		if (ctx.useDiff())
+// 		{
+// 			for (uint i = 0; i < ctx.cx.bins; ++i)
+// 			{
+// 				for (uint j = 0; j < ctx.cy.bins; ++j)
+// 				{
 // 					if (hDiscreteXYDiff) hDiscreteXYDiff[i][j]->Scale(factor);
 // 				}
 // 				if (hSliceXYDiff) hSliceXYDiff[i]->Scale(factor);
@@ -446,17 +454,22 @@ void DiffAnalysisFactory::scale(Float_t factor)
 	if (hSignalXY) hSignalXY->Scale(factor);
 
 	// Signal with cut
-	if (ctx.useCuts()) {
+	if (ctx.useCuts())
+	{
 		if (hSignalWithCutsXY) hSignalWithCutsXY->Scale(factor);
 	}
 
-	if (ctx.useClip()) {
+	if (ctx.useClip())
+	{
 		if (hDiscreteXY) hDiscreteXY->Scale(factor);
 		if (hDiscreteXYSig) hDiscreteXYSig->Scale(factor);
 
-		if (ctx.useDiff()) {
-			for (uint i = 0; i < ctx.cx.bins; ++i) {
-				for (uint j = 0; j < ctx.cy.bins; ++j) {
+		if (ctx.useDiff())
+		{
+			for (uint i = 0; i < ctx.cx.bins; ++i)
+			{
+				for (uint j = 0; j < ctx.cy.bins; ++j)
+				{
 					if (hDiscreteXYDiff) hDiscreteXYDiff[i][j]->Scale(factor);
 				}
 				if (hSliceXYDiff) hSliceXYDiff[i]->Scale(factor);
@@ -526,9 +539,12 @@ void DiffAnalysisFactory::niceHists(float mt, float mr, float mb, float ml, int 
 
 void DiffAnalysisFactory::niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
 {
-	if (ctx.useDiff()) {
-	for (uint i = 0; i < ctx.cx.bins; ++i) {
-		for (uint j = 0; j < ctx.cy.bins; ++j) {
+	if (ctx.useDiff())
+	{
+	for (uint i = 0; i < ctx.cx.bins; ++i)
+	{
+		for (uint j = 0; j < ctx.cy.bins; ++j)
+		{
 			TVirtualPad * p = cDiscreteXYDiff[i]->cd(1+j);
 			RootTools::NicePad(p, mt, mr, mb, ml);
 
