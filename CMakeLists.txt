@@ -8,7 +8,11 @@ set (VERSION_MINOR 1)
 set (VERSION_PATCH 1)
 set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
-find_package(jsoncpp)
+find_package(jsoncpp QUIET)
+if (NOT jsoncpp_FOUND)
+	include_directories(/usr/include/jsoncpp/)
+endif()
+
 find_package(SmartFactory)
 find_package(FitterFactory)
 find_package(RootTools)
@@ -59,7 +63,7 @@ link_directories(
 ##### make targets
 ROOT_STANDARD_LIBRARY_PACKAGE(DiffAnaFactory
 	DEPENDENCIES
-		jsoncpp_lib ${ROOT_LIBRARIES} ${ROOTTOOLS_LIBRARIES}
+		jsoncpp ${ROOT_LIBRARIES} ${ROOTTOOLS_LIBRARIES}
 		SmartFactory FitterFactory
 )
 
