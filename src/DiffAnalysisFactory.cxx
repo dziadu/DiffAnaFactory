@@ -713,6 +713,8 @@ void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
 
 	if (cDiscreteXYSig)
 	{
+		hDiscreteXYSig->SetMarkerColor(kWhite);
+
 		cDiscreteXYSig->cd(0);
 		hDiscreteXYSig->Draw(colzopts);
 		RootTools::NicePalette(hDiscreteXYSig, 0.05);
