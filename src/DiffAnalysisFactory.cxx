@@ -699,7 +699,7 @@ void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
 		cDiscreteXY->cd(0);
 		hDiscreteXY->Draw(colzopts);
 		RootTools::NicePalette(hDiscreteXY, 0.05);
-		hDiscreteXY->SetMarkerSize(1.4);
+		hDiscreteXY->SetMarkerSize(1.6);
 // 		DrawStats(cDiscreteXY, hDiscreteXY);
 		gPad->Update();
 
@@ -714,6 +714,7 @@ void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
 	if (cDiscreteXYSig)
 	{
 		hDiscreteXYSig->SetMarkerColor(kWhite);
+		hDiscreteXYSig->SetMarkerSize(1.6);
 
 		cDiscreteXYSig->cd(0);
 		hDiscreteXYSig->Draw(colzopts);
@@ -723,13 +724,13 @@ void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
 
 		cDiscreteXYSigFull->cd(0);
 		TH2I * h2 = (TH2I *)hSignalWithCutsXY->DrawCopy("colz");
-		hDiscreteXYSig->SetMarkerSize(1.4);
+// 		hDiscreteXYSig->SetMarkerSize(1.4);
 		// 	if (flag_details)
 		hDiscreteXYSig->Draw(coltopts+",same");
 		RootTools::NoPalette(h2);
 		gPad->Update();
 	}
-	gStyle->SetPaintTextFormat("g");
+// 	gStyle->SetPaintTextFormat("g");
 
 	float qa_min = 0.;
 	float qa_max = 0.;
@@ -1046,6 +1047,10 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 // 				hSliceXYDiff[i]->SetBinError(1+j, res.signal_err);
 // 				hDiscreteXYSig->SetBinContent(1+i, 1+j, res.signal);
 // 				hDiscreteXYSig->SetBinError(1+i, 1+j, res.signal_err);
+
+				if (fitCallback)
+					(*fitCallback)(this, -1, hDiscreteXYDiff[i][j], i, j);
+
 			}
 
 			Double_t hmax = hDiscreteXYDiff[i][j]->GetBinContent(hDiscreteXYDiff[i][j]->GetMaximumBin());
@@ -1057,7 +1062,7 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 	}
 
 	cDiscreteXYSig->cd();
-	hDiscreteXYSig->SetMarkerColor(kWhite);
+// 	hDiscreteXYSig->SetMarkerColor(kWhite);
 
 // 	if (flag_details)
 // 		gStyle->SetPaintTextFormat(".3g");

@@ -45,7 +45,7 @@ class TVirtualPad;
 
 class DiffAnalysisFactory;
 
-typedef void (FitCallback)(DiffAnalysisFactory * fac, bool fit_res, TH1 * h, int x_pos, int y_pos);
+typedef void (FitCallback)(DiffAnalysisFactory * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
 
 class DiffAnalysisFactory : public TObject, public SmartFactory {
 public:
