@@ -11,11 +11,18 @@ set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 find_package(jsoncpp QUIET)
 if (NOT jsoncpp_FOUND)
 	include_directories(/usr/include/jsoncpp/)
+	set(jsoncpp_dep jsoncpp)
+else()
+		set(jsoncpp_dep jsoncpp_lib)
 endif()
 
 find_package(SmartFactory)
 find_package(FitterFactory)
 find_package(RootTools)
+find_package(HistAsymmErrors QUIET)
+if (HistAsymmErrors_FOUND)
+	add_definitions("-DHAVE_HISTASYMMERRORS=1")
+endif()
 
 include(GNUInstallDirs)
 
@@ -50,6 +57,7 @@ include_directories(
 	${ROOTTOOLS_INCLUDE_DIR}
 	${SMARTFACTORY_INCLUDE_DIR}
 	${FITTERFACTORY_INCLUDE_DIR}
+	${HISTASYMMERRORS_INCLUDE_DIR}
 	inc
 )
 
@@ -58,12 +66,14 @@ link_directories(
 	${ROOTTOOLS_LIBRARY_DIR}
 	${SMARTFACTORY_LIBRARY_DIR}
 	${FITTERFACTORY_LIBRARY_DIR}
+	${HISTASYMMERRORS_LIBRARY_DIR}
 )
 
 ##### make targets
 ROOT_STANDARD_LIBRARY_PACKAGE(DiffAnaFactory
 	DEPENDENCIES
-		jsoncpp ${ROOT_LIBRARIES} ${ROOTTOOLS_LIBRARIES}
+		${jsoncpp_dep} ${ROOT_LIBRARIES} ${ROOTTOOLS_LIBRARIES}
+		${HISTASYMMERRORS_LIBRARIES}
 		SmartFactory FitterFactory
 )
 
@@ -82,7 +92,7 @@ configure_package_config_file(Config.cmake.in ${CMAKE_PROJECT_NAME}Config.cmake
 write_basic_package_version_file(${CMAKE_PROJECT_NAME}ConfigVersion.cmake
 	VERSION ${PROJECT_VERSION}
 	COMPATIBILITY SameMajorVersion)
-                                 
+
 install(FILES 
 	${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake
 	${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}ConfigVersion.cmake

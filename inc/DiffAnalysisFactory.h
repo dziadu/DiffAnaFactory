@@ -43,6 +43,10 @@ class TH2D;
 class TStyle;
 class TVirtualPad;
 
+#ifdef HAVE_HISTASYMMERRORS
+#include "TH2DA.h"
+#endif
+
 class DiffAnalysisFactory;
 
 typedef void (FitCallback)(DiffAnalysisFactory * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
@@ -106,8 +110,12 @@ public:
 	TH2D * hDiscreteXY;				//->	// discretre X-Y
 	TCanvas * cDiscreteXY;			//->
 	TCanvas * cDiscreteXYFull;		//->	// discrete X-Y on top of regular
-	
+
+#ifdef HAVE_HISTASYMMERRORS
+	TH2DA * hDiscreteXYSig;
+#else
 	TH2D * hDiscreteXYSig;			//->	// discrete X-Y, signal extracted
+#endif
 	TCanvas * cDiscreteXYSig;		//->
 	TCanvas * cDiscreteXYSigFull;	//->
 

@@ -311,12 +311,21 @@ void DiffAnalysisFactory::Init(DiffAnalysisFactory::Stages s)
 											ctx.y.format_unit().c_str());
 
 			 if (ctx.cx.bins_arr and ctx.cy.bins_arr)
+#ifdef HAVE_HISTASYMMERRORS
+				hDiscreteXYSig = RegTH2<TH2DA>(hname, htitle, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
+#else
 				hDiscreteXYSig = RegTH2<TH2D>(hname, htitle, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
+#endif
 			else
+#ifdef HAVE_HISTASYMMERRORS
+				hDiscreteXYSig = RegTH2<TH2DA>(hname, htitle,
+					ctx.cx.bins, ctx.cx.min, ctx.cx.max,
+					ctx.cy.bins, ctx.cy.min, ctx.cy.max);
+#else
 				hDiscreteXYSig = RegTH2<TH2D>(hname, htitle,
 					ctx.cx.bins, ctx.cx.min, ctx.cx.max,
 					ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-
+#endif
 
 			cname = "@@@d/c_@@@a_LambdaInvMassSig";
 			cDiscreteXYSig = RegCanvas(cname, htitle, can_width, can_height);
