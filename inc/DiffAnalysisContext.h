@@ -47,7 +47,7 @@ public:
 	mutable Double_t delta, cdelta;	// CAUTION: overriden by validate(), do not set by hand
 	Float_t * var;		//!	here is the address of the variable which is used to fill data
 
-	std::string format_unit();
+	std::string format_unit() const;
 
 	static std::string format_unit(const char * unit);
 	static std::string format_unit(const TString & unit);
@@ -62,6 +62,7 @@ public:
 	// config
 	TString histPrefix;	// prefix for histograms
 	mutable TString ctxName;	// prefix for histograms
+	TString diff_var_name;
 
 	AxisCfg x, y, z;
 	AxisCfg cx, cy;
@@ -89,6 +90,8 @@ public:
 	inline bool useCuts() const { return (cutMin or cutMax); }
 	inline bool useClip() const { return cx.bins; }
 	inline bool useDiff() const { return (z.bins and useClip()); }
+
+	void format_z_axis();
 
 	inline virtual const char * GetName() const { return ctxName.Data(); }
     inline virtual void SetName(const char* name) { ctxName = name; }

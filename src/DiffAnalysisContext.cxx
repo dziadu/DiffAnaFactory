@@ -66,7 +66,7 @@ bool AxisCfg::operator!=(const AxisCfg & ctx)
 	return (this->bins != ctx.bins);
 }
 
-std::string AxisCfg::format_unit()
+std::string AxisCfg::format_unit() const
 {
 	return format_unit(unit);
 }
@@ -100,6 +100,15 @@ std::string AxisCfg::format_unit(const std::string & unit)
 		funit = "";
 
 	return funit;
+}
+
+void DiffAnalysisContext::format_z_axis()
+{
+	TString hunit = TString::Format("1/%s%s", x.unit.Data(), y.unit.Data());
+	TString htitle = TString::Format("d^{2}%s/d%sd%s", diff_var_name.Data(), x.label.Data(), y.label.Data());
+
+	z.label = htitle;
+	z.unit = hunit;
 }
 
 DiffAnalysisContext::DiffAnalysisContext() : TNamed(), json_found(false)
@@ -366,6 +375,8 @@ DiffAnalysisContext & DiffAnalysisContext::operator=(const DiffAnalysisContext &
 	cutMax = ctx.cutMax;
 
 	var_weight = ctx.var_weight;
+
+	diff_var_name = ctx.diff_var_name;
 
 	return *this;
 }

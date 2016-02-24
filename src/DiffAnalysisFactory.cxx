@@ -112,14 +112,7 @@ DiffAnalysisFactory::DiffAnalysisFactory(const DiffAnalysisContext * context) :
 DiffAnalysisFactory::~DiffAnalysisFactory()
 {
 	gSystem->ProcessEvents();
-// 	if (objectsDiffs)	objectsDiffs->Print();
-// 	if (objectsSlices)	objectsSlices->Print();
-// 	if (objectsFits)	objectsFits->Print();
-
-// 	if (objectsDiffs)	objectsDiffs->Delete();
-// 	if (objectsSlices)	objectsSlices->Delete();
 	if (objectsFits)	objectsFits->Delete();
-
 	if (objectsDiffs)	delete objectsDiffs;
 	if (objectsSlices)	delete objectsSlices;
 	if (objectsFits)	delete objectsFits;
@@ -176,10 +169,52 @@ void DiffAnalysisFactory::prepare()
 	objectsFits->SetName(ctx.histPrefix + "Fits");
 }
 
+TString format_hist_axes(const DiffAnalysisContext & ctx)
+{
+	TString htitle = TString::Format(";%s%s;%s%s",
+									 ctx.x.label.Data(), ctx.x.format_unit().c_str(),
+									 ctx.y.label.Data(), ctx.y.format_unit().c_str());
+
+	return htitle;
+}
+
+TString format_hist_caxes(const DiffAnalysisContext & ctx)
+{
+	TString htitle = TString::Format(";%s%s;%s%s",
+									 ctx.cx.label.Data(), ctx.cx.format_unit().c_str(),
+									 ctx.cy.label.Data(), ctx.cy.format_unit().c_str());
+
+	return htitle;
+}
+
+TString format_hist_xaxis(const DiffAnalysisContext & ctx)
+{
+	TString htitle = TString::Format("%s%s", ctx.x.label.Data(), ctx.x.format_unit().c_str());
+
+	return htitle;
+}
+
+TString format_hist_yaxis(const DiffAnalysisContext & ctx)
+{
+	TString htitle = TString::Format("%s%s", ctx.y.label.Data(), ctx.y.format_unit().c_str());
+
+	return htitle;
+}
+
+TString format_hist_zaxis(const DiffAnalysisContext & ctx)
+{
+	TString htitle = TString::Format("%s%s", ctx.z.label.Data(), ctx.z.format_unit().c_str());
+
+	return htitle;
+}
+
 void DiffAnalysisFactory::Init(DiffAnalysisFactory::Stages s)
 {
 	Int_t can_width = 800, can_height = 600;
-	TString hname, htitle, cname;
+	TString hname, cname;
+	TString htitle = format_hist_axes(ctx);
+	TString htitlec = format_hist_caxes(ctx);
+	TString htitlez = format_hist_zaxis(ctx);
 
 	// input histograms
 	if (s == RECO or s == ALL)
@@ -187,16 +222,11 @@ void DiffAnalysisFactory::Init(DiffAnalysisFactory::Stages s)
 		// Signal
 		hname = "@@@d/h_@@@a_Signal";
 		cname = "@@@d/c_@@@a_Signal";
-		htitle = TString::Format("d^{2}N/d%sd%s;%s%s;%s%s",
-									ctx.x.label.Data(), ctx.y.label.Data(),
-									ctx.x.label.Data(),
-									ctx.x.format_unit().c_str(),
-									ctx.y.label.Data(),
-									ctx.y.format_unit().c_str());
 
 		hSignalXY = RegTH2<TH2D>(hname, htitle,
 				ctx.x.bins, ctx.x.min, ctx.x.max,
 				ctx.y.bins, ctx.y.min, ctx.y.max);
+		hSignalXY->GetZaxis()->SetTitle(htitlez);
 
 		cSignalXY = RegCanvas(cname, htitle, can_width, can_height);
 
@@ -205,15 +235,9 @@ void DiffAnalysisFactory::Init(DiffAnalysisFactory::Stages s)
 		{
 			hname = "@@@d/h_@@@a_Lambda";
 			cname = "@@@d/c_@@@a_Lambda";
-			htitle = TString::Format("d^{2}N/d%sd%s;%s%s;%s%s",
-										ctx.x.label.Data(), ctx.y.label.Data(),
-										ctx.x.label.Data(),
-										ctx.x.format_unit().c_str(),
-										ctx.y.label.Data(),
-										ctx.y.format_unit().c_str());
-
 			hSignalWithCutsXY = RegTH2<TH2D>(hname, htitle, ctx.x.bins, ctx.x.min, ctx.x.max,
 				ctx.y.bins, ctx.y.min, ctx.y.max);
+			hSignalWithCutsXY->GetZaxis()->SetTitle(htitlez);
 
 			cSignalWithCutsXY = RegCanvas(cname, htitle, can_width, can_height);
 		}
@@ -222,20 +246,16 @@ void DiffAnalysisFactory::Init(DiffAnalysisFactory::Stages s)
 		{
 			hname = "@@@d/h_@@@a_LambdaInvMass";
 			cname = "@@@d/c_@@@a_LambdaInvMass";
-			htitle = TString::Format("d^{2}N/d%sd%s;%s%s;%s%s",
-										ctx.x.label.Data(), ctx.y.label.Data(),
-										ctx.x.label.Data(),
-										ctx.x.format_unit().c_str(),
-										ctx.y.label.Data(),
-										ctx.y.format_unit().c_str());
 
 			// Lambda: X vs Y
 			if (ctx.cx.bins_arr and ctx.cy.bins_arr)
-				hDiscreteXY = RegTH2<TH2D>(hname, htitle, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
+				hDiscreteXY = RegTH2<TH2D>(hname, htitlec, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
 			else
-				hDiscreteXY = RegTH2<TH2D>(hname, htitle,
+				hDiscreteXY = RegTH2<TH2D>(hname, htitlec,
 					ctx.cx.bins, ctx.cx.min, ctx.cx.max,
 					ctx.cy.bins, ctx.cy.min, ctx.cy.max);
+
+			hDiscreteXY->GetZaxis()->SetTitle(htitlez);
 
 			cDiscreteXY = RegCanvas(cname, htitle, can_width, can_height);
 
@@ -266,66 +286,46 @@ void DiffAnalysisFactory::Init(DiffAnalysisFactory::Stages s)
 
 			for (uint i = 0; i < ctx.cx.bins; ++i)
 			{
+				// common title for all
+				htitle = TString::Format("#Lambda: %s[%d]=%.1f-%.1f;%s%s;Stat", "X", i,
+										 ctx.cx.min+ctx.cx.delta*i, ctx.cx.min+ctx.cx.delta*(i+1),
+										 ctx.y.label.Data(), ctx.y.format_unit().c_str());
+
 				// slices
 				hname = TString::Format("@@@d/Slices/h_@@@a_LambdaInvMassSlice_%s%02d", "X", i);
-				htitle = TString::Format("#Lambda: %s[%d]=%.1f-%.1f;%s%s;Stat", "X", i,
-											ctx.cx.min+ctx.cx.delta*i, ctx.cx.min+ctx.cx.delta*(i+1),
-											ctx.y.label.Data(),
-											ctx.y.format_unit().c_str());
-
 				hSliceXYDiff[i] = RegTH1<TH1D>(hname, htitle, ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-
 				objectsSlices->AddLast(hSliceXYDiff[i]);
 
 				// Fit QA
 				hname = TString::Format("@@@d/Slices/h_@@@a_LambdaInvMassFitQA_%s%02d", "X", i);
-				htitle = TString::Format("#Lambda: %s[%d]=%.1f-%.1f;%s%s;Stat", "X", i,
-											ctx.cx.min+ctx.cx.delta*i, ctx.cx.min+ctx.cx.delta*(i+1),
-											ctx.y.label.Data(),
-											ctx.y.format_unit().c_str());
-
 				hSliceXYFitQA[i] = RegTH1<TH1D>(hname, htitle,ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// 				hSliceXYFitQA[i] = RegGraph<TGraphErrors>(hname, ctx.cy.bins);
-
 				objectsSlices->AddLast(hSliceXYFitQA[i]);
 
 				// Chi2/NDF
 				hname = TString::Format("@@@d/Slices/h_@@@a_LambdaInvMassChi2NDF_%s%02d", "X", i);
-				htitle = TString::Format("#Lambda: %s[%d]=%.1f-%.1f;%s%s;Stat", "X", i,
-											ctx.cx.min+ctx.cx.delta*i, ctx.cx.min+ctx.cx.delta*(i+1),
-											ctx.y.label.Data(), ctx.y.format_unit().c_str());
-
 				hSliceXYChi2NDF[i] = RegTH1<TH1D>(hname, htitle, ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// 				hSliceXYChi2NDF[i] = RegGraph<TGraph>(hname, ctx.cy.bins);
-
 				objectsSlices->AddLast(hSliceXYChi2NDF[i]);
 			}
 
 			// Lambda: X vs Y
 			hname = "@@@d/h_@@@a_LambdaInvMassSig";
-			htitle = TString::Format("d^{2}N/d%sd%s;%s%s;%s%s",
-											ctx.x.label.Data(), ctx.y.label.Data(),
-											ctx.x.label.Data(),
-											ctx.x.format_unit().c_str(),
-											ctx.y.label.Data(),
-											ctx.y.format_unit().c_str());
 
-			 if (ctx.cx.bins_arr and ctx.cy.bins_arr)
 #ifdef HAVE_HISTASYMMERRORS
-				hDiscreteXYSig = RegTH2<TH2DA>(hname, htitle, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
-#else
-				hDiscreteXYSig = RegTH2<TH2D>(hname, htitle, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
-#endif
+			if (ctx.cx.bins_arr and ctx.cy.bins_arr)
+				hDiscreteXYSig = RegTH2<TH2DA>(hname, htitlec, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
 			else
-#ifdef HAVE_HISTASYMMERRORS
-				hDiscreteXYSig = RegTH2<TH2DA>(hname, htitle,
+				hDiscreteXYSig = RegTH2<TH2DA>(hname, htitlec,
 					ctx.cx.bins, ctx.cx.min, ctx.cx.max,
 					ctx.cy.bins, ctx.cy.min, ctx.cy.max);
 #else
-				hDiscreteXYSig = RegTH2<TH2D>(hname, htitle,
+			if (ctx.cx.bins_arr and ctx.cy.bins_arr)
+				hDiscreteXYSig = RegTH2<TH2D>(hname, htitlec, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
+			else
+				hDiscreteXYSig = RegTH2<TH2D>(hname, htitlec,
 					ctx.cx.bins, ctx.cx.min, ctx.cx.max,
 					ctx.cy.bins, ctx.cy.min, ctx.cy.max);
 #endif
+			hDiscreteXYSig->GetZaxis()->SetTitle(htitlez);
 
 			cname = "@@@d/c_@@@a_LambdaInvMassSig";
 			cDiscreteXYSig = RegCanvas(cname, htitle, can_width, can_height);
@@ -382,8 +382,7 @@ void DiffAnalysisFactory::GetDiffs(bool with_canvases)
 					ctx.cy.min+ctx.cy.delta*j,
 					ctx.cy.min+ctx.cy.delta*(j+1));
 
-					hDiscreteXYDiff[i][j] = RegTH1<TH1D>(hname, htitle,
-																						ctx.z.bins, ctx.z.min, ctx.z.max);
+					hDiscreteXYDiff[i][j] = RegTH1<TH1D>(hname, htitle, ctx.z.bins, ctx.z.min, ctx.z.max);
 
 					objectsDiffs->AddLast(hDiscreteXYDiff[i][j]);
 			}
@@ -506,10 +505,6 @@ void DiffAnalysisFactory::Finalize(Stages s, bool flag_details)
 			prepareSigCanvas(flag_details);
 			break;
 	}
-
-// 	if (objectsDiffs)	objectsDiffs->Write();
-// 	if (objectsSlices)	objectsSlices->Write();
-// 	if (objectsFits)	objectsFits->Write();
 }
 
 void DiffAnalysisFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
@@ -518,30 +513,30 @@ void DiffAnalysisFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, flo
 	RootTools::NiceHistogram(hist, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
 }
 
-void DiffAnalysisFactory::niceHists(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
+void DiffAnalysisFactory::niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format)
 {
-	RootTools::NicePad(cSignalXY->cd(), mt, mr, mb, ml);
-	RootTools::NiceHistogram(hSignalXY, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
+	RootTools::NicePad(cSignalXY->cd(), pf);
+	RootTools::NiceHistogram(hSignalXY, format);
 	hSignalXY->GetYaxis()->CenterTitle(kTRUE);
 
 	// Signal with cut
 	if (ctx.useCuts())
 	{
-		RootTools::NicePad(cSignalWithCutsXY->cd(), mt, mr, mb, ml);
-		RootTools::NiceHistogram(hSignalWithCutsXY, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
+		RootTools::NicePad(cSignalWithCutsXY->cd(), pf);
+		RootTools::NiceHistogram(hSignalWithCutsXY, format);
 		hSignalWithCutsXY->GetYaxis()->CenterTitle(kTRUE);
 	}
 
 	if (ctx.useClip())
 	{
-		RootTools::NicePad(cDiscreteXY->cd(), mt, mr, mb, ml);
-		RootTools::NicePad(cDiscreteXYFull->cd(), mt, mr, mb, ml);
-		RootTools::NiceHistogram(hDiscreteXY, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
+		RootTools::NicePad(cDiscreteXY->cd(), pf);
+		RootTools::NicePad(cDiscreteXYFull->cd(), pf);
+		RootTools::NiceHistogram(hDiscreteXY, format);
 		hDiscreteXY->GetYaxis()->CenterTitle(kTRUE);
 
-		RootTools::NicePad(cDiscreteXYSig->cd(), mt, mr, mb, ml);
-		RootTools::NicePad(cDiscreteXYSigFull->cd(), mt, mr, mb, ml);
-		RootTools::NiceHistogram(hDiscreteXYSig, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
+		RootTools::NicePad(cDiscreteXYSig->cd(), pf);
+		RootTools::NicePad(cDiscreteXYSigFull->cd(), pf);
+		RootTools::NiceHistogram(hDiscreteXYSig, format);
 		hDiscreteXYSig->GetYaxis()->CenterTitle(kTRUE);
 	}
 }
@@ -585,6 +580,11 @@ void DiffAnalysisFactory::prepareDiffCanvas()
 	latex->SetNDC();
 	latex->SetTextSize(0.07);
 
+	TLatex * nflatex = new TLatex();
+	nflatex->SetNDC();
+	nflatex->SetTextSize(0.07);
+	nflatex->SetTextAlign(23);
+
 	if (ctx.useDiff())
 	{
 		for (uint i = 0; i < ctx.cx.bins; ++i)
@@ -592,10 +592,8 @@ void DiffAnalysisFactory::prepareDiffCanvas()
 			for (uint j = 0; j < ctx.cy.bins; ++j)
 			{
 				cDiscreteXYDiff[i]->cd(1+j);
-// 				RootTools::NicePad(gPad, mt, mr, mb, ml);
 
 				TH1 * h = hDiscreteXYDiff[i][j];
-// 				RootTools::NiceHistogram(h, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
 
 				h->Draw();
 				latex->DrawLatex(0.12, 0.85, TString::Format("%02d", j));
@@ -608,6 +606,7 @@ void DiffAnalysisFactory::prepareDiffCanvas()
 					latex->DrawLatex(0.55, 0.80, TString::Format("R=%g", hDiscreteXYDiff[i][j]->GetRMS()));
 					latex->DrawLatex(0.55, 0.75, TString::Format("E/R=%g", hDiscreteXYDiff[i][j]->GetEntries() / hDiscreteXYDiff[i][j]->GetRMS()));
 
+					nflatex->DrawLatex(0.5, 0.5, "No fit");
 					continue;
 				}
 
@@ -642,8 +641,8 @@ void DiffAnalysisFactory::prepareDiffCanvas()
 				h->SetTitle("");
 				TLatex * latex = new TLatex();
 				latex->SetNDC();
-				latex->SetTextColor(/*36*/4);
-				latex->SetTextSize(0.07);
+				latex->SetTextColor(/*36*/1);
+				latex->SetTextSize(0.06);
 				Int_t oldalign = latex->GetTextAlign();
 				Int_t centeralign = 23;
 
@@ -653,18 +652,18 @@ void DiffAnalysisFactory::prepareDiffCanvas()
 				latex->DrawLatex(centerpos, 1.01, TString::Format("%.2f < %s < %.2f", X_l, ctx.cx.label.Data(), X_h));
 				latex->DrawLatex(centerpos, 0.96, TString::Format("%.0f < %s < %.0f", Y_l, ctx.cy.label.Data(), Y_h));
 				latex->SetTextAlign(oldalign);
-				latex->SetTextColor(/*36*/2);
+				latex->SetTextColor(/*36*/1);
 
 				int fitnpar = tfLambdaSig->GetNpar();
 				for (int i = 0; i < fitnpar; ++i)
 				{
-					latex->DrawLatex(0.50, 0.85-0.05*i, TString::Format("[%d] = %5g#pm%.2g", i,
+					latex->DrawLatex(0.5, 0.81-0.05*i, TString::Format("[%d] %5g#pm%.2g", i,
 																		tfLambdaSig->GetParameter(i),
 													 tfLambdaSig->GetParError(i)));
 				}
-				latex->DrawLatex(0.50, 0.25, TString::Format("#chi^{2}/ndf = %g",
+				latex->DrawLatex(0.5, 0.25, TString::Format("#chi^{2}/ndf = %g",
 															 tfLambdaSum->GetChisquare()/tfLambdaSum->GetNDF()));
-				latex->DrawLatex(0.50, 0.15, TString::Format(" %.2g/%d",
+				latex->DrawLatex(0.5, 0.20, TString::Format(" %.2g/%d",
 															 tfLambdaSum->GetChisquare(), tfLambdaSum->GetNDF()));
 
 			}
@@ -681,12 +680,19 @@ void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
 		colzopts += ",text";
 	TString coltopts = "col,text";
 
+	TString haxx = format_hist_xaxis(ctx);
+	TString haxy = format_hist_yaxis(ctx);
+	TString haxz = format_hist_zaxis(ctx);
+
 	if (cSignalXY)
 	{
+		hSignalXY->GetXaxis()->SetTitle(haxx);
+		hSignalXY->GetYaxis()->SetTitle(haxy);
+		hSignalXY->GetZaxis()->SetTitle(haxz);
+
 		cSignalXY->cd(0);
 		hSignalXY->Draw("colz");
 		RootTools::NicePalette(hSignalXY, 0.05);
-// 		DrawStats(cSignalXY, hSignalXY);
 		RootTools::NoPalette(hSignalXY);
 		gPad->Update();
 	}
@@ -694,27 +700,31 @@ void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
 	// Signal with cut
 	if (cSignalWithCutsXY)
 	{
+		hSignalWithCutsXY->GetXaxis()->SetTitle(haxx);
+		hSignalWithCutsXY->GetYaxis()->SetTitle(haxy);
+		hSignalWithCutsXY->GetZaxis()->SetTitle(haxz);
+
 		cSignalWithCutsXY->cd(0);
 		hSignalWithCutsXY->Draw("colz");
 		RootTools::NicePalette(hSignalWithCutsXY, 0.05);
-// 		DrawStats(cSignalWithCutsXY, hSignalWithCutsXY);
 		RootTools::NoPalette(hSignalWithCutsXY);
 		gPad->Update();
 	}
 
-	gStyle->SetPaintTextFormat(".3g");
 	if (cDiscreteXY)
 	{
+		hDiscreteXY->GetXaxis()->SetTitle(haxx);
+		hDiscreteXY->GetYaxis()->SetTitle(haxy);
+		hDiscreteXY->GetZaxis()->SetTitle(haxz);
+
 		cDiscreteXY->cd(0);
 		hDiscreteXY->Draw(colzopts);
 		RootTools::NicePalette(hDiscreteXY, 0.05);
 		hDiscreteXY->SetMarkerSize(1.6);
-// 		DrawStats(cDiscreteXY, hDiscreteXY);
 		gPad->Update();
 
 		cDiscreteXYFull->cd(0);
 		TH2I * h1 = (TH2I *)hSignalXY->DrawCopy("colz");
-// 		hDiscreteXY->SetMarkerSize(1.4);
 		hDiscreteXY->Draw(coltopts+",same");
 		RootTools::NoPalette(h1);
 		gPad->Update();
@@ -722,24 +732,24 @@ void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
 
 	if (cDiscreteXYSig)
 	{
+		hDiscreteXYSig->GetXaxis()->SetTitle(haxx);
+		hDiscreteXYSig->GetYaxis()->SetTitle(haxy);
+		hDiscreteXYSig->GetZaxis()->SetTitle(haxz);
+
 		hDiscreteXYSig->SetMarkerColor(kWhite);
 		hDiscreteXYSig->SetMarkerSize(1.6);
 
 		cDiscreteXYSig->cd(0);
 		hDiscreteXYSig->Draw(colzopts);
 		RootTools::NicePalette(hDiscreteXYSig, 0.05);
-// 		DrawStats(cDiscreteXYSig, hDiscreteXYSig);
 		gPad->Update();
 
 		cDiscreteXYSigFull->cd(0);
 		TH2I * h2 = (TH2I *)hSignalWithCutsXY->DrawCopy("colz");
-// 		hDiscreteXYSig->SetMarkerSize(1.4);
-		// 	if (flag_details)
 		hDiscreteXYSig->Draw(coltopts+",same");
 		RootTools::NoPalette(h2);
 		gPad->Update();
 	}
-// 	gStyle->SetPaintTextFormat("g");
 
 	float qa_min = 0.;
 	float qa_max = 0.;
@@ -976,24 +986,32 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 // 	FitResultData res;
 	bool res;
 
+	TLatex * nofit_text = new TLatex();
+	nofit_text->SetTextAlign(23);
+	nofit_text->SetNDC();
+
+	int info_text = 0;
 	for (uint i = 0; i < ctx.cx.bins; ++i)
 	{
 		cDiscreteXYDiff[i]->Draw(h1opts);
 		for (uint j = 0; j < ctx.cy.bins; ++j)
 		{
 			TVirtualPad * pad = cDiscreteXYDiff[i]->cd(1+j);
+			RootTools::NicePad(pad, 0.10, 0.01, 0.15, 0.10);
 
-			hDiscreteXYDiff[i][j]->SetStats(0);
-			hDiscreteXYDiff[i][j]->Draw();
+			TH1D * hfit = hDiscreteXYDiff[i][j];
+			hfit->SetStats(0);
+			hfit->Draw();
+			info_text = 0;
 
 			if (!integral_only)
 			{
 				HistFitParams hfp = stdfit;
-				FitterFactory::FIND_FLAGS fflags = ff.findParams(hDiscreteXYDiff[i][j], hfp, true);
+				FitterFactory::FIND_FLAGS fflags = ff.findParams(hfit, hfp, true);
 
 				if (fflags == FitterFactory::NOT_FOUND)
 				{
-					hfp.setNewName(hDiscreteXYDiff[i][j]->GetName());
+					hfp.setNewName(hfit->GetName());
 					ff.insertParameters(hfp);
 				}
 // 				bool hasfunc = ( fflags == FitterFactory::USE_FOUND);
@@ -1001,9 +1019,11 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 
 				if ( ((!hasfunc) or (hasfunc and !hfp.fit_disabled)) /*and*/ /*(hDiscreteXYDiff[i][j]->GetEntries() > 50)*//* and (hDiscreteXYDiff[i][j]->GetRMS() < 15)*/ )
 				{
-					if (( hDiscreteXYDiff[i][j]->GetEntries() / hDiscreteXYDiff[i][j]->GetRMS() ) < 10)
+					if (( hfit->GetEntries() / hfit->GetRMS() ) < 5)
 					{
-						pad->SetFillColor(40);
+// 						PR(( hDiscreteXYDiff[i][j]->GetEntries() / hDiscreteXYDiff[i][j]->GetRMS() ));
+//						pad->SetFillColor(40);		// FIXME I dont want colors in the putput
+						info_text = 1;
 					}
 					else
 					{
@@ -1038,7 +1058,8 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 				}
 				else
 				{
-					pad->SetFillColor(42);
+//					pad->SetFillColor(42);
+					info_text = 2;
 				}
 			}
 			else
@@ -1063,7 +1084,20 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 			}
 
 			Double_t hmax = hDiscreteXYDiff[i][j]->GetBinContent(hDiscreteXYDiff[i][j]->GetMaximumBin());
-			hDiscreteXYDiff[i][j]->GetYaxis()->SetRangeUser(-hmax*0.05, hmax * 1.1);
+			hfit->GetYaxis()->SetRangeUser(0, hmax * 1.1);
+			hfit->GetYaxis()->SetNdivisions(504, kTRUE);
+
+			switch (info_text)
+			{
+				case 1:
+					nofit_text->DrawLatex(0.65, 0.65, "No fit");
+					break;
+				case 2:
+					nofit_text->DrawLatex(0.65, 0.65, "Fit disabled");
+					break;
+				default:
+					break;
+			}
 		}
 
 		cSliceXYDiff->cd(1+i)/*->Draw()*/;
