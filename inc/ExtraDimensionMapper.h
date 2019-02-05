@@ -37,6 +37,8 @@ class TH1;
 class TH1D;
 class TH2;
 class TH2D;
+class TH3;
+class TH3D;
 class TStyle;
 class TVirtualPad;
 

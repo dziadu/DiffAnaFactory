@@ -32,6 +32,7 @@
 #include "TGraphErrors.h"
 #include "TGraph.h"
 #include "TH2.h"
+#include "TH3.h"
 #include "TImage.h"
 #include "TLatex.h"
 #include "TLegend.h"
