@@ -20,9 +20,9 @@
 #ifndef DIFFANALYSISCONTEXT_H
 #define DIFFANALYSISCONTEXT_H
 
-#include "TNamed.h"
-#include "TString.h"
-#include "Rtypes.h"
+#include <TNamed.h>
+#include <TString.h>
+#include <Rtypes.h>
 
 class AxisCfg
 {
@@ -64,7 +64,7 @@ public:
 	mutable TString ctxName;	// prefix for histograms
 	TString diff_var_name;
 
-	AxisCfg x, y, z;
+	AxisCfg x, y, V;     // x, y are two dimensions, V is a final Variable axis
 	AxisCfg cx, cy;
 
 	// cut range when useCut==kTRUE
@@ -79,30 +79,29 @@ public:
 	DiffAnalysisContext(const DiffAnalysisContext & ctx);
 	virtual ~DiffAnalysisContext();
 
-	DiffAnalysisContext & operator=(const DiffAnalysisContext & ctx);
-	bool operator==(const DiffAnalysisContext & ctx);
-	bool operator!=(const DiffAnalysisContext & ctx);
+	virtual DiffAnalysisContext & operator=(const DiffAnalysisContext & ctx);
+	virtual bool operator==(const DiffAnalysisContext & ctx);
+	virtual bool operator!=(const DiffAnalysisContext & ctx);
 
-	void update() const;
-	bool validate() const;
+	virtual void update() const;
+	virtual bool validate() const;
 
 	// flags
-	inline bool useCuts() const { return (cutMin or cutMax); }
-	inline bool useClip() const { return cx.bins; }
-	inline bool useDiff() const { return (z.bins and useClip()); }
+	virtual bool useCuts() const { return (cutMin or cutMax); }
+	virtual bool useClip() const { return cx.bins; }
+	virtual bool useDiff() const { return (V.bins and useClip()); }
 
-	void format_z_axis();
+	virtual void format_V_axis();
 
-	inline virtual const char * GetName() const { return ctxName.Data(); }
-    inline virtual void SetName(const char* name) { ctxName = name; }
-	const char * AnaName() const { return histPrefix.Data(); }
+	virtual const char * GetName() const { return ctxName.Data(); }
+	virtual void SetName(const char* name) { ctxName = name; }
+	virtual const char * AnaName() const { return histPrefix.Data(); }
 
-	bool findJsonFile(const char * initial_path, const char * filename, int search_depth = -1);
-	bool configureFromJson(const char * name);
-	bool configureToJson(const char * name, const char * jsonfile);
+	virtual bool findJsonFile(const char * initial_path, const char * filename, int search_depth = -1);
+	virtual bool configureFromJson(const char * name);
+	virtual bool configureToJson(const char * name, const char * jsonfile);
 
 private:
-
 	TString json_fn;
 	bool json_found;
 	ClassDef(DiffAnalysisContext, 1);

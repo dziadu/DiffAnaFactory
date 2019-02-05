@@ -43,7 +43,7 @@
 #endif /* __CINT__ */
 
 #include "RootTools.h"
-#include "DiffAnalysisFactory.h"
+#include "TripleAnalysisFactory.h"
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
@@ -58,78 +58,78 @@ const Option_t h1opts[] = "h,E1";
 const TString flags_fit_a = "B,Q,0";
 const TString flags_fit_b = "";
 
-DiffAnalysisFactory::DiffAnalysisFactory() :
+TripleAnalysisFactory::TripleAnalysisFactory() :
 	SmartFactory("null"),
-	ctx(DiffAnalysisContext()),
+	ctx(TripleAnalysisContext()),
 	hSignalXY(nullptr), cSignalXY(nullptr),
 	hSignalWithCutsXY(nullptr), cSignalWithCutsXY(nullptr),
 	hDiscreteXY(nullptr), cDiscreteXY(nullptr), cDiscreteXYFull(nullptr),
 	hDiscreteXYSig(nullptr), cDiscreteXYSig(nullptr), cDiscreteXYSigFull(nullptr),
-	hDiscreteXYDiff(nullptr), cDiscreteXYDiff(nullptr),
+	hDiscreteXYTriple(nullptr), cDiscreteXYTriple(nullptr),
 	hSliceXYFitQA(nullptr), cSliceXYFitQA(nullptr),
 	hSliceXYChi2NDF(nullptr), cSliceXYChi2NDF(nullptr), cSliceXYprojX(nullptr),
-	hSliceXYDiff(nullptr), cSliceXYDiff(nullptr),
-	objectsDiffs(nullptr), objectsSlices(nullptr), objectsFits(nullptr),
+	hSliceXYTriple(nullptr), cSliceXYTriple(nullptr),
+	objectsTriples(nullptr), objectsSlices(nullptr), objectsFits(nullptr),
 	fitCallback(nullptr)
 {
 	prepare();
 }
 
-DiffAnalysisFactory::DiffAnalysisFactory(const DiffAnalysisContext & context) :
+TripleAnalysisFactory::TripleAnalysisFactory(const TripleAnalysisContext & context) :
 	SmartFactory(context.AnaName()),
 	ctx(context),
 	hSignalXY(nullptr), cSignalXY(nullptr),
 	hSignalWithCutsXY(nullptr), cSignalWithCutsXY(nullptr),
 	hDiscreteXY(nullptr), cDiscreteXY(nullptr), cDiscreteXYFull(nullptr),
 	hDiscreteXYSig(nullptr), cDiscreteXYSig(nullptr), cDiscreteXYSigFull(nullptr),
-	hDiscreteXYDiff(nullptr), cDiscreteXYDiff(nullptr),
+	hDiscreteXYTriple(nullptr), cDiscreteXYTriple(nullptr),
 	hSliceXYFitQA(nullptr), cSliceXYFitQA(nullptr),
 	hSliceXYChi2NDF(nullptr), cSliceXYChi2NDF(nullptr), cSliceXYprojX(nullptr),
-	hSliceXYDiff(nullptr), cSliceXYDiff(nullptr),
-	objectsDiffs(nullptr), objectsSlices(nullptr), objectsFits(nullptr),
+	hSliceXYTriple(nullptr), cSliceXYTriple(nullptr),
+	objectsTriples(nullptr), objectsSlices(nullptr), objectsFits(nullptr),
 	fitCallback(nullptr)
 {
 	prepare();
 }
 
-DiffAnalysisFactory::DiffAnalysisFactory(const DiffAnalysisContext * context) :
+TripleAnalysisFactory::TripleAnalysisFactory(const TripleAnalysisContext * context) :
 	SmartFactory(context->AnaName()),
 	ctx(*context),
 	hSignalXY(nullptr), cSignalXY(nullptr),
 	hSignalWithCutsXY(nullptr), cSignalWithCutsXY(nullptr),
 	hDiscreteXY(nullptr), cDiscreteXY(nullptr), cDiscreteXYFull(nullptr),
 	hDiscreteXYSig(nullptr), cDiscreteXYSig(nullptr), cDiscreteXYSigFull(nullptr),
-	hDiscreteXYDiff(nullptr), cDiscreteXYDiff(nullptr),
+	hDiscreteXYTriple(nullptr), cDiscreteXYTriple(nullptr),
 	hSliceXYFitQA(nullptr), cSliceXYFitQA(nullptr),
 	hSliceXYChi2NDF(nullptr), cSliceXYChi2NDF(nullptr), cSliceXYprojX(nullptr),
-	hSliceXYDiff(nullptr), cSliceXYDiff(nullptr),
-	objectsDiffs(nullptr), objectsSlices(nullptr), objectsFits(nullptr),
+	hSliceXYTriple(nullptr), cSliceXYTriple(nullptr),
+	objectsTriples(nullptr), objectsSlices(nullptr), objectsFits(nullptr),
 	fitCallback(nullptr)
 {
 	prepare();
 }
 
-DiffAnalysisFactory::~DiffAnalysisFactory()
+TripleAnalysisFactory::~TripleAnalysisFactory()
 {
 	gSystem->ProcessEvents();
 	if (objectsFits)	objectsFits->Delete();
-	if (objectsDiffs)	delete objectsDiffs;
+	if (objectsTriples)	delete objectsTriples;
 	if (objectsSlices)	delete objectsSlices;
 	if (objectsFits)	delete objectsFits;
 }
 
-DiffAnalysisFactory & DiffAnalysisFactory::operator=(const DiffAnalysisFactory & fa)
+TripleAnalysisFactory & TripleAnalysisFactory::operator=(const TripleAnalysisFactory & fa)
 {
-	DiffAnalysisFactory * nthis = this;//new DiffAnalysisFactory(fa.ctx);
+	TripleAnalysisFactory * nthis = this;//new TripleAnalysisFactory(fa.ctx);
 
 	nthis->ctx = fa.ctx;
 	nthis->ctx.histPrefix = fa.ctx.histPrefix;
 
-	nthis->objectsDiffs = new TObjArray();
+	nthis->objectsTriples = new TObjArray();
 	nthis->objectsSlices = new TObjArray();
 	nthis->objectsFits = new TObjArray();
 
-	nthis->objectsDiffs->SetName(ctx.histPrefix + "Diffs");
+	nthis->objectsTriples->SetName(ctx.histPrefix + "Triples");
 	nthis->objectsSlices->SetName(ctx.histPrefix + "Slices");
 	nthis->objectsFits->SetName(ctx.histPrefix + "Fits");
 
@@ -141,14 +141,14 @@ DiffAnalysisFactory & DiffAnalysisFactory::operator=(const DiffAnalysisFactory &
 	{
 		for (uint j = 0; j < ctx.cy.bins; ++j)
 		{
-			copyHistogram(fa.hDiscreteXYDiff[i][j], hDiscreteXYDiff[i][j]);
+			copyHistogram(fa.hDiscreteXYTriple[i][j], hDiscreteXYTriple[i][j]);
 		}
 	}
 
 	for (uint i = 0; i < ctx.cx.bins; ++i)
 	{
-		copyHistogram(fa.hSliceXYDiff[i], hSliceXYDiff[i]);
-		nthis->objectsSlices->AddLast(hSliceXYDiff[i]);
+		copyHistogram(fa.hSliceXYTriple[i], hSliceXYTriple[i]);
+		nthis->objectsSlices->AddLast(hSliceXYTriple[i]);
 
 		copyHistogram(fa.hSliceXYFitQA[i], hSliceXYFitQA[i]);
 		nthis->objectsSlices->AddLast(hSliceXYFitQA[i]);
@@ -161,7 +161,7 @@ DiffAnalysisFactory & DiffAnalysisFactory::operator=(const DiffAnalysisFactory &
 	return *nthis;
 }
 
-void DiffAnalysisFactory::prepare()
+void TripleAnalysisFactory::prepare()
 {
 	ctx.update();
 
@@ -169,7 +169,7 @@ void DiffAnalysisFactory::prepare()
 	objectsFits->SetName(ctx.histPrefix + "Fits");
 }
 
-TString format_hist_axes(const DiffAnalysisContext & ctx)
+TString format_hist_axes(const TripleAnalysisContext & ctx)
 {
 	TString htitle = TString::Format(";%s%s;%s%s",
 									 ctx.x.label.Data(), ctx.x.format_unit().c_str(),
@@ -178,7 +178,7 @@ TString format_hist_axes(const DiffAnalysisContext & ctx)
 	return htitle;
 }
 
-TString format_hist_caxes(const DiffAnalysisContext & ctx)
+TString format_hist_caxes(const TripleAnalysisContext & ctx)
 {
 	TString htitle = TString::Format(";%s%s;%s%s",
 									 ctx.cx.label.Data(), ctx.cx.format_unit().c_str(),
@@ -187,28 +187,28 @@ TString format_hist_caxes(const DiffAnalysisContext & ctx)
 	return htitle;
 }
 
-TString format_hist_xaxis(const DiffAnalysisContext & ctx)
+TString format_hist_xaxis(const TripleAnalysisContext & ctx)
 {
 	TString htitle = TString::Format("%s%s", ctx.x.label.Data(), ctx.x.format_unit().c_str());
 
 	return htitle;
 }
 
-TString format_hist_yaxis(const DiffAnalysisContext & ctx)
+TString format_hist_yaxis(const TripleAnalysisContext & ctx)
 {
 	TString htitle = TString::Format("%s%s", ctx.y.label.Data(), ctx.y.format_unit().c_str());
 
 	return htitle;
 }
 
-TString format_hist_zaxis(const DiffAnalysisContext & ctx)
+TString format_hist_zaxis(const TripleAnalysisContext & ctx)
 {
-	TString htitle = TString::Format("%s%s", ctx.V.label.Data(), ctx.V.format_unit().c_str());
+	TString htitle = TString::Format("%s%s", ctx.z.label.Data(), ctx.z.format_unit().c_str());
 
 	return htitle;
 }
 
-void DiffAnalysisFactory::Init(DiffAnalysisFactory::Stages s)
+void TripleAnalysisFactory::Init(TripleAnalysisFactory::Stages s)
 {
 	Int_t can_width = 800, can_height = 600;
 	TString hname, cname;
@@ -267,20 +267,20 @@ void DiffAnalysisFactory::Init(DiffAnalysisFactory::Stages s)
 	// histograms for fitting
 	if (s == FIT or s == ALL)
 	{
-		if (ctx.useDiff())
+		if (ctx.useTriple())
 		{
-			GetDiffs();
+			GetTriples();
 		}
 	}
 
 	if (s == SIG or s == ALL)
 	{
-		if (ctx.useDiff())
+		if (ctx.useTriple())
 		{
 			objectsSlices = new TObjArray();
 			objectsSlices->SetName(ctx.histPrefix + "Slices");
 
-			hSliceXYDiff = new TH1D*[ctx.cx.bins];
+			hSliceXYTriple = new TH1D*[ctx.cx.bins];
 			hSliceXYFitQA = new TH1D*[ctx.cx.bins];
 			hSliceXYChi2NDF = new TH1D*[ctx.cx.bins];
 
@@ -293,8 +293,8 @@ void DiffAnalysisFactory::Init(DiffAnalysisFactory::Stages s)
 
 				// slices
 				hname = TString::Format("@@@d/Slices/h_@@@a_LambdaInvMassSlice_%s%02d", "X", i);
-				hSliceXYDiff[i] = RegTH1<TH1D>(hname, htitle, ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-				objectsSlices->AddLast(hSliceXYDiff[i]);
+				hSliceXYTriple[i] = RegTH1<TH1D>(hname, htitle, ctx.cy.bins, ctx.cy.min, ctx.cy.max);
+				objectsSlices->AddLast(hSliceXYTriple[i]);
 
 				// Fit QA
 				hname = TString::Format("@@@d/Slices/h_@@@a_LambdaInvMassFitQA_%s%02d", "X", i);
@@ -335,7 +335,7 @@ void DiffAnalysisFactory::Init(DiffAnalysisFactory::Stages s)
 
 			// Slices
 			cname = "@@@d/Slices/c_@@@a_LambdaInvMassSlice";
-			cSliceXYDiff = RegCanvas(cname.Data(), "#Lambda: Slice of Y distribution", can_width, can_height, ctx.cx.bins);
+			cSliceXYTriple = RegCanvas(cname.Data(), "#Lambda: Slice of Y distribution", can_width, can_height, ctx.cx.bins);
 
 			// Fit QA
 			cname = "@@@d/Slices/c_@@@a_LambdaInvMassFitQA";
@@ -351,28 +351,28 @@ void DiffAnalysisFactory::Init(DiffAnalysisFactory::Stages s)
 	}
 }
 
-void DiffAnalysisFactory::GetDiffs(bool with_canvases)
+void TripleAnalysisFactory::GetTriples(bool with_canvases)
 {
 	Int_t can_width = 800, can_height = 600;
 	TString hname, htitle, cname;
 
-	if (ctx.useDiff())
+	if (ctx.useTriple())
 	{
-		objectsDiffs = new TObjArray();
-		objectsDiffs->SetName(ctx.histPrefix + "Diffs");
+		objectsTriples = new TObjArray();
+		objectsTriples->SetName(ctx.histPrefix + "Triples");
 
 		// Lambda: differential plots
-		hDiscreteXYDiff = new TH1D**[ctx.cx.bins];
+		hDiscreteXYTriple = new TH1D**[ctx.cx.bins];
 		if (with_canvases)
-			cDiscreteXYDiff = new TCanvas*[ctx.cx.bins];
+			cDiscreteXYTriple = new TCanvas*[ctx.cx.bins];
 
 		for (uint i = 0; i < ctx.cx.bins; ++i)
 		{
-			hDiscreteXYDiff[i] = new TH1D*[ctx.cy.bins];
+			hDiscreteXYTriple[i] = new TH1D*[ctx.cy.bins];
 
 			for (uint j = 0; j < ctx.cy.bins; ++j)
 			{
-				hname = TString::Format("@@@d/Diffs/h_@@@a_LambdaDiff_%s%02d_%s%02d", "X", i, "Y", j);
+				hname = TString::Format("@@@d/Triples/h_@@@a_LambdaTriple_%s%02d_%s%02d", "X", i, "Y", j);
 				htitle = TString::Format(
 					"#Lambda: %s[%d]=%.1f-%.1f, %s[%d]=%.0f-%.0f;M [MeV/c^{2}];Stat",
 					ctx.cx.label.Data(), i,
@@ -382,21 +382,21 @@ void DiffAnalysisFactory::GetDiffs(bool with_canvases)
 					ctx.cy.min+ctx.cy.delta*j,
 					ctx.cy.min+ctx.cy.delta*(j+1));
 
-					hDiscreteXYDiff[i][j] = RegTH1<TH1D>(hname, htitle, ctx.V.bins, ctx.V.min, ctx.V.max);
+					hDiscreteXYTriple[i][j] = RegTH1<TH1D>(hname, htitle, ctx.z.bins, ctx.z.min, ctx.z.max);
 
-					objectsDiffs->AddLast(hDiscreteXYDiff[i][j]);
+					objectsTriples->AddLast(hDiscreteXYTriple[i][j]);
 			}
 
 			if (with_canvases)
 			{
-				cname = TString::Format("@@@d/Diffs/c_@@@a_LambdaDiff_%s%02d", "X", i);
-				cDiscreteXYDiff[i] = RegCanvas(cname, "test", can_width, can_height, ctx.cy.bins);
+				cname = TString::Format("@@@d/Triples/c_@@@a_LambdaTriple_%s%02d", "X", i);
+				cDiscreteXYTriple[i] = RegCanvas(cname, "test", can_width, can_height, ctx.cy.bins);
 			}
 		}
 	}
 }
 
-void DiffAnalysisFactory::Proceed()
+void TripleAnalysisFactory::Proceed()
 {
 	Bool_t isInRange = kFALSE;
 
@@ -408,12 +408,12 @@ void DiffAnalysisFactory::Proceed()
 		const Int_t xcbin = Int_t( (*ctx.x.var - ctx.cx.min)/ctx.cx.delta );
 		const Int_t ycbin = Int_t( (*ctx.y.var - ctx.cy.min)/ctx.cy.delta );
 
-		hDiscreteXYDiff[xcbin][ycbin]->Fill(*ctx.V.var, *ctx.var_weight);
+		hDiscreteXYTriple[xcbin][ycbin]->Fill(*ctx.z.var, *ctx.var_weight);
 
 		isInRange = kTRUE;
 	}
 
-	if (ctx.useCuts() and *ctx.V.var > ctx.cutMin and *ctx.V.var < ctx.cutMax)
+	if (ctx.useCuts() and *ctx.z.var > ctx.cutMin and *ctx.z.var < ctx.cutMax)
 	{
 		hSignalWithCutsXY->Fill(*ctx.x.var, *ctx.y.var, *ctx.var_weight);
 
@@ -424,7 +424,7 @@ void DiffAnalysisFactory::Proceed()
 	}
 }
 
-void DiffAnalysisFactory::binnorm()
+void TripleAnalysisFactory::binnorm()
 {
 // 	PR(hSignalXY->GetXaxis()->GetBinWidth(1) * hSignalXY->GetYaxis()->GetBinWidth(1));
 	if (hSignalXY) hSignalXY->Scale( 1.0 / ( hSignalXY->GetXaxis()->GetBinWidth(1) * hSignalXY->GetYaxis()->GetBinWidth(1) ) );
@@ -443,21 +443,21 @@ void DiffAnalysisFactory::binnorm()
 		if (hDiscreteXY) hDiscreteXY->Scale( 1.0 / ( hDiscreteXY->GetXaxis()->GetBinWidth(1) * hDiscreteXY->GetYaxis()->GetBinWidth(1) ) );
 		if (hDiscreteXYSig) hDiscreteXYSig->Scale( 1.0 / ( hDiscreteXYSig->GetXaxis()->GetBinWidth(1) * hDiscreteXYSig->GetYaxis()->GetBinWidth(1) ) );
 
-// 		if (ctx.useDiff())
+// 		if (ctx.useTriple())
 // 		{
 // 			for (uint i = 0; i < ctx.cx.bins; ++i)
 // 			{
 // 				for (uint j = 0; j < ctx.cy.bins; ++j)
 // 				{
-// 					if (hDiscreteXYDiff) hDiscreteXYDiff[i][j]->Scale(factor);
+// 					if (hDiscreteXYTriple) hDiscreteXYTriple[i][j]->Scale(factor);
 // 				}
-// 				if (hSliceXYDiff) hSliceXYDiff[i]->Scale(factor);
+// 				if (hSliceXYTriple) hSliceXYTriple[i]->Scale(factor);
 // 			}
 // 		}
 	}
 }
 
-void DiffAnalysisFactory::scale(Float_t factor)
+void TripleAnalysisFactory::scale(Float_t factor)
 {
 	if (hSignalXY) hSignalXY->Scale(factor);
 
@@ -472,21 +472,21 @@ void DiffAnalysisFactory::scale(Float_t factor)
 		if (hDiscreteXY) hDiscreteXY->Scale(factor);
 		if (hDiscreteXYSig) hDiscreteXYSig->Scale(factor);
 
-		if (ctx.useDiff())
+		if (ctx.useTriple())
 		{
 			for (uint i = 0; i < ctx.cx.bins; ++i)
 			{
 				for (uint j = 0; j < ctx.cy.bins; ++j)
 				{
-					if (hDiscreteXYDiff) hDiscreteXYDiff[i][j]->Scale(factor);
+					if (hDiscreteXYTriple) hDiscreteXYTriple[i][j]->Scale(factor);
 				}
-				if (hSliceXYDiff) hSliceXYDiff[i]->Scale(factor);
+				if (hSliceXYTriple) hSliceXYTriple[i]->Scale(factor);
 			}
 		}
 	}
 }
 
-void DiffAnalysisFactory::Finalize(Stages s, bool flag_details)
+void TripleAnalysisFactory::Finalize(Stages s, bool flag_details)
 {
 	switch (s)
 	{
@@ -494,26 +494,26 @@ void DiffAnalysisFactory::Finalize(Stages s, bool flag_details)
 			prepareSigCanvas(flag_details);
 			break;
 		case FIT:
-			prepareDiffCanvas();
+			prepareTripleCanvas();
 			break;
 		case SIG:
 			prepareSigCanvas(flag_details);
 			break;
 		case ALL:
 			prepareSigCanvas(flag_details);
-			prepareDiffCanvas();
+			prepareTripleCanvas();
 			prepareSigCanvas(flag_details);
 			break;
 	}
 }
 
-void DiffAnalysisFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
+void TripleAnalysisFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
 {
 	RootTools::NicePad(pad, mt, mr, mb, ml);
 	RootTools::NiceHistogram(hist, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
 }
 
-void DiffAnalysisFactory::niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format)
+void TripleAnalysisFactory::niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format)
 {
 	RootTools::NicePad(cSignalXY->cd(), pf);
 	RootTools::NiceHistogram(hSignalXY, format);
@@ -541,40 +541,40 @@ void DiffAnalysisFactory::niceHists(RootTools::PadFormat pf, const RootTools::Gr
 	}
 }
 
-void DiffAnalysisFactory::niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
+void TripleAnalysisFactory::niceTriples(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
 {
-	if (ctx.useDiff())
+	if (ctx.useTriple())
 	{
 	for (uint i = 0; i < ctx.cx.bins; ++i)
 	{
 		for (uint j = 0; j < ctx.cy.bins; ++j)
 		{
-			TVirtualPad * p = cDiscreteXYDiff[i]->cd(1+j);
+			TVirtualPad * p = cDiscreteXYTriple[i]->cd(1+j);
 			RootTools::NicePad(p, mt, mr, mb, ml);
 
-			TH1 * h = hDiscreteXYDiff[i][j];
+			TH1 * h = hDiscreteXYTriple[i][j];
 			RootTools::NiceHistogram(h, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
 		}
 	}
 	}
 }
 
-void DiffAnalysisFactory::niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
+void TripleAnalysisFactory::niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
 {
-	if (ctx.useDiff())
+	if (ctx.useTriple())
 	{
 	for (uint i = 0; i < ctx.cx.bins; ++i)
 	{
-		TVirtualPad * p = cSliceXYDiff->cd(1+i);
+		TVirtualPad * p = cSliceXYTriple->cd(1+i);
 		RootTools::NicePad(p, mt, mr, mb, ml);
 
-		TH1 * h = hSliceXYDiff[i];
+		TH1 * h = hSliceXYTriple[i];
 		RootTools::NiceHistogram(h, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
 	}
 	}
 }
 
-void DiffAnalysisFactory::prepareDiffCanvas()
+void TripleAnalysisFactory::prepareTripleCanvas()
 {
 	TLatex * latex = new TLatex();
 	latex->SetNDC();
@@ -585,15 +585,15 @@ void DiffAnalysisFactory::prepareDiffCanvas()
 	nflatex->SetTextSize(0.07);
 	nflatex->SetTextAlign(23);
 
-	if (ctx.useDiff())
+	if (ctx.useTriple())
 	{
 		for (uint i = 0; i < ctx.cx.bins; ++i)
 		{
 			for (uint j = 0; j < ctx.cy.bins; ++j)
 			{
-				cDiscreteXYDiff[i]->cd(1+j);
+				cDiscreteXYTriple[i]->cd(1+j);
 
-				TH1 * h = hDiscreteXYDiff[i][j];
+				TH1 * h = hDiscreteXYTriple[i][j];
 
 				h->Draw();
 				latex->DrawLatex(0.12, 0.85, TString::Format("%02d", j));
@@ -602,9 +602,9 @@ void DiffAnalysisFactory::prepareDiffCanvas()
 				size_t fs = flist->GetEntries();
 				if (fs < 3)
 				{
-					latex->DrawLatex(0.55, 0.85, TString::Format("E=%g", hDiscreteXYDiff[i][j]->GetEntries()));
-					latex->DrawLatex(0.55, 0.80, TString::Format("R=%g", hDiscreteXYDiff[i][j]->GetRMS()));
-					latex->DrawLatex(0.55, 0.75, TString::Format("E/R=%g", hDiscreteXYDiff[i][j]->GetEntries() / hDiscreteXYDiff[i][j]->GetRMS()));
+					latex->DrawLatex(0.55, 0.85, TString::Format("E=%g", hDiscreteXYTriple[i][j]->GetEntries()));
+					latex->DrawLatex(0.55, 0.80, TString::Format("R=%g", hDiscreteXYTriple[i][j]->GetRMS()));
+					latex->DrawLatex(0.55, 0.75, TString::Format("E/R=%g", hDiscreteXYTriple[i][j]->GetEntries() / hDiscreteXYTriple[i][j]->GetRMS()));
 
 					nflatex->DrawLatex(0.5, 0.5, "No fit");
 					continue;
@@ -673,7 +673,7 @@ void DiffAnalysisFactory::prepareDiffCanvas()
 	latex->Delete();
 }
 
-void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
+void TripleAnalysisFactory::prepareSigCanvas(bool flag_details)
 {
 	TString colzopts = "colz";
 	if (flag_details)
@@ -759,10 +759,10 @@ void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
 
 	for (uint i = 0; i < ctx.cx.bins; ++i)
 	{
-		if (cSliceXYDiff)
+		if (cSliceXYTriple)
 		{
-			cSliceXYDiff->cd(1+i);
-			hSliceXYDiff[i]->Draw("E");
+			cSliceXYTriple->cd(1+i);
+			hSliceXYTriple[i]->Draw("E");
 		}
 
 		if (cSliceXYFitQA)
@@ -870,7 +870,7 @@ void DiffAnalysisFactory::prepareSigCanvas(bool flag_details)
 }
 
 // TODO this two should be moved somewhere else, not in library
-void DiffAnalysisFactory::applyAngDists(double a2, double a4, double corr_a2, double corr_a4)
+void TripleAnalysisFactory::applyAngDists(double a2, double a4, double corr_a2, double corr_a4)
 {
 	const size_t hists_num = 4;
 	TH2 * hist_to_map[hists_num] = { hSignalXY, hSignalWithCutsXY, hDiscreteXY, hDiscreteXYSig };
@@ -879,7 +879,7 @@ void DiffAnalysisFactory::applyAngDists(double a2, double a4, double corr_a2, do
 		applyAngDists(hist_to_map[x], a2, a4, corr_a2, corr_a4);
 }
 
-void DiffAnalysisFactory::applyAngDists(TH2 * h, double a2, double a4, double corr_a2, double corr_a4)
+void TripleAnalysisFactory::applyAngDists(TH2 * h, double a2, double a4, double corr_a2, double corr_a4)
 {
 	TF1 * f = new TF1("local_legpol", "angdist", -1, 1);
 	f->SetParameter(0, 1.0);
@@ -931,7 +931,7 @@ void DiffAnalysisFactory::applyAngDists(TH2 * h, double a2, double a4, double co
 }
 
 // TODO move away
-void DiffAnalysisFactory::applyBinomErrors(TH2* N)
+void TripleAnalysisFactory::applyBinomErrors(TH2* N)
 {
 	const size_t hists_num = 4;
 	TH2 * hmap[hists_num] = { hSignalXY, hSignalWithCutsXY, hDiscreteXY, hDiscreteXYSig };
@@ -941,12 +941,12 @@ void DiffAnalysisFactory::applyBinomErrors(TH2* N)
 }
 
 // TODO move away
-void DiffAnalysisFactory::applyBinomErrors(TH2* q, TH2* N)
+void TripleAnalysisFactory::applyBinomErrors(TH2* q, TH2* N)
 {
 	RootTools::calcBinomialErrors(q, N);
 }
 
-TH2** DiffAnalysisFactory::getSigsArray(size_t & size)
+TH2** TripleAnalysisFactory::getSigsArray(size_t & size)
 {
 	size = 4;
 
@@ -959,7 +959,7 @@ TH2** DiffAnalysisFactory::getSigsArray(size_t & size)
 	return hmap;
 }
 
-bool DiffAnalysisFactory::copyHistogram(TH1 * src, TH1 * dst)
+bool TripleAnalysisFactory::copyHistogram(TH1 * src, TH1 * dst)
 {
 	if (!src or !dst)
 		return false;
@@ -981,7 +981,7 @@ bool DiffAnalysisFactory::copyHistogram(TH1 * src, TH1 * dst)
 	return true;
 }
 
-void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only)
+void TripleAnalysisFactory::fitTripleHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only)
 {
 // 	FitResultData res;
 	bool res;
@@ -993,13 +993,13 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 	int info_text = 0;
 	for (uint i = 0; i < ctx.cx.bins; ++i)
 	{
-		cDiscreteXYDiff[i]->Draw(h1opts);
+		cDiscreteXYTriple[i]->Draw(h1opts);
 		for (uint j = 0; j < ctx.cy.bins; ++j)
 		{
-			TVirtualPad * pad = cDiscreteXYDiff[i]->cd(1+j);
+			TVirtualPad * pad = cDiscreteXYTriple[i]->cd(1+j);
 			RootTools::NicePad(pad, 0.10, 0.01, 0.15, 0.10);
 
-			TH1D * hfit = hDiscreteXYDiff[i][j];
+			TH1D * hfit = hDiscreteXYTriple[i][j];
 			hfit->SetStats(0);
 			hfit->Draw();
 			info_text = 0;
@@ -1017,34 +1017,34 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 // 				bool hasfunc = ( fflags == FitterFactory::USE_FOUND);
 				bool hasfunc = true;
 
-				if ( ((!hasfunc) or (hasfunc and !hfp.fit_disabled)) /*and*/ /*(hDiscreteXYDiff[i][j]->GetEntries() > 50)*//* and (hDiscreteXYDiff[i][j]->GetRMS() < 15)*/ )
+				if ( ((!hasfunc) or (hasfunc and !hfp.fit_disabled)) /*and*/ /*(hDiscreteXYTriple[i][j]->GetEntries() > 50)*//* and (hDiscreteXYTriple[i][j]->GetRMS() < 15)*/ )
 				{
 					if (( hfit->GetEntries() / hfit->GetRMS() ) < 5)
 					{
-// 						PR(( hDiscreteXYDiff[i][j]->GetEntries() / hDiscreteXYDiff[i][j]->GetRMS() ));
+// 						PR(( hDiscreteXYTriple[i][j]->GetEntries() / hDiscreteXYTriple[i][j]->GetRMS() ));
 //						pad->SetFillColor(40);		// FIXME I dont want colors in the putput
 						info_text = 1;
 					}
 					else
 					{
 						if (fflags == FitterFactory::USE_FOUND)
-							printf("+ Fitting %s with custom function\n", hDiscreteXYDiff[i][j]->GetName());
+							printf("+ Fitting %s with custom function\n", hDiscreteXYTriple[i][j]->GetName());
 						else
-							printf("+ Fitting %s with standard function\n", hDiscreteXYDiff[i][j]->GetName());
+							printf("+ Fitting %s with standard function\n", hDiscreteXYTriple[i][j]->GetName());
 
-						res = fitDiffHist(hDiscreteXYDiff[i][j], hfp);
+						res = fitTripleHist(hDiscreteXYTriple[i][j], hfp);
 
 						if (res)
-							ff.updateParams(hDiscreteXYDiff[i][j], hfp);
+							ff.updateParams(hDiscreteXYTriple[i][j], hfp);
 
 						if (fitCallback)
-							(*fitCallback)(this, res, hDiscreteXYDiff[i][j], i, j);
+							(*fitCallback)(this, res, hDiscreteXYTriple[i][j], i, j);
 
 // 						FIXME
 // 						std::cout << "    Signal: " << res.signal << " +/- " << res.signal_err << std::endl;
 
-// 						hSliceXYDiff[i]->SetBinContent(1+j, res.signal);
-// 						hSliceXYDiff[i]->SetBinError(1+j, res.signal_err);
+// 						hSliceXYTriple[i]->SetBinContent(1+j, res.signal);
+// 						hSliceXYTriple[i]->SetBinError(1+j, res.signal_err);
 // 						hDiscreteXYSig->SetBinContent(1+i, 1+j, res.signal);
 // 						hDiscreteXYSig->SetBinError(1+i, 1+j, res.signal_err);
 
@@ -1065,25 +1065,25 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 			else
 			{
 // 				FIXME
-// 				res.signal = hDiscreteXYDiff[i][j]->Integral();
+// 				res.signal = hDiscreteXYTriple[i][j]->Integral();
 // 
 // 				if (res.signal < 0)  // FIXME old value 500
 // 				{
 // 					res.signal = 0;
 // 				}
 // 
-// 				res.signal_err = RootTools::calcTotalError( hDiscreteXYDiff[i][j], 1, hDiscreteXYDiff[i][j]->GetNbinsX() );
-// 				hSliceXYDiff[i]->SetBinContent(1+j, res.signal);
-// 				hSliceXYDiff[i]->SetBinError(1+j, res.signal_err);
+// 				res.signal_err = RootTools::calcTotalError( hDiscreteXYTriple[i][j], 1, hDiscreteXYTriple[i][j]->GetNbinsX() );
+// 				hSliceXYTriple[i]->SetBinContent(1+j, res.signal);
+// 				hSliceXYTriple[i]->SetBinError(1+j, res.signal_err);
 // 				hDiscreteXYSig->SetBinContent(1+i, 1+j, res.signal);
 // 				hDiscreteXYSig->SetBinError(1+i, 1+j, res.signal_err);
 
 				if (fitCallback)
-					(*fitCallback)(this, -1, hDiscreteXYDiff[i][j], i, j);
+					(*fitCallback)(this, -1, hDiscreteXYTriple[i][j], i, j);
 
 			}
 
-			Double_t hmax = hDiscreteXYDiff[i][j]->GetBinContent(hDiscreteXYDiff[i][j]->GetMaximumBin());
+			Double_t hmax = hDiscreteXYTriple[i][j]->GetBinContent(hDiscreteXYTriple[i][j]->GetMaximumBin());
 			hfit->GetYaxis()->SetRangeUser(0, hmax * 1.1);
 			hfit->GetYaxis()->SetNdivisions(504, kTRUE);
 
@@ -1100,8 +1100,8 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 			}
 		}
 
-		cSliceXYDiff->cd(1+i)/*->Draw()*/;
-		hSliceXYDiff[i]->Draw(h1opts);
+		cSliceXYTriple->cd(1+i)/*->Draw()*/;
+		hSliceXYTriple[i]->Draw(h1opts);
 	}
 
 	cDiscreteXYSig->cd();
@@ -1119,7 +1119,7 @@ void DiffAnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 	printf("Raw/fine binning counts:  %f / %f  for %s\n", hDiscreteXY->Integral(), hDiscreteXYSig->Integral(), ctx.histPrefix.Data());
 }
 
-bool DiffAnalysisFactory::fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries)
+bool TripleAnalysisFactory::fitTripleHist(TH1 * hist, HistFitParams & hfp, double min_entries)
 {
 	Int_t bin_l = hist->FindBin(hfp.fun_l);
 	Int_t bin_u = hist->FindBin(hfp.fun_u);

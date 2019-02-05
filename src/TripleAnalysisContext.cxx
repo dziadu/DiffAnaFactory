@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "DiffAnalysisContext.h"
+#include "TripleAnalysisContext.h"
 #include <json/json.h>
 
 
@@ -102,16 +102,16 @@ std::string AxisCfg::format_unit(const std::string & unit)
 	return funit;
 }
 
-void DiffAnalysisContext::format_V_axis()
+void TripleAnalysisContext::format_z_axis()
 {
 	TString hunit = TString::Format("1/%s%s", x.unit.Data(), y.unit.Data());
 	TString htitle = TString::Format("d^{2}%s/d%sd%s", diff_var_name.Data(), x.label.Data(), y.label.Data());
 
-	V.label = htitle;
-	V.unit = hunit;
+	z.label = htitle;
+	z.unit = hunit;
 }
 
-DiffAnalysisContext::DiffAnalysisContext() : TNamed(), json_found(false)
+TripleAnalysisContext::TripleAnalysisContext() : TNamed(), json_found(false)
 {
 	// config
 	TString histPrefix = "Dummy";	// prefix for histograms	
@@ -127,13 +127,13 @@ DiffAnalysisContext::DiffAnalysisContext() : TNamed(), json_found(false)
 	// variable used for cuts when cutCut==kTRUE
 }
 
-DiffAnalysisContext::DiffAnalysisContext(const DiffAnalysisContext & ctx) : TNamed()
+TripleAnalysisContext::TripleAnalysisContext(const TripleAnalysisContext & ctx) : TNamed()
 {
 	*this = ctx;
 	histPrefix = ctx.histPrefix;
 }
 
-void DiffAnalysisContext::update() const
+void TripleAnalysisContext::update() const
 {
 	x.delta = ((x.max - x.min)/x.bins);
 	y.delta = ((y.max - y.min)/y.bins);
@@ -144,12 +144,12 @@ void DiffAnalysisContext::update() const
 	ctxName = histPrefix + "Ctx";
 }
 
-bool DiffAnalysisContext::validate() const
+bool TripleAnalysisContext::validate() const
 {
 	if (!x.var and !y.var and !var_weight)
 		return false;
 
-	if (useCuts() and !V.var)
+	if (useCuts() and !z.var)
 		return false;
 
 	update();
@@ -157,7 +157,7 @@ bool DiffAnalysisContext::validate() const
 	return true;
 }
 
-DiffAnalysisContext::~DiffAnalysisContext()
+TripleAnalysisContext::~TripleAnalysisContext()
 {}
 
 bool jsonReadTStringKey(const Json::Value & jsondata, const char * key, TString & target)
@@ -215,7 +215,7 @@ bool jsonReadDoubleKey(const Json::Value & jsondata, const char * key, double & 
 	return false;
 }
 
-bool DiffAnalysisContext::configureFromJson(const char * name)
+bool TripleAnalysisContext::configureFromJson(const char * name)
 {
 	std::ifstream ifs(json_fn.Data());
 	if (!ifs.is_open())
@@ -244,8 +244,8 @@ bool DiffAnalysisContext::configureFromJson(const char * name)
 	cfg = ana[name];
 
 	const size_t axis_num = 5;
-	const char * axis_labels[axis_num] = { "x", "y", "V", "cx", "cy" };
-	AxisCfg * axis_ptrs[axis_num] = { &x, &y, &V, &cx, &cy };
+	const char * axis_labels[axis_num] = { "x", "y", "z", "cx", "cy" };
+	AxisCfg * axis_ptrs[axis_num] = { &x, &y, &z, &cx, &cy };
 
 	for (uint i = 0; i < axis_num; ++i)
 	{
@@ -267,7 +267,7 @@ bool DiffAnalysisContext::configureFromJson(const char * name)
 	return true;
 }
 
-bool DiffAnalysisContext::configureToJson(const char * name, const char * jsonfile)
+bool TripleAnalysisContext::configureToJson(const char * name, const char * jsonfile)
 {
 	(void)jsonfile;
 
@@ -294,10 +294,10 @@ bool DiffAnalysisContext::configureToJson(const char * name, const char * jsonfi
 	axis["bins"]	= 100;
 	axis["min"]		= 0;
 	axis["max"]		= 100;
-	axis["label"]	= "Vlabel";
+	axis["label"]	= "zlabel";
 	axis["var"]		= "none";
 
-	cfg["V"] = axis;
+	cfg["z"] = axis;
 
 	ana[name] = cfg;
 
@@ -312,7 +312,7 @@ bool DiffAnalysisContext::configureToJson(const char * name, const char * jsonfi
 	return true;
 }
 
-bool DiffAnalysisContext::findJsonFile(const char * initial_path, const char * filename, int search_depth)
+bool TripleAnalysisContext::findJsonFile(const char * initial_path, const char * filename, int search_depth)
 {
 	const size_t max_len = 1024*16;
 	int depth_counter = 0;
@@ -360,7 +360,7 @@ bool DiffAnalysisContext::findJsonFile(const char * initial_path, const char * f
 	return json_found;
 }
 
-DiffAnalysisContext & DiffAnalysisContext::operator=(const DiffAnalysisContext & ctx)
+TripleAnalysisContext & TripleAnalysisContext::operator=(const TripleAnalysisContext & ctx)
 {
 // 	histPrefix = ctx.histPrefix;
 	ctxName = ctx.ctxName;
@@ -369,7 +369,7 @@ DiffAnalysisContext & DiffAnalysisContext::operator=(const DiffAnalysisContext &
 	cx = ctx.cx;
 	y = ctx.y;
 	cy = ctx.cy;
-	V = ctx.V;
+	z = ctx.z;
 
 	cutMin = ctx.cutMin;
 	cutMax = ctx.cutMax;
@@ -381,42 +381,42 @@ DiffAnalysisContext & DiffAnalysisContext::operator=(const DiffAnalysisContext &
 	return *this;
 }
 
-bool DiffAnalysisContext::operator==(const DiffAnalysisContext & ctx)
+bool TripleAnalysisContext::operator==(const TripleAnalysisContext & ctx)
 {
 	if (this->x != ctx.x)
 	{
-		fprintf(stderr, "Different number of x bins: %d vs %d\n", this->x.bins, ctx.x.bins);
+		fprintf(stderr, "Tripleerent number of x bins: %d vs %d\n", this->x.bins, ctx.x.bins);
 		return false;
 	}
 
 	if (this->cx != ctx.cx)
 	{
-		fprintf(stderr, "Different number of cx bins: %d vs %d\n", this->cx.bins, ctx.cx.bins);
+		fprintf(stderr, "Tripleerent number of cx bins: %d vs %d\n", this->cx.bins, ctx.cx.bins);
 		return false;
 	}
 
 	if (this->y != ctx.y)
 	{
-		fprintf(stderr, "Different number of y bins: %d vs %d\n", this->y.bins, ctx.y.bins);
+		fprintf(stderr, "Tripleerent number of y bins: %d vs %d\n", this->y.bins, ctx.y.bins);
 		return false;
 	}
 
 	if (this->cy != ctx.cy)
 	{
-		fprintf(stderr, "Different number of cy bins: %d vs %d\n", this->cy.bins, ctx.cy.bins);
+		fprintf(stderr, "Tripleerent number of cy bins: %d vs %d\n", this->cy.bins, ctx.cy.bins);
 		return false;
 	}
 
-	if (this->V != ctx.V)
+	if (this->z != ctx.z)
 	{
-		fprintf(stderr, "Different number of z bins: %d vs %d\n", this->V.bins, ctx.V.bins);
+		fprintf(stderr, "Tripleerent number of z bins: %d vs %d\n", this->z.bins, ctx.z.bins);
 		return false;
 	}
 
 	return true;
 }
 
-bool DiffAnalysisContext::operator!=(const DiffAnalysisContext & ctx)
+bool TripleAnalysisContext::operator!=(const TripleAnalysisContext & ctx)
 {
 	return !operator==(ctx);
 }

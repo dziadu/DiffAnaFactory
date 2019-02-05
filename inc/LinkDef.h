@@ -6,6 +6,8 @@
 
 #pragma link C++ class DiffAnalysisContext+;
 #pragma link C++ class DiffAnalysisFactory+;
+#pragma link C++ class TripleAnalysisContext+;
+#pragma link C++ class TripleAnalysisFactory+;
 #pragma link C++ class AxisCfg+;
 
 #endif
