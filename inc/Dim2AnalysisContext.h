@@ -17,8 +17,8 @@
 */
 
 
-#ifndef DIFFANALYSISCONTEXT_H
-#define DIFFANALYSISCONTEXT_H
+#ifndef DIM2ANALYSISCONTEXT_H
+#define DIM2ANALYSISCONTEXT_H
 
 #include <TNamed.h>
 #include <TString.h>
@@ -56,7 +56,7 @@ public:
 	ClassDef(AxisCfg, 2);
 };
 
-class DiffAnalysisContext : public TNamed
+class Dim2AnalysisContext : public TNamed
 {
 public:
 	// config
@@ -65,31 +65,28 @@ public:
 	TString diff_var_name;
 
 	AxisCfg x, y, V;     // x, y are two dimensions, V is a final Variable axis
-	AxisCfg cx, cy;
 
 	// cut range when useCut==kTRUE
-	Double_t cutMin;			// Cut: min
-	Double_t cutMax;			// Cut: max
+// 	Double_t cutMin;			// Cut: min
+// 	Double_t cutMax;			// Cut: max
 
 	// variables to use for diff analysis
 	Float_t * var_weight;	//!
 	// variable used for cuts when cutCut==kTRUE
 
-	DiffAnalysisContext();
-	DiffAnalysisContext(const DiffAnalysisContext & ctx);
-	virtual ~DiffAnalysisContext();
+	Dim2AnalysisContext();
+	Dim2AnalysisContext(const Dim2AnalysisContext & ctx);
+	virtual ~Dim2AnalysisContext();
 
-	virtual DiffAnalysisContext & operator=(const DiffAnalysisContext & ctx);
-	virtual bool operator==(const DiffAnalysisContext & ctx);
-	virtual bool operator!=(const DiffAnalysisContext & ctx);
+	virtual Dim2AnalysisContext & operator=(const Dim2AnalysisContext & ctx);
+	virtual bool operator==(const Dim2AnalysisContext & ctx);
+	virtual bool operator!=(const Dim2AnalysisContext & ctx);
 
 	virtual void update() const;
 	virtual bool validate() const;
 
 	// flags
-	virtual bool useCuts() const { return (cutMin or cutMax); }
-	virtual bool useClip() const { return cx.bins; }
-	virtual bool useDiff() const { return (V.bins and useClip()); }
+// 	virtual bool useCuts() const { return (cutMin or cutMax); }
 
 	virtual void format_V_axis();
 
@@ -104,7 +101,7 @@ public:
 private:
 	TString json_fn;
 	bool json_found;
-	ClassDef(DiffAnalysisContext, 1);
+	ClassDef(Dim2AnalysisContext, 2);
 };
 
-#endif // DIFFANALYSISCONTEXT_H
+#endif // DIM2ANALYSISCONTEXT_H

@@ -17,8 +17,8 @@
 */
 
 
-#ifndef DIFFANALYSISFACTORY_H
-#define DIFFANALYSISFACTORY_H
+#ifndef DIM3ANALYSISFACTORY_H
+#define DIM3ANALYSISFACTORY_H
 
 #include "TObject.h"
 #include "TString.h"
@@ -27,7 +27,8 @@
 #include "TDirectory.h"
 #include "RootTools.h"
 
-#include "DiffAnalysisContext.h"
+#include "Dim3AnalysisContext.h"
+#include "ExtraDimensionMapper.h"
 #include "SmartFactory.h"
 #include "FitterFactory.h"
 
@@ -48,18 +49,18 @@ class TVirtualPad;
 #include "TH2DA.h"
 #endif
 
-class DiffAnalysisFactory;
+class Dim3AnalysisFactory;
 
-typedef void (FitCallback)(DiffAnalysisFactory * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
+typedef void (FitCallbackDim3)(Dim3AnalysisFactory * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
 
-class DiffAnalysisFactory : public TObject, public SmartFactory {
+class Dim3AnalysisFactory : public TObject, public SmartFactory {
 public:
-	DiffAnalysisFactory();
-	DiffAnalysisFactory(const DiffAnalysisContext & ctx);
-	DiffAnalysisFactory(const DiffAnalysisContext * ctx);
-	virtual ~DiffAnalysisFactory();
+	Dim3AnalysisFactory();
+	Dim3AnalysisFactory(const Dim3AnalysisContext & ctx);
+	Dim3AnalysisFactory(const Dim3AnalysisContext * ctx);
+	virtual ~Dim3AnalysisFactory();
 
-	DiffAnalysisFactory & operator=(const DiffAnalysisFactory & fa);
+	Dim3AnalysisFactory & operator=(const Dim3AnalysisFactory & fa);
 
 	enum Stages { RECO, FIT, SIG, ALL };
 	void Init(Stages s = ALL);
@@ -94,54 +95,47 @@ public:
 
 	TH2 ** getSigsArray(size_t & size);
 
-	inline void setFitCallback(FitCallback * cb) { fitCallback = cb; }
+	inline void setFitCallback(FitCallbackDim3 * cb) { fitCallback = cb; }
 
 private:
 	void prepare();
 	bool copyHistogram(TH1 * src, TH1 * dst);
 
 public:
-	DiffAnalysisContext ctx;		//||
-
-	TH2D * hSignalXY;				//->	// X-Y spectrum
-	TCanvas * cSignalXY;			//->
-
-	TH2D * hSignalWithCutsXY;		//->	// X-Y spectrum with cuts
-	TCanvas * cSignalWithCutsXY;	//->
-
-	TH2D * hDiscreteXY;				//->	// discretre X-Y
-	TCanvas * cDiscreteXY;			//->
-	TCanvas * cDiscreteXYFull;		//->	// discrete X-Y on top of regular
+	Dim3AnalysisContext ctx;		//||
 
 #ifdef HAVE_HISTASYMMERRORS
-	TH2DA * hDiscreteXYSig;
+	TH2DA * hSignalXY;
 #else
-	TH2D * hDiscreteXYSig;			//->	// discrete X-Y, signal extracted
+	TH2D * hSignalXY;			//->	// discrete X-Y, signal extracted
 #endif
-	TCanvas * cDiscreteXYSig;		//->
-	TCanvas * cDiscreteXYSigFull;	//->
+// 	TCanvas * cSignalXY;			//->
+// 
+// 	TCanvas * cDiscreteXYSig;		//->
+// 	TCanvas * cDiscreteXYSigFull;	//->
 
-	TH1D *** hDiscreteXYDiff;		//[10]	// 3rd var distribution in diff bin
-	TCanvas ** cDiscreteXYDiff;		//!
+  ExtraDimensionMapper * diffs;
+// 	TH1D *** hDiscreteXYDiff;		//[10]	// 3rd var distribution in diff bin
+	TCanvas ** c_Diffs;		//!
 
-	TH1D ** hSliceXYFitQA;			//[10]	// QA values
-	TCanvas * cSliceXYFitQA;		//!
-
-	TH1D ** hSliceXYChi2NDF;		//[10]	// Chi2/NDF values
-	TCanvas * cSliceXYChi2NDF;		//!
-	TCanvas * cSliceXYprojX;		//!
-
-	TH1D ** hSliceXYDiff;			//!		// slice of x-var in discrete X-Y
-	TCanvas * cSliceXYDiff;			//!
-
-	TObjArray * objectsDiffs;		//!
-	TObjArray * objectsSlices;		//!
+// 	TH1D ** hSliceXYFitQA;			//[10]	// QA values
+// 	TCanvas * cSliceXYFitQA;		//!
+// 
+// 	TH1D ** hSliceXYChi2NDF;		//[10]	// Chi2/NDF values
+// 	TCanvas * cSliceXYChi2NDF;		//!
+// 	TCanvas * cSliceXYprojX;		//!
+// 
+// 	TH1D ** hSliceXYDiff;			//!		// slice of x-var in discrete X-Y
+// 	TCanvas * cSliceXYDiff;			//!
+// 
+// 	TObjArray * objectsDiffs;		//!
+// 	TObjArray * objectsSlices;		//!
 	TObjArray * objectsFits;		//!
 
-	ClassDef(DiffAnalysisFactory, 1);
+	ClassDef(Dim3AnalysisFactory, 1);
 
 private:
-	FitCallback * fitCallback;
+	FitCallbackDim3 * fitCallback;
 };
 
-#endif // DIFFANALYSISFACTORY_H
+#endif // DIM3ANALYSISFACTORY_H

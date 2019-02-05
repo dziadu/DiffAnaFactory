@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(DiffAnaFactory C CXX)
+project(MultiDimAnalysisFactory CXX)
 string(TOUPPER "${PROJECT_NAME}" CAPS_PROJECT_NAME)
 
 ##### the version number
@@ -71,7 +71,7 @@ link_directories(
 )
 
 ##### make targets
-ROOT_STANDARD_LIBRARY_PACKAGE(DiffAnaFactory
+ROOT_STANDARD_LIBRARY_PACKAGE(MultiDimAnalysisFactory
 	DEPENDENCIES
 		${jsoncpp_dep} ${ROOT_LIBRARIES} ${ROOTTOOLS_LIBRARIES}
 		${HISTASYMMERRORS_LIBRARIES}
@@ -79,7 +79,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(DiffAnaFactory
 )
 
 # add_subdirectory(examples)
-# add_subdirectory(tests)
+add_subdirectory(tests)
 
 # Export the package for use from the build-tree
 # (this registers the build-tree with a global CMake-registry)
@@ -100,11 +100,11 @@ install(FILES
 	DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 
 # Add all targets to the build-tree export set
-export(TARGETS DiffAnaFactory
+export(TARGETS MultiDimAnalysisFactory
 	FILE ${CMAKE_PROJECT_NAME}Targets.cmake)
 
 # Install the export set for use with the install-tree
-install(TARGETS DiffAnaFactory
+install(TARGETS MultiDimAnalysisFactory
 	EXPORT ${CMAKE_PROJECT_NAME}Targets
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	COMPONENT shlib COMPONENT dev)

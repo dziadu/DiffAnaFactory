@@ -16,7 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "DiffAnalysisContext.h"
+
+#include "Dim3AnalysisContext.h"
 #include <json/json.h>
 
 
@@ -27,91 +28,16 @@
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
-// AxisCfg::AxisCfg() : label(), unit(), bins(0), min(0), max(0), bins_arr(nullptr), delta(0), cdelta(0), var(nullptr)
-// {
-// }
-
-AxisCfg::AxisCfg() : bins_arr(nullptr)
-{
-}
-
-AxisCfg::AxisCfg(const AxisCfg & a)
-{
-	*this = a;
-}
-
-AxisCfg & AxisCfg::operator=(const AxisCfg & a)
-{
-	label = a.label;
-	unit = a.unit;
-
-	bins = a.bins;
-	min = a.min;
-	max = a.max;
-	bins_arr = a.bins_arr;
-	delta = a.delta;
-	cdelta = a.cdelta;
-	var = a.var;
-
-	return *this;
-}
-
-bool AxisCfg::operator==(const AxisCfg & ctx)
-{
-	return (this->bins == ctx.bins);
-}
-
-bool AxisCfg::operator!=(const AxisCfg & ctx)
-{
-	return (this->bins != ctx.bins);
-}
-
-std::string AxisCfg::format_unit() const
-{
-	return format_unit(unit);
-}
-
-std::string AxisCfg::format_unit(const char * unit)
-{
-	std::string funit;
-	if (strlen(unit))
-	{
-		funit = " [";
-		funit += unit;
-		funit += "]";
-	}
-	else
-		funit = "";
-
-	return funit;
-}
-
-std::string AxisCfg::format_unit(const TString & unit)
-{
-	return format_unit(unit.Data());
-}
-
-std::string AxisCfg::format_unit(const std::string & unit)
-{
-	std::string funit;
-	if (unit.size())
-		funit = " [" + unit + "]";
-	else
-		funit = "";
-
-	return funit;
-}
-
-void DiffAnalysisContext::format_V_axis()
+void Dim3AnalysisContext::format_z_axis()
 {
 	TString hunit = TString::Format("1/%s%s", x.unit.Data(), y.unit.Data());
 	TString htitle = TString::Format("d^{2}%s/d%sd%s", diff_var_name.Data(), x.label.Data(), y.label.Data());
 
-	V.label = htitle;
-	V.unit = hunit;
+	z.label = htitle;
+	z.unit = hunit;
 }
 
-DiffAnalysisContext::DiffAnalysisContext() : TNamed(), json_found(false)
+Dim3AnalysisContext::Dim3AnalysisContext() : Dim2AnalysisContext(), json_found(false)
 {
 	// config
 	TString histPrefix = "Dummy";	// prefix for histograms	
@@ -120,102 +46,47 @@ DiffAnalysisContext::DiffAnalysisContext() : TNamed(), json_found(false)
 	// x and y binning for full range
 
 	// cut range when useCut==kTRUE
-	cutMin = cutMax = 0;
+// 	cutMin = cutMax = 0;
 
 	// variables to use for diff analysis
-	var_weight = 0;
+// 	var_weight = 0;
 	// variable used for cuts when cutCut==kTRUE
 }
 
-DiffAnalysisContext::DiffAnalysisContext(const DiffAnalysisContext & ctx) : TNamed()
+Dim3AnalysisContext::Dim3AnalysisContext(const Dim3AnalysisContext & ctx) : Dim2AnalysisContext()
 {
 	*this = ctx;
 	histPrefix = ctx.histPrefix;
 }
 
-void DiffAnalysisContext::update() const
+void Dim3AnalysisContext::update() const
 {
-	x.delta = ((x.max - x.min)/x.bins);
-	y.delta = ((y.max - y.min)/y.bins);
+	z.delta = ((z.max - z.min)/z.bins);
 
-	cx.delta = ((cx.max - cx.min)/cx.bins);
-	cy.delta = ((cy.max - cy.min)/cy.bins);
-
-	ctxName = histPrefix + "Ctx";
+  Dim2AnalysisContext::update();
 }
 
-bool DiffAnalysisContext::validate() const
+bool Dim3AnalysisContext::validate() const
 {
-	if (!x.var and !y.var and !var_weight)
+	if (!z.var)
 		return false;
 
-	if (useCuts() and !V.var)
-		return false;
-
-	update();
+  Dim2AnalysisContext::validate();
+// 	update();
 
 	return true;
 }
 
-DiffAnalysisContext::~DiffAnalysisContext()
+Dim3AnalysisContext::~Dim3AnalysisContext()
 {}
 
-bool jsonReadTStringKey(const Json::Value & jsondata, const char * key, TString & target)
-{
-	if (jsondata.isMember(key))
-	{
-		target = jsondata[key].asCString();
-		std::cout << "    + " << key << ": " << target.Data() << std::endl;
-		return true;
-	}
-	return false;
-}
+extern bool jsonReadTStringKey(const Json::Value & jsondata, const char * key, TString & target);
+extern bool jsonReadIntKey(const Json::Value & jsondata, const char * key, int & target);
+extern bool jsonReadUIntKey(const Json::Value & jsondata, const char * key, uint & target);
+extern bool jsonReadFloatKey(const Json::Value & jsondata, const char * key, float & target);
+extern bool jsonReadDoubleKey(const Json::Value & jsondata, const char * key, double & target);
 
-bool jsonReadIntKey(const Json::Value & jsondata, const char * key, int & target)
-{
-	if (jsondata.isMember(key))
-	{
-		target = jsondata[key].asInt();
-		std::cout << "    + " << key << ": " << target << std::endl;
-		return true;
-	}
-	return false;
-}
-
-bool jsonReadUIntKey(const Json::Value & jsondata, const char * key, uint & target)
-{
-	if (jsondata.isMember(key))
-	{
-		target = jsondata[key].asInt();
-		std::cout << "    + " << key << ": " << target << std::endl;
-		return true;
-	}
-	return false;
-}
-
-bool jsonReadFloatKey(const Json::Value & jsondata, const char * key, float & target)
-{
-	if (jsondata.isMember(key))
-	{
-		target = jsondata[key].asFloat();
-		std::cout << "    + " << key << ": " << target << std::endl;
-		return true;
-	}
-	return false;
-}
-
-bool jsonReadDoubleKey(const Json::Value & jsondata, const char * key, double & target)
-{
-	if (jsondata.isMember(key))
-	{
-		target = jsondata[key].asDouble();
-		std::cout << "    + " << key << ": " << target << std::endl;
-		return true;
-	}
-	return false;
-}
-
-bool DiffAnalysisContext::configureFromJson(const char * name)
+bool Dim3AnalysisContext::configureFromJson(const char * name)
 {
 	std::ifstream ifs(json_fn.Data());
 	if (!ifs.is_open())
@@ -243,9 +114,9 @@ bool DiffAnalysisContext::configureFromJson(const char * name)
 
 	cfg = ana[name];
 
-	const size_t axis_num = 5;
-	const char * axis_labels[axis_num] = { "x", "y", "V", "cx", "cy" };
-	AxisCfg * axis_ptrs[axis_num] = { &x, &y, &V, &cx, &cy };
+	const size_t axis_num = 4;
+	const char * axis_labels[axis_num] = { "x", "y", "z", "V" };
+	AxisCfg * axis_ptrs[axis_num] = { &x, &y, &z, &V};
 
 	for (uint i = 0; i < axis_num; ++i)
 	{
@@ -267,7 +138,7 @@ bool DiffAnalysisContext::configureFromJson(const char * name)
 	return true;
 }
 
-bool DiffAnalysisContext::configureToJson(const char * name, const char * jsonfile)
+bool Dim3AnalysisContext::configureToJson(const char * name, const char * jsonfile)
 {
 	(void)jsonfile;
 
@@ -294,10 +165,10 @@ bool DiffAnalysisContext::configureToJson(const char * name, const char * jsonfi
 	axis["bins"]	= 100;
 	axis["min"]		= 0;
 	axis["max"]		= 100;
-	axis["label"]	= "Vlabel";
+	axis["label"]	= "zlabel";
 	axis["var"]		= "none";
 
-	cfg["V"] = axis;
+	cfg["z"] = axis;
 
 	ana[name] = cfg;
 
@@ -312,7 +183,7 @@ bool DiffAnalysisContext::configureToJson(const char * name, const char * jsonfi
 	return true;
 }
 
-bool DiffAnalysisContext::findJsonFile(const char * initial_path, const char * filename, int search_depth)
+bool Dim3AnalysisContext::findJsonFile(const char * initial_path, const char * filename, int search_depth)
 {
 	const size_t max_len = 1024*16;
 	int depth_counter = 0;
@@ -360,19 +231,14 @@ bool DiffAnalysisContext::findJsonFile(const char * initial_path, const char * f
 	return json_found;
 }
 
-DiffAnalysisContext & DiffAnalysisContext::operator=(const DiffAnalysisContext & ctx)
+Dim3AnalysisContext & Dim3AnalysisContext::operator=(const Dim3AnalysisContext & ctx)
 {
 // 	histPrefix = ctx.histPrefix;
 	ctxName = ctx.ctxName;
 
 	x = ctx.x;
-	cx = ctx.cx;
 	y = ctx.y;
-	cy = ctx.cy;
-	V = ctx.V;
-
-	cutMin = ctx.cutMin;
-	cutMax = ctx.cutMax;
+	z = ctx.z;
 
 	var_weight = ctx.var_weight;
 
@@ -381,17 +247,11 @@ DiffAnalysisContext & DiffAnalysisContext::operator=(const DiffAnalysisContext &
 	return *this;
 }
 
-bool DiffAnalysisContext::operator==(const DiffAnalysisContext & ctx)
+bool Dim3AnalysisContext::operator==(const Dim3AnalysisContext & ctx)
 {
 	if (this->x != ctx.x)
 	{
 		fprintf(stderr, "Different number of x bins: %d vs %d\n", this->x.bins, ctx.x.bins);
-		return false;
-	}
-
-	if (this->cx != ctx.cx)
-	{
-		fprintf(stderr, "Different number of cx bins: %d vs %d\n", this->cx.bins, ctx.cx.bins);
 		return false;
 	}
 
@@ -401,22 +261,16 @@ bool DiffAnalysisContext::operator==(const DiffAnalysisContext & ctx)
 		return false;
 	}
 
-	if (this->cy != ctx.cy)
+	if (this->z != ctx.z)
 	{
-		fprintf(stderr, "Different number of cy bins: %d vs %d\n", this->cy.bins, ctx.cy.bins);
-		return false;
-	}
-
-	if (this->V != ctx.V)
-	{
-		fprintf(stderr, "Different number of z bins: %d vs %d\n", this->V.bins, ctx.V.bins);
+		fprintf(stderr, "Different number of z bins: %d vs %d\n", this->z.bins, ctx.z.bins);
 		return false;
 	}
 
 	return true;
 }
 
-bool DiffAnalysisContext::operator!=(const DiffAnalysisContext & ctx)
+bool Dim3AnalysisContext::operator!=(const Dim3AnalysisContext & ctx)
 {
 	return !operator==(ctx);
 }

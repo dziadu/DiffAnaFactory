@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "TripleAnalysisContext.h"
+#include "Dim2AnalysisContext.h"
 #include <json/json.h>
 
 
@@ -102,16 +102,16 @@ std::string AxisCfg::format_unit(const std::string & unit)
 	return funit;
 }
 
-void TripleAnalysisContext::format_z_axis()
+void Dim2AnalysisContext::format_V_axis()
 {
 	TString hunit = TString::Format("1/%s%s", x.unit.Data(), y.unit.Data());
 	TString htitle = TString::Format("d^{2}%s/d%sd%s", diff_var_name.Data(), x.label.Data(), y.label.Data());
 
-	z.label = htitle;
-	z.unit = hunit;
+	V.label = htitle;
+	V.unit = hunit;
 }
 
-TripleAnalysisContext::TripleAnalysisContext() : TNamed(), json_found(false)
+Dim2AnalysisContext::Dim2AnalysisContext() : TNamed(), json_found(false)
 {
 	// config
 	TString histPrefix = "Dummy";	// prefix for histograms	
@@ -120,44 +120,41 @@ TripleAnalysisContext::TripleAnalysisContext() : TNamed(), json_found(false)
 	// x and y binning for full range
 
 	// cut range when useCut==kTRUE
-	cutMin = cutMax = 0;
+// 	cutMin = cutMax = 0;
 
 	// variables to use for diff analysis
 	var_weight = 0;
 	// variable used for cuts when cutCut==kTRUE
 }
 
-TripleAnalysisContext::TripleAnalysisContext(const TripleAnalysisContext & ctx) : TNamed()
+Dim2AnalysisContext::Dim2AnalysisContext(const Dim2AnalysisContext & ctx) : TNamed()
 {
 	*this = ctx;
 	histPrefix = ctx.histPrefix;
 }
 
-void TripleAnalysisContext::update() const
+void Dim2AnalysisContext::update() const
 {
 	x.delta = ((x.max - x.min)/x.bins);
 	y.delta = ((y.max - y.min)/y.bins);
 
-	cx.delta = ((cx.max - cx.min)/cx.bins);
-	cy.delta = ((cy.max - cy.min)/cy.bins);
-
 	ctxName = histPrefix + "Ctx";
 }
 
-bool TripleAnalysisContext::validate() const
+bool Dim2AnalysisContext::validate() const
 {
 	if (!x.var and !y.var and !var_weight)
 		return false;
 
-	if (useCuts() and !z.var)
-		return false;
+// 	if (useCuts() and !V.var)
+// 		return false;
 
 	update();
 
 	return true;
 }
 
-TripleAnalysisContext::~TripleAnalysisContext()
+Dim2AnalysisContext::~Dim2AnalysisContext()
 {}
 
 bool jsonReadTStringKey(const Json::Value & jsondata, const char * key, TString & target)
@@ -215,7 +212,7 @@ bool jsonReadDoubleKey(const Json::Value & jsondata, const char * key, double & 
 	return false;
 }
 
-bool TripleAnalysisContext::configureFromJson(const char * name)
+bool Dim2AnalysisContext::configureFromJson(const char * name)
 {
 	std::ifstream ifs(json_fn.Data());
 	if (!ifs.is_open())
@@ -243,9 +240,9 @@ bool TripleAnalysisContext::configureFromJson(const char * name)
 
 	cfg = ana[name];
 
-	const size_t axis_num = 5;
-	const char * axis_labels[axis_num] = { "x", "y", "z", "cx", "cy" };
-	AxisCfg * axis_ptrs[axis_num] = { &x, &y, &z, &cx, &cy };
+	const size_t axis_num = 3;
+	const char * axis_labels[axis_num] = { "x", "y", "V" };
+	AxisCfg * axis_ptrs[axis_num] = { &x, &y, &V };
 
 	for (uint i = 0; i < axis_num; ++i)
 	{
@@ -267,7 +264,7 @@ bool TripleAnalysisContext::configureFromJson(const char * name)
 	return true;
 }
 
-bool TripleAnalysisContext::configureToJson(const char * name, const char * jsonfile)
+bool Dim2AnalysisContext::configureToJson(const char * name, const char * jsonfile)
 {
 	(void)jsonfile;
 
@@ -294,10 +291,10 @@ bool TripleAnalysisContext::configureToJson(const char * name, const char * json
 	axis["bins"]	= 100;
 	axis["min"]		= 0;
 	axis["max"]		= 100;
-	axis["label"]	= "zlabel";
+	axis["label"]	= "Vlabel";
 	axis["var"]		= "none";
 
-	cfg["z"] = axis;
+	cfg["V"] = axis;
 
 	ana[name] = cfg;
 
@@ -312,7 +309,7 @@ bool TripleAnalysisContext::configureToJson(const char * name, const char * json
 	return true;
 }
 
-bool TripleAnalysisContext::findJsonFile(const char * initial_path, const char * filename, int search_depth)
+bool Dim2AnalysisContext::findJsonFile(const char * initial_path, const char * filename, int search_depth)
 {
 	const size_t max_len = 1024*16;
 	int depth_counter = 0;
@@ -360,19 +357,17 @@ bool TripleAnalysisContext::findJsonFile(const char * initial_path, const char *
 	return json_found;
 }
 
-TripleAnalysisContext & TripleAnalysisContext::operator=(const TripleAnalysisContext & ctx)
+Dim2AnalysisContext & Dim2AnalysisContext::operator=(const Dim2AnalysisContext & ctx)
 {
 // 	histPrefix = ctx.histPrefix;
 	ctxName = ctx.ctxName;
 
 	x = ctx.x;
-	cx = ctx.cx;
 	y = ctx.y;
-	cy = ctx.cy;
-	z = ctx.z;
+	V = ctx.V;
 
-	cutMin = ctx.cutMin;
-	cutMax = ctx.cutMax;
+// 	cutMin = ctx.cutMin;
+// 	cutMax = ctx.cutMax;
 
 	var_weight = ctx.var_weight;
 
@@ -381,42 +376,30 @@ TripleAnalysisContext & TripleAnalysisContext::operator=(const TripleAnalysisCon
 	return *this;
 }
 
-bool TripleAnalysisContext::operator==(const TripleAnalysisContext & ctx)
+bool Dim2AnalysisContext::operator==(const Dim2AnalysisContext & ctx)
 {
 	if (this->x != ctx.x)
 	{
-		fprintf(stderr, "Tripleerent number of x bins: %d vs %d\n", this->x.bins, ctx.x.bins);
-		return false;
-	}
-
-	if (this->cx != ctx.cx)
-	{
-		fprintf(stderr, "Tripleerent number of cx bins: %d vs %d\n", this->cx.bins, ctx.cx.bins);
+		fprintf(stderr, "Different number of x bins: %d vs %d\n", this->x.bins, ctx.x.bins);
 		return false;
 	}
 
 	if (this->y != ctx.y)
 	{
-		fprintf(stderr, "Tripleerent number of y bins: %d vs %d\n", this->y.bins, ctx.y.bins);
+		fprintf(stderr, "Different number of y bins: %d vs %d\n", this->y.bins, ctx.y.bins);
 		return false;
 	}
 
-	if (this->cy != ctx.cy)
+	if (this->V != ctx.V)
 	{
-		fprintf(stderr, "Tripleerent number of cy bins: %d vs %d\n", this->cy.bins, ctx.cy.bins);
-		return false;
-	}
-
-	if (this->z != ctx.z)
-	{
-		fprintf(stderr, "Tripleerent number of z bins: %d vs %d\n", this->z.bins, ctx.z.bins);
+		fprintf(stderr, "Different number of z bins: %d vs %d\n", this->V.bins, ctx.V.bins);
 		return false;
 	}
 
 	return true;
 }
 
-bool TripleAnalysisContext::operator!=(const TripleAnalysisContext & ctx)
+bool Dim2AnalysisContext::operator!=(const Dim2AnalysisContext & ctx)
 {
 	return !operator==(ctx);
 }

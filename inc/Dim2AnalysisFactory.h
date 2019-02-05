@@ -17,8 +17,8 @@
 */
 
 
-#ifndef TRIPLEANALYSISFACTORY_H
-#define TRIPLEANALYSISFACTORY_H
+#ifndef DIM2ANALYSISFACTORY_H
+#define DIM2ANALYSISFACTORY_H
 
 #include "TObject.h"
 #include "TString.h"
@@ -27,8 +27,8 @@
 #include "TDirectory.h"
 #include "RootTools.h"
 
-// #include "DiffAnalysisFactory.h"
-#include "TripleAnalysisContext.h"
+#include "Dim2AnalysisContext.h"
+#include "ExtraDimensionMapper.h"
 #include "SmartFactory.h"
 #include "FitterFactory.h"
 
@@ -49,22 +49,22 @@ class TVirtualPad;
 #include "TH2DA.h"
 #endif
 
-class TripleAnalysisFactory;
+class Dim2AnalysisFactory;
 
-typedef void (FitCallbackTriple)(TripleAnalysisFactory * fac, int fit_res, TH1 * h, int x_pos, int y_pos, int z_pos);
+typedef void (FitCallbackDim2)(Dim2AnalysisFactory * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
 
-class TripleAnalysisFactory : public TObject, public SmartFactory {
+class Dim2AnalysisFactory : public TObject, public SmartFactory {
 public:
-	TripleAnalysisFactory();
-	TripleAnalysisFactory(const TripleAnalysisContext & ctx);
-	TripleAnalysisFactory(const TripleAnalysisContext * ctx);
-	virtual ~TripleAnalysisFactory();
+	Dim2AnalysisFactory();
+	Dim2AnalysisFactory(const Dim2AnalysisContext & ctx);
+	Dim2AnalysisFactory(const Dim2AnalysisContext * ctx);
+	virtual ~Dim2AnalysisFactory();
 
-	TripleAnalysisFactory & operator=(const TripleAnalysisFactory & fa);
+	Dim2AnalysisFactory & operator=(const Dim2AnalysisFactory & fa);
 
 	enum Stages { RECO, FIT, SIG, ALL };
 	void Init(Stages s = ALL);
-	void GetTriples(bool with_canvases = true);
+	void GetDiffs(bool with_canvases = true);
 
 	void Proceed();
 	void Finalize(Stages s = ALL, bool flag_details = false);
@@ -76,15 +76,15 @@ public:
 
 // 	void niceHists(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 	void niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format);
-	void niceTriples(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
+	void niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 	void niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 
-	void fitTripleHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
-	bool fitTripleHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
+	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
+	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
 
 	const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
 
-	void prepareTripleCanvas();
+	void prepareDiffCanvas();
 	void prepareSigCanvas(bool flag_details = false);
 
 	void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
@@ -95,54 +95,47 @@ public:
 
 	TH2 ** getSigsArray(size_t & size);
 
-	inline void setFitCallback(FitCallbackTriple * cb) { fitCallback = cb; }
+	inline void setFitCallback(FitCallbackDim2 * cb) { fitCallback = cb; }
 
 private:
 	void prepare();
 	bool copyHistogram(TH1 * src, TH1 * dst);
 
 public:
-	TripleAnalysisContext ctx;		//||
-
-	TH2D * hSignalXY;				//->	// X-Y spectrum
-	TCanvas * cSignalXY;			//->
-
-	TH2D * hSignalWithCutsXY;		//->	// X-Y spectrum with cuts
-	TCanvas * cSignalWithCutsXY;	//->
-
-	TH2D * hDiscreteXY;				//->	// discretre X-Y
-	TCanvas * cDiscreteXY;			//->
-	TCanvas * cDiscreteXYFull;		//->	// discrete X-Y on top of regular
+	Dim2AnalysisContext ctx;		//||
 
 #ifdef HAVE_HISTASYMMERRORS
-	TH2DA * hDiscreteXYSig;
+	TH2DA * hSignalXY;
 #else
-	TH2D * hDiscreteXYSig;			//->	// discrete X-Y, signal extracted
+	TH2D * hSignalXY;			//->	// discrete X-Y, signal extracted
 #endif
-	TCanvas * cDiscreteXYSig;		//->
-	TCanvas * cDiscreteXYSigFull;	//->
+// 	TCanvas * cSignalXY;			//->
+// 
+// 	TCanvas * cDiscreteXYSig;		//->
+// 	TCanvas * cDiscreteXYSigFull;	//->
 
-	TH1D *** hDiscreteXYTriple;		//[10]	// 3rd var distribution in diff bin
-	TCanvas ** cDiscreteXYTriple;		//!
+  ExtraDimensionMapper * diffs;
+// 	TH1D *** hDiscreteXYDiff;		//[10]	// 3rd var distribution in diff bin
+	TCanvas ** c_Diffs;		//!
 
-	TH1D ** hSliceXYFitQA;			//[10]	// QA values
-	TCanvas * cSliceXYFitQA;		//!
-
-	TH1D ** hSliceXYChi2NDF;		//[10]	// Chi2/NDF values
-	TCanvas * cSliceXYChi2NDF;		//!
-	TCanvas * cSliceXYprojX;		//!
-
-	TH1D ** hSliceXYTriple;			//!		// slice of x-var in discrete X-Y
-	TCanvas * cSliceXYTriple;			//!
-
-	TObjArray * objectsTriples;		//!
-	TObjArray * objectsSlices;		//!
+// 	TH1D ** hSliceXYFitQA;			//[10]	// QA values
+// 	TCanvas * cSliceXYFitQA;		//!
+// 
+// 	TH1D ** hSliceXYChi2NDF;		//[10]	// Chi2/NDF values
+// 	TCanvas * cSliceXYChi2NDF;		//!
+// 	TCanvas * cSliceXYprojX;		//!
+// 
+// 	TH1D ** hSliceXYDiff;			//!		// slice of x-var in discrete X-Y
+// 	TCanvas * cSliceXYDiff;			//!
+// 
+// 	TObjArray * objectsDiffs;		//!
+// 	TObjArray * objectsSlices;		//!
 	TObjArray * objectsFits;		//!
 
-	ClassDef(TripleAnalysisFactory, 1);
+	ClassDef(Dim2AnalysisFactory, 1);
 
 private:
-	FitCallbackTriple * fitCallback;
+	FitCallbackDim2 * fitCallback;
 };
 
-#endif // TRIPLEANALYSISFACTORY_H
+#endif // DIM2ANALYSISFACTORY_H
