@@ -140,13 +140,13 @@ public:
 // 	TObjArray * objectsSlices;		//!
 	TObjArray * objectsFits;		//!
 
-	ClassDef(Dim2AnalysisFactory, 1);
-
 protected:
   Dimensions dim_version;
 
 private:
 	FitCallback * fitCallback;
+
+	ClassDef(Dim2AnalysisFactory, 1);
 };
 
 #endif // DIM2ANALYSISFACTORY_H

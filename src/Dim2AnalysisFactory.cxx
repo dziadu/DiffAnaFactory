@@ -169,11 +169,12 @@ void Dim2AnalysisFactory::prepare(Dimensions dim)
 
 static TString format_hist_axes(const MultiDimAnalysisContext & ctx)
 {
-	return TString::Format(";%s%s;%s%s",
-                         ctx.x.label.Data(), ctx.x.format_unit().Data(),
-                         ctx.y.label.Data(), ctx.y.format_unit().Data());
-}
+	TString htitle = TString::Format(";%s%s;%s%s",
+									 ctx.x.label.Data(), ctx.x.format_unit().Data(),
+									 ctx.y.label.Data(), ctx.y.format_unit().Data());
 
+	return htitle;
+}
 TString format_hist_Vaxis(const MultiDimAnalysisContext & ctx)
 {
 	return TString::Format("%s%s", ctx.V.label.Data(), ctx.V.format_unit().Data());
@@ -182,16 +183,12 @@ TString format_hist_Vaxis(const MultiDimAnalysisContext & ctx)
 void Dim2AnalysisFactory::init()
 {
 	Int_t can_width = 800, can_height = 600;
-// 	TString hname, cname;
 	TString htitle = format_hist_axes(ctx);
-// 	TString htitlec = format_hist_caxes(ctx);
-	TString htitlez = format_hist_Vaxis(ctx);
+	TString htitleV = format_hist_Vaxis(ctx);
 
 	// input histograms
 	if (!hSignalCounter)
 	{
-		// Signal
-
 #ifdef HAVE_HISTASYMMERRORS
 		hSignalCounter = RegTH2<TH2DA>("@@@d/h_@@@a_Signal", htitle,
 #else
@@ -199,7 +196,7 @@ void Dim2AnalysisFactory::init()
 #endif
 				ctx.x.bins, ctx.x.min, ctx.x.max,
 				ctx.y.bins, ctx.y.min, ctx.y.max);
-		hSignalCounter->GetZaxis()->SetTitle(htitlez);
+		hSignalCounter->GetZaxis()->SetTitle(htitleV);
   }
 
   if (!cSignalCounter)
@@ -376,7 +373,7 @@ void Dim2AnalysisFactory::proceed()
 {
 	Bool_t isInRange = kFALSE;
 
-	hSignalCounter->Fill(*ctx.x.var, *ctx.y.var, *ctx.var_weight); // FIXME fill it after analysis (fits or so)
+	hSignalCounter->Fill(*ctx.x.var, *ctx.y.var, *ctx.var_weight);
 // 	if (ctx.useClip() and
 // 			*ctx.x.var > ctx.cx.min and *ctx.x.var < ctx.cx.max and
 // 			*ctx.y.var > ctx.cy.min and *ctx.y.var < ctx.cy.max)
@@ -434,27 +431,15 @@ void Dim2AnalysisFactory::scale(Float_t factor)
 {
 	if (hSignalCounter) hSignalCounter->Scale(factor);
 
-	// Signal with cut
-// 	if (ctx.useCuts())
-// 	{
-// 		if (hSignalWithCutsXY) hSignalWithCutsXY->Scale(factor);
-// 	}
-
-// 	if (ctx.useClip())
-// 	{
-// 		if (hDiscreteXY) hDiscreteXY->Scale(factor);
-// 		if (hDiscreteXYSig) hDiscreteXYSig->Scale(factor);
-
-// 		if (ctx.useDiff())
-// 		{
-			for (uint i = 0; i < diffs->getNHists(); ++i)
-			{
-          TH1 * h = (*diffs)[i];
-					if (h) h->Scale(factor);
+ 	if (diffs)
+ 	{
+		for (uint i = 0; i < diffs->getNHists(); ++i)
+		{
+      TH1 * h = (*diffs)[i];
+      if (h) h->Scale(factor);
 // 				if (hSliceXYDiff) hSliceXYDiff[i]->Scale(factor);
-			}
-// 		}
-// 	}
+		}
+ 	}
 }
 
 void Dim2AnalysisFactory::finalize(bool flag_details)
