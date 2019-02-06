@@ -51,7 +51,7 @@ class TVirtualPad;
 
 class Dim2AnalysisFactory;
 
-typedef void (FitCallbackDim2)(Dim2AnalysisFactory * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
+typedef void (FitCallback)(Dim2AnalysisFactory * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
 
 class Dim2AnalysisFactory : public TObject, public SmartFactory {
 public:
@@ -66,11 +66,11 @@ public:
 	void Init(Stages s = ALL);
 	void GetDiffs(bool with_canvases = true);
 
-	void Proceed();
-	void Finalize(Stages s = ALL, bool flag_details = false);
+	virtual void Proceed();
+	virtual void Finalize(Stages s = ALL, bool flag_details = false);
 
-	void binnorm();
-	void scale(Float_t factor);
+	virtual void binnorm();
+	virtual void scale(Float_t factor);
 
 	static void niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 
@@ -82,7 +82,7 @@ public:
 	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
 	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
 
-	const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
+	virtual const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
 
 	void prepareDiffCanvas();
 	void prepareSigCanvas(bool flag_details = false);
@@ -93,9 +93,9 @@ public:
 	void applyBinomErrors(TH2 * N);
 	static void applyBinomErrors(TH2 * q, TH2 * N);
 
-	TH2 ** getSigsArray(size_t & size);
+	virtual TH2 ** getSigsArray(size_t & size);
 
-	inline void setFitCallback(FitCallbackDim2 * cb) { fitCallback = cb; }
+	inline void setFitCallback(FitCallback * cb) { fitCallback = cb; }
 
 private:
 	void prepare();
@@ -135,7 +135,7 @@ public:
 	ClassDef(Dim2AnalysisFactory, 1);
 
 private:
-	FitCallbackDim2 * fitCallback;
+	FitCallback * fitCallback;
 };
 
 #endif // DIM2ANALYSISFACTORY_H

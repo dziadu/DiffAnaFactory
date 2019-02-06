@@ -60,6 +60,10 @@ public:
   TH1D * get(UInt_t x, UInt_t y = 0, UInt_t z = 0);
   TH1D * find(Double_t x, Double_t y = 0.0, Double_t z = 0.0);
 
+  size_t getNHists() const { return nhists; }
+  TH1 * operator[](int n) { return histograms[n]; }
+  const TH1 * operator[](int n) const { return histograms[n]; }
+
   void Fill1D(Double_t x, Double_t v, Double_t w = 1.0);
   void Fill2D(Double_t x, Double_t y, Double_t v, Double_t w = 1.0);
   void Fill3D(Double_t x, Double_t y, Double_t z, Double_t v, Double_t w = 1.0);

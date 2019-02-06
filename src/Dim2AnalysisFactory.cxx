@@ -214,15 +214,6 @@ static TString format_hist_axes(const MultiDimAnalysisContext & ctx)
 	return htitle;
 }
 
-// TString format_hist_caxes(const MultiDimAnalysisContext & ctx)
-// {
-// 	TString htitle = TString::Format(";%s%s;%s%s",
-// 									 ctx.cx.label.Data(), ctx.cx.format_unit().c_str(),
-// 									 ctx.cy.label.Data(), ctx.cy.format_unit().c_str());
-// 
-// 	return htitle;
-// }
-
 TString format_hist_xaxis(const MultiDimAnalysisContext & ctx)
 {
 	TString htitle = TString::Format("%s%s", ctx.x.label.Data(), ctx.x.format_unit().c_str());
@@ -268,6 +259,8 @@ void Dim2AnalysisFactory::Init(Dim2AnalysisFactory::Stages s)
 				ctx.x.bins, ctx.x.min, ctx.x.max,
 				ctx.y.bins, ctx.y.min, ctx.y.max);
 		hSignalXY->GetZaxis()->SetTitle(htitlez);
+
+    diffs = new ExtraDimensionMapper(hSignalXY, ctx.V, "");
 // 
 // 		cSignalXY = RegCanvas(cname, htitle, can_width, can_height);
 
@@ -512,13 +505,10 @@ void Dim2AnalysisFactory::scale(Float_t factor)
 
 // 		if (ctx.useDiff())
 // 		{
-			for (uint i = 0; i < ctx.x.bins; ++i)
+			for (uint i = 0; i < diffs->getNHists(); ++i)
 			{
-				for (uint j = 0; j < ctx.y.bins; ++j)
-				{
-          TH1D * h = diffs->get(i, j);
+          TH1 * h = (*diffs)[i];
 					if (h) h->Scale(factor);
-				}
 // 				if (hSliceXYDiff) hSliceXYDiff[i]->Scale(factor);
 			}
 // 		}

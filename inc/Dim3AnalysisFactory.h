@@ -29,6 +29,8 @@
 
 #include "MultiDimAnalysisContext.h"
 #include "ExtraDimensionMapper.h"
+#include "Dim2AnalysisFactory.h"
+
 #include "SmartFactory.h"
 #include "FitterFactory.h"
 
@@ -49,11 +51,7 @@ class TVirtualPad;
 #include "TH2DA.h"
 #endif
 
-class Dim3AnalysisFactory;
-
-typedef void (FitCallbackDim3)(Dim3AnalysisFactory * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
-
-class Dim3AnalysisFactory : public TObject, public SmartFactory {
+class Dim3AnalysisFactory : public Dim2AnalysisFactory {
 public:
 	Dim3AnalysisFactory();
 	Dim3AnalysisFactory(const MultiDimAnalysisContext & ctx);
@@ -70,9 +68,14 @@ public:
 	void Finalize(Stages s = ALL, bool flag_details = false);
 
 	void binnorm();
-	void scale(Float_t factor);
 
-	static void niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
+	static void niceHisto(TVirtualPad * pad, TH1 * hist,
+                        float mt, float mr, float mb, float ml,
+                       int ndivx, int ndivy, int ndivz,
+                       float xls, float xts, float xto,
+                       float yls, float yts, float yto,
+                       float zls, float zts, float zto,
+                       bool centerY = false, bool centerX = false);
 
 // 	void niceHists(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 	void niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format);
@@ -82,9 +85,7 @@ public:
 	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
 	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
 
-	const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
-
-	void prepareDiffCanvas();
+  void prepareDiffCanvas();
 	void prepareSigCanvas(bool flag_details = false);
 
 	void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
@@ -93,16 +94,13 @@ public:
 	void applyBinomErrors(TH2 * N);
 	static void applyBinomErrors(TH2 * q, TH2 * N);
 
-	TH2 ** getSigsArray(size_t & size);
-
-	inline void setFitCallback(FitCallbackDim3 * cb) { fitCallback = cb; }
+	virtual TH2 ** getSigsArray(size_t & size);
 
 private:
 	void prepare();
 	bool copyHistogram(TH1 * src, TH1 * dst);
 
 public:
-	MultiDimAnalysisContext ctx;		//||
 
 #ifdef HAVE_HISTASYMMERRORS
 	TH2DA * hSignalXY;
@@ -114,7 +112,6 @@ public:
 // 	TCanvas * cDiscreteXYSig;		//->
 // 	TCanvas * cDiscreteXYSigFull;	//->
 
-  ExtraDimensionMapper * diffs;
 // 	TH1D *** hDiscreteXYDiff;		//[10]	// 3rd var distribution in diff bin
 	TCanvas ** c_Diffs;		//!
 
@@ -134,8 +131,6 @@ public:
 
 	ClassDef(Dim3AnalysisFactory, 1);
 
-private:
-	FitCallbackDim3 * fitCallback;
 };
 
 #endif // DIM3ANALYSISFACTORY_H

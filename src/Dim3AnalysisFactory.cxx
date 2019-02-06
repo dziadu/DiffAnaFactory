@@ -59,37 +59,19 @@ const TString flags_fit_a = "B,Q,0";
 const TString flags_fit_b = "";
 
 Dim3AnalysisFactory::Dim3AnalysisFactory()
-  : SmartFactory("null")
-  , ctx(MultiDimAnalysisContext())
-  , hSignalXY(nullptr)
-  , diffs(nullptr)
-  , c_Diffs(nullptr)
-  , objectsFits(nullptr)
-  , fitCallback(nullptr)
+  : Dim2AnalysisFactory(MultiDimAnalysisContext())
 {
 	prepare();
 }
 
 Dim3AnalysisFactory::Dim3AnalysisFactory(const MultiDimAnalysisContext & context)
-  : SmartFactory(context.AnaName())
-  , ctx(context)
-  , hSignalXY(nullptr)
-  , diffs(nullptr)
-  , c_Diffs(nullptr)
-  , objectsFits(nullptr)
-  , fitCallback(nullptr)
+  : Dim2AnalysisFactory(context)
 {
 	prepare();
 }
 
 Dim3AnalysisFactory::Dim3AnalysisFactory(const MultiDimAnalysisContext * context)
-  : SmartFactory(context->AnaName())
-  , ctx(*context)
-  , hSignalXY(nullptr)
-  , diffs(nullptr)
-  , c_Diffs(nullptr)
-  , objectsFits(nullptr)
-  , fitCallback(nullptr)
+  : Dim2AnalysisFactory(context)
 {
 	prepare();
 }
@@ -257,6 +239,8 @@ void Dim3AnalysisFactory::Init(Dim3AnalysisFactory::Stages s)
 				ctx.x.bins, ctx.x.min, ctx.x.max,
 				ctx.y.bins, ctx.y.min, ctx.y.max);
 		hSignalXY->GetZaxis()->SetTitle(htitlez);
+
+    diffs = new ExtraDimensionMapper(hSignalXY, ctx.V, "");
 // 
 // 		cSignalXY = RegCanvas(cname, htitle, can_width, can_height);
 
@@ -484,36 +468,6 @@ void Dim3AnalysisFactory::binnorm()
 // 	}
 }
 
-void Dim3AnalysisFactory::scale(Float_t factor)
-{
-	if (hSignalXY) hSignalXY->Scale(factor);
-
-	// Signal with cut
-// 	if (ctx.useCuts())
-// 	{
-// 		if (hSignalWithCutsXY) hSignalWithCutsXY->Scale(factor);
-// 	}
-
-// 	if (ctx.useClip())
-// 	{
-// 		if (hDiscreteXY) hDiscreteXY->Scale(factor);
-// 		if (hDiscreteXYSig) hDiscreteXYSig->Scale(factor);
-
-// 		if (ctx.useDiff())
-// 		{
-			for (uint i = 0; i < ctx.x.bins; ++i)
-			{
-				for (uint j = 0; j < ctx.y.bins; ++j)
-				{
-          TH1D * h = diffs->get(i, j);
-					if (h) h->Scale(factor);
-				}
-// 				if (hSliceXYDiff) hSliceXYDiff[i]->Scale(factor);
-			}
-// 		}
-// 	}
-}
-
 void Dim3AnalysisFactory::Finalize(Stages s, bool flag_details)
 {
 	switch (s)
@@ -535,7 +489,13 @@ void Dim3AnalysisFactory::Finalize(Stages s, bool flag_details)
 	}
 }
 
-void Dim3AnalysisFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
+void Dim3AnalysisFactory::niceHisto(TVirtualPad * pad, TH1 * hist,
+                                    float mt, float mr, float mb, float ml,
+                                    int ndivx, int ndivy, int /*ndivz*/,
+                                    float xls, float xts, float xto,
+                                    float yls, float yts, float yto,
+                                    float /*zls*/, float /*zts*/, float /*zto*/,
+                                    bool centerY, bool centerX)
 {
 	RootTools::NicePad(pad, mt, mr, mb, ml);
 	RootTools::NiceHistogram(hist, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
