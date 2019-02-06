@@ -85,6 +85,8 @@ public:
 	virtual void update() const;
 	virtual bool validate() const;
 
+  TString format_hist_axes() const;
+
 	// flags
 // 	virtual bool useCuts() const { return (cutMin or cutMax); }
 

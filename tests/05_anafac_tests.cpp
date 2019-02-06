@@ -1,6 +1,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "ExtraDimensionMapper.h"
+#include "Dim2AnalysisFactory.h"
 #include "Dim3AnalysisFactory.h"
 
 #include <TFile.h>
@@ -38,7 +39,7 @@ void AnaFacCase::setUp()
   a3ctx.V.bins = 100; a3ctx.V.min = -10; a3ctx.V.max = 10; a3ctx.V.label = "a3_V";
 
   a3ctx.histPrefix = "a2fac";
-  a2fac = new Dim3AnalysisFactory(a3ctx);
+  a2fac = new Dim2AnalysisFactory(a3ctx);
   a2fac->init();
 
   a3ctx.histPrefix = "a3fac";
@@ -60,7 +61,7 @@ void AnaFacCase::InitializationTest()
 
   CPPUNIT_ASSERT_EQUAL(a3ctx.x.bins, edm->getBinsX());
   CPPUNIT_ASSERT_EQUAL(a3ctx.y.bins, edm->getBinsY());
-  CPPUNIT_ASSERT_EQUAL(a3ctx.z.bins, edm->getBinsZ());
+//   CPPUNIT_ASSERT_EQUAL(a3ctx.z.bins, edm->getBinsZ());
 
   edm = a3fac->diffs;
 
@@ -89,7 +90,7 @@ void AnaFacCase::ScaleTest()
   TFile * file = TFile::Open("/tmp/res.root", "RECREATE");
   a3fac->finalize();
 
-  a3fac->ctx.Write();
+  a3fac->MultiDimAnalysisExtension::ctx.Write();
   a3fac->write(file, true);
   file->Close();
 }

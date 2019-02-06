@@ -17,8 +17,8 @@
 */
 
 
-#ifndef DIM2ANALYSISFACTORY_H
-#define DIM2ANALYSISFACTORY_H
+#ifndef MULTIDIMANALYSISEXTENSION_H
+#define MULTIDIMANALYSISEXTENSION_H
 
 #include "TObject.h"
 #include "TString.h"
@@ -30,8 +30,6 @@
 #include "Dim2DistributionFactory.h"
 #include "ExtraDimensionMapper.h"
 #include "MultiDimAnalysisContext.h"
-#include "MultiDimAnalysisExtension.h"
-
 #include "SmartFactory.h"
 #include "FitterFactory.h"
 
@@ -52,42 +50,61 @@ class TVirtualPad;
 #include "TH2DA.h"
 #endif
 
-class Dim2AnalysisFactory : public Dim2DistributionFactory, public MultiDimAnalysisExtension {
-public:
-	Dim2AnalysisFactory();
-	Dim2AnalysisFactory(const MultiDimAnalysisContext & ctx);
-	Dim2AnalysisFactory(const MultiDimAnalysisContext * ctx);
-	virtual ~Dim2AnalysisFactory();
+class MultiDimAnalysisExtension;
 
-	Dim2AnalysisFactory & operator=(const Dim2AnalysisFactory & fa);
+typedef void (FitCallbackMD)(MultiDimAnalysisExtension * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
+
+class MultiDimAnalysisExtension {
+public:
+	MultiDimAnalysisExtension();
+	MultiDimAnalysisExtension(const MultiDimAnalysisContext & ctx);
+	MultiDimAnalysisExtension(const MultiDimAnalysisContext * ctx);
+	virtual ~MultiDimAnalysisExtension();
+
+	MultiDimAnalysisExtension & operator=(const MultiDimAnalysisExtension & fa);
 
 	void GetDiffs(bool with_canvases = true);
 
-  virtual void init();
+  virtual void init(TH1 * h);
 	virtual void proceed();
 	virtual void finalize(bool flag_details = false);
 
-	virtual void binnorm();
 	virtual void scale(Float_t factor);
+
+	void niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
+	void niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 
 	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
 	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
 
-  void prepareDiffCanvas();
-
-	void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
-	static void applyAngDists(TH2 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
+	virtual void prepareDiffCanvas();
 
 	void applyBinomErrors(TH2 * N);
 	static void applyBinomErrors(TH2 * q, TH2 * N);
 
+	inline void setFitCallback(FitCallbackMD * cb) { fitCallback = cb; }
+
   bool write(TFile * f/* = nullptr*/, bool verbose = false);
   bool write(const char * filename/* = nullptr*/, bool verbose = false);
 
+protected:
+	virtual void prepare();
+
+private:
+
 public:
+	MultiDimAnalysisContext ctx;		//||
 
+  ExtraDimensionMapper * diffs;
+	TCanvas ** c_Diffs;		//!
+	TObjArray * objectsFits;		//!
 
-	ClassDef(Dim2AnalysisFactory, 1);
+protected:
+
+private:
+	FitCallbackMD * fitCallback;
+
+	ClassDef(MultiDimAnalysisExtension, 1);
 };
 
-#endif // DIM2ANALYSISFACTORY_H
+#endif // MULTIDIMANALYSISEXTENSION_H

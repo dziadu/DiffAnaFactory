@@ -136,7 +136,7 @@ TString format_hist_zaxis(const MultiDimDistributionContext & ctx)
 void Dim3DistributionFactory::init()
 {
 	Int_t can_width = 800, can_height = 600;
-	TString htitle = format_hist_axes(ctx);
+	TString htitle = ctx.format_hist_axes();
 	TString htitlez = format_hist_zaxis(ctx);
 
 	// input histograms

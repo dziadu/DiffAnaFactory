@@ -27,9 +27,10 @@
 #include "TDirectory.h"
 #include "RootTools.h"
 
-#include "MultiDimAnalysisContext.h"
+#include "Dim3DistributionFactory.h"
 #include "ExtraDimensionMapper.h"
-#include "Dim2AnalysisFactory.h"
+#include "MultiDimAnalysisContext.h"
+#include "MultiDimAnalysisExtension.h"
 
 #include "SmartFactory.h"
 #include "FitterFactory.h"
@@ -51,7 +52,7 @@ class TVirtualPad;
 #include "TH2DA.h"
 #endif
 
-class Dim3AnalysisFactory : public Dim2AnalysisFactory {
+class Dim3AnalysisFactory : public Dim3DistributionFactory, public MultiDimAnalysisExtension {
 public:
 	Dim3AnalysisFactory();
 	Dim3AnalysisFactory(const MultiDimAnalysisContext & ctx);
@@ -63,24 +64,16 @@ public:
 	void GetDiffs(bool with_canvases = true);
 
 	virtual void init();
-	void proceed();
-	void finalize(bool flag_details = false);
+	virtual void proceed();
+	virtual void finalize(bool flag_details = false);
 
-	void binnorm();
-
-	static void niceHisto(TVirtualPad * pad, TH1 * hist,
-                        float mt, float mr, float mb, float ml,
-                       int ndivx, int ndivy, int ndivz,
-                       float xls, float xts, float xto,
-                       float yls, float yts, float yto,
-                       float zls, float zts, float zto,
-                       bool centerY = false, bool centerX = false);
+	virtual void binnorm();
+	virtual void scale(Float_t factor);
 
 	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
 	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
 
   void prepareDiffCanvas();
-	virtual void prepareSigCanvas(bool flag_details = false);
 
 	void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
 	static void applyAngDists(TH2 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
@@ -88,32 +81,13 @@ public:
 	void applyBinomErrors(TH2 * N);
 	static void applyBinomErrors(TH2 * q, TH2 * N);
 
-	virtual TH2 ** getSigsArray(size_t & size);
+  bool write(TFile * f/* = nullptr*/, bool verbose = false);
+  bool write(const char * filename/* = nullptr*/, bool verbose = false);
 
 public:
 
-// 	TCanvas * cDiscreteXYSig;		//->
-// 	TCanvas * cDiscreteXYSigFull;	//->
-
-// 	TH1D *** hDiscreteXYDiff;		//[10]	// 3rd var distribution in diff bin
-	TCanvas ** c_Diffs;		//!
-
-// 	TH1D ** hSliceXYFitQA;			//[10]	// QA values
-// 	TCanvas * cSliceXYFitQA;		//!
-// 
-// 	TH1D ** hSliceXYChi2NDF;		//[10]	// Chi2/NDF values
-// 	TCanvas * cSliceXYChi2NDF;		//!
-// 	TCanvas * cSliceXYprojX;		//!
-// 
-// 	TH1D ** hSliceXYDiff;			//!		// slice of x-var in discrete X-Y
-// 	TCanvas * cSliceXYDiff;			//!
-// 
-// 	TObjArray * objectsDiffs;		//!
-// 	TObjArray * objectsSlices;		//!
-	TObjArray * objectsFits;		//!
 
 	ClassDef(Dim3AnalysisFactory, 1);
-
 };
 
 #endif // DIM3ANALYSISFACTORY_H

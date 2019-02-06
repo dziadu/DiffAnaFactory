@@ -376,3 +376,18 @@ bool MultiDimDistributionContext::operator!=(const MultiDimDistributionContext &
 {
 	return !operator==(ctx);
 }
+
+TString MultiDimDistributionContext::format_hist_axes() const {
+  if (z.bins > 0)
+    return TString::Format(";%s%s%s;%s%s%s",
+                           x.label.Data(), x.format_unit().Data(),
+                           y.label.Data(), y.format_unit().Data(),
+                           z.label.Data(), z.format_unit().Data());
+  else if (y.bins > 0)
+    return TString::Format(";%s%s;%s%s",
+                           x.label.Data(), x.format_unit().Data(),
+                           y.label.Data(), y.format_unit().Data());
+  else
+    return TString::Format(";%s;%s",
+                           x.label.Data(), x.format_unit().Data());
+}

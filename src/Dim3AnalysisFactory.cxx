@@ -22,23 +22,8 @@
 #include <string>
 #include "getopt.h"
 
-#include "TCanvas.h"
-#include "TChain.h"
-#include "TDirectory.h"
-#include "TError.h"
-#include "TF1.h"
-#include "TFile.h"
-#include "TGaxis.h"
-#include "TGraphErrors.h"
-#include "TGraph.h"
-#include "TH2.h"
-#include "TImage.h"
 #include "TLatex.h"
-#include "TLegend.h"
-#include "TMath.h"
-#include "TStyle.h"
 #include "TSystem.h"
-#include "TVector.h"
 
 #endif /* __CINT__ */
 
@@ -59,21 +44,27 @@ const TString flags_fit_a = "B,Q,0";
 const TString flags_fit_b = "";
 
 Dim3AnalysisFactory::Dim3AnalysisFactory()
-  : Dim2AnalysisFactory()
+  : Dim3DistributionFactory()
+  , MultiDimAnalysisExtension(MultiDimAnalysisContext())
 {
-  prepare(DIM3);
+  Dim3DistributionFactory::prepare(DIM3);
+  MultiDimAnalysisExtension::prepare();
 }
 
 Dim3AnalysisFactory::Dim3AnalysisFactory(const MultiDimAnalysisContext & context)
-  : Dim2AnalysisFactory(context)
+  : Dim3DistributionFactory(context)
+  , MultiDimAnalysisExtension(context)
 {
-  prepare(DIM3);
+  Dim3DistributionFactory::prepare(DIM3);
+  MultiDimAnalysisExtension::prepare();
 }
 
 Dim3AnalysisFactory::Dim3AnalysisFactory(const MultiDimAnalysisContext * context)
-  : Dim2AnalysisFactory(context)
+  : Dim3DistributionFactory(context)
+  , MultiDimAnalysisExtension(context)
 {
-  prepare(DIM3);
+  Dim3DistributionFactory::prepare(DIM3);
+  MultiDimAnalysisExtension::prepare();
 }
 
 Dim3AnalysisFactory::~Dim3AnalysisFactory()
@@ -85,86 +76,14 @@ Dim3AnalysisFactory & Dim3AnalysisFactory::operator=(const Dim3AnalysisFactory &
 {
 	Dim3AnalysisFactory * nthis = this;//new Dim3AnalysisFactory(fa.ctx);
 
-	nthis->ctx = fa.ctx;
-	nthis->ctx.histPrefix = fa.ctx.histPrefix;
-
-// 	nthis->objectsDiffs = new TObjArray();
-// 	nthis->objectsSlices = new TObjArray();
-	nthis->objectsFits = new TObjArray();
-
-// 	nthis->objectsDiffs->SetName(ctx.histPrefix + "Diffs");
-// 	nthis->objectsSlices->SetName(ctx.histPrefix + "Slices");
-	nthis->objectsFits->SetName(ctx.histPrefix + "Fits");
-
-	copyHistogram(fa.hSignalCounter, hSignalCounter);
-// 	copyHistogram(fa.hSignalWithCutsXY, hSignalWithCutsXY);
-// 	copyHistogram(fa.hDiscreteXY, hDiscreteXY);
-
-// 	for (uint i = 0; i < ctx.cx.bins; ++i)
-// 	{
-// 		for (uint j = 0; j < ctx.cy.bins; ++j)
-// 		{
-// 			copyHistogram(fa.hDiscreteXYDiff[i][j], hDiscreteXYDiff[i][j]);
-// 		}
-// 	}
-// 
-// 	for (uint i = 0; i < ctx.cx.bins; ++i)
-// 	{
-// 		copyHistogram(fa.hSliceXYDiff[i], hSliceXYDiff[i]);
-// 		nthis->objectsSlices->AddLast(hSliceXYDiff[i]);
-// 
-// 		copyHistogram(fa.hSliceXYFitQA[i], hSliceXYFitQA[i]);
-// 		nthis->objectsSlices->AddLast(hSliceXYFitQA[i]);
-// 
-// 		copyHistogram(fa.hSliceXYChi2NDF[i], hSliceXYChi2NDF[i]);
-// 		nthis->objectsSlices->AddLast(hSliceXYChi2NDF[i]);
-// 	}
-// 
-// 	copyHistogram(fa.hDiscreteXYSig, hDiscreteXYSig);
+	*nthis = fa;
 	return *nthis;
 }
 
-static TString format_hist_axes(const MultiDimAnalysisContext & ctx)
-{
-	TString htitle = TString::Format(";%s%s%s;%s%s%s",
-									 ctx.x.label.Data(), ctx.x.format_unit().Data(),
-									 ctx.y.label.Data(), ctx.y.format_unit().Data(),
-                   ctx.z.label.Data(), ctx.z.format_unit().Data());
-
-	return htitle;
-}
-
-TString format_hist_zaxis(const MultiDimAnalysisContext & ctx)
-{
-	return TString::Format("%s%s", ctx.z.label.Data(), ctx.z.format_unit().Data());
-}
-
-extern TString format_hist_Vaxis(const MultiDimAnalysisContext & ctx);
-
 void Dim3AnalysisFactory::init()
 {
-  TString hname, cname;
-  TString htitle = format_hist_axes(ctx);
-	TString htitlez = format_hist_Vaxis(ctx);
-
-  // input histograms
-	if (!hSignalCounter)
-	{
-		// Signal
-		hname = "@@@d/h_@@@a_Signal";
-		cname = "@@@d/c_@@@a_Signal";
-
-    hSignalCounter = (TH2*) RegTH3<TH3D>(hname, htitle,
-				ctx.x.bins, ctx.x.min, ctx.x.max,
-				ctx.y.bins, ctx.y.min, ctx.y.max,
-        ctx.z.bins, ctx.z.min, ctx.z.max);
-// 		hSignalCounter->SetTitle(htitlez);
-  }
-
-  Dim2AnalysisFactory::init();
-
-// 
-// 		cSignalXY = RegCanvas(cname, htitle, can_width, can_height);
+  Dim3DistributionFactory::init();
+  MultiDimAnalysisExtension::init(hSignalCounter);
 
 		// Signal with cut
 // 		if (ctx.useCuts())
@@ -335,54 +254,27 @@ void Dim3AnalysisFactory::proceed()
 {
 	Bool_t isInRange = kFALSE;
 
-	((TH3*)hSignalCounter)->Fill(*ctx.x.var, *ctx.y.var, *ctx.z.var, *ctx.var_weight);
+  Dim3DistributionFactory::proceed();
+
+  MultiDimAnalysisContext & ctx = MultiDimAnalysisExtension::ctx;
+
   diffs->Fill3D(*ctx.x.var, *ctx.y.var, *ctx.z.var, *ctx.V.var, *ctx.var_weight);
 }
 
 void Dim3AnalysisFactory::binnorm()
 {
-	if (hSignalCounter) hSignalCounter->Scale( 1.0 / ( hSignalCounter->GetXaxis()->GetBinWidth(1) * hSignalCounter->GetYaxis()->GetBinWidth(1) ) );
-// 
-// 	// Signal with cut
-// 	if (ctx.useCuts())
-// 	{
-// 		if (hSignalWithCutsXY) hSignalWithCutsXY->Scale( 1.0 / ( hSignalWithCutsXY->GetXaxis()->GetBinWidth(1) * hSignalWithCutsXY->GetYaxis()->GetBinWidth(1) ) );
-// 	}
-// 
-// 	if (ctx.useClip())
-// 	{
-// 		if (hDiscreteXY) hDiscreteXY->Scale( 1.0 / ( hDiscreteXY->GetXaxis()->GetBinWidth(1) * hDiscreteXY->GetYaxis()->GetBinWidth(1) ) );
-// 		if (hDiscreteXYSig) hDiscreteXYSig->Scale( 1.0 / ( hDiscreteXYSig->GetXaxis()->GetBinWidth(1) * hDiscreteXYSig->GetYaxis()->GetBinWidth(1) ) );
-// 
-// // 		if (ctx.useDiff())
-// // 		{
-// // 			for (uint i = 0; i < ctx.cx.bins; ++i)
-// // 			{
-// // 				for (uint j = 0; j < ctx.cy.bins; ++j)
-// // 				{
-// // 					if (hDiscreteXYDiff) hDiscreteXYDiff[i][j]->Scale(factor);
-// // 				}
-// // 				if (hSliceXYDiff) hSliceXYDiff[i]->Scale(factor);
-// // 			}
-// // 		}
-// 	}
+  Dim3DistributionFactory::binnorm();
+}
+
+void Dim3AnalysisFactory::scale(Float_t factor)
+{
+  Dim3DistributionFactory::scale(factor);
+  MultiDimAnalysisExtension::scale(factor);
 }
 
 void Dim3AnalysisFactory::finalize(bool flag_details)
 {
-  Dim2AnalysisFactory::finalize(flag_details);
-}
-
-void Dim3AnalysisFactory::niceHisto(TVirtualPad * pad, TH1 * hist,
-                                    float mt, float mr, float mb, float ml,
-                                    int ndivx, int ndivy, int /*ndivz*/,
-                                    float xls, float xts, float xto,
-                                    float yls, float yts, float yto,
-                                    float /*zls*/, float /*zts*/, float /*zto*/,
-                                    bool centerY, bool centerX)
-{
-	RootTools::NicePad(pad, mt, mr, mb, ml);
-	RootTools::NiceHistogram(hist, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
+  Dim3DistributionFactory::finalize(flag_details);
 }
 
 void Dim3AnalysisFactory::prepareDiffCanvas()
@@ -484,182 +376,6 @@ void Dim3AnalysisFactory::prepareDiffCanvas()
 	latex->Delete();
 }
 
-void Dim3AnalysisFactory::prepareSigCanvas(bool flag_details)
-{
-	TString colzopts = "colz";
-	if (flag_details)
-		colzopts += ",text";
-	TString coltopts = "col,text";
-
-  hSignalCounter->GetXaxis()->SetTitle(ctx.x.format_string());
-  hSignalCounter->GetYaxis()->SetTitle(ctx.y.format_string());
-  hSignalCounter->GetZaxis()->SetTitle(ctx.z.format_string());
-  hSignalCounter->SetTitle(ctx.V.format_string());
-
-  cSignalCounter->cd(0);
-  hSignalCounter->Draw("colz");
-  RootTools::NicePalette(hSignalCounter, 0.05);
-  RootTools::NoPalette(hSignalCounter);
-  gPad->Update();
-
-// 	if (cDiscreteXY)
-// 	{
-// 		hDiscreteXY->GetXaxis()->SetTitle(haxx);
-// 		hDiscreteXY->GetYaxis()->SetTitle(haxy);
-// 		hDiscreteXY->GetZaxis()->SetTitle(haxz);
-// 
-// 		cDiscreteXY->cd(0);
-// 		hDiscreteXY->Draw(colzopts);
-// 		RootTools::NicePalette(hDiscreteXY, 0.05);
-// 		hDiscreteXY->SetMarkerSize(1.6);
-// 		gPad->Update();
-// 
-// 		cDiscreteXYFull->cd(0);
-// 		TH2I * h1 = (TH2I *)hSignalCounter->DrawCopy("colz"); FIXME
-// 		hDiscreteXY->Draw(coltopts+",same");
-// 		RootTools::NoPalette(h1);
-// 		gPad->Update();
-// 	}
-
-// 	if (cDiscreteXYSig)
-// 	{
-// 		hDiscreteXYSig->GetXaxis()->SetTitle(haxx);
-// 		hDiscreteXYSig->GetYaxis()->SetTitle(haxy);
-// 		hDiscreteXYSig->GetZaxis()->SetTitle(haxz);
-// 
-// 		hDiscreteXYSig->SetMarkerColor(kWhite);
-// 		hDiscreteXYSig->SetMarkerSize(1.6);
-// 
-// 		cDiscreteXYSig->cd(0);
-// 		hDiscreteXYSig->Draw(colzopts);
-// 		RootTools::NicePalette(hDiscreteXYSig, 0.05);
-// 		gPad->Update();
-// 
-// 		cDiscreteXYSigFull->cd(0);
-// 		TH2I * h2 = (TH2I *)hSignalWithCutsXY->DrawCopy("colz");
-// 		hDiscreteXYSig->Draw(coltopts+",same");
-// 		RootTools::NoPalette(h2);
-// 		gPad->Update();
-// 	}
-
-	float qa_min = 0.;
-	float qa_max = 0.;
-
-	float cn_min = 0.;
-	float cn_max = 0.;
-
-// 	for (uint i = 0; i < ctx.cx.bins; ++i)
-// 	{
-// 		if (cSliceXYDiff)
-// 		{
-// 			cSliceXYDiff->cd(1+i);
-// 			hSliceXYDiff[i]->Draw("E");
-// 		}
-// 
-// 		if (cSliceXYFitQA)
-// 		{
-// 			cSliceXYFitQA->cd(1+i);
-// 			hSliceXYFitQA[i]->Draw("E");
-// 
-// 			for (uint j = 0; j < ctx.cy.bins; ++j)
-// 			{
-// 				float cnt = hSliceXYFitQA[i]->GetBinContent(1+j);
-// 				float err_lo = cnt - hSliceXYFitQA[i]->GetBinErrorLow(1+j);
-// 				float err_up = cnt + hSliceXYFitQA[i]->GetBinErrorUp(1+j);
-// 
-// 				if (cnt and (err_lo or err_up))
-// 				{
-// 					if (qa_min == 0.)
-// 						qa_min = err_lo;
-// 					else
-// 						qa_min = err_lo < qa_min ? err_lo : qa_min;
-// 
-// 					if (qa_max == 0.)
-// 						qa_max = err_up;
-// 					else
-// 						qa_max = err_up > qa_max ? err_up : qa_max;
-// 				}
-// 			}
-// 		}
-// 
-// 		if (cSliceXYChi2NDF)
-// 		{
-// 			cSliceXYChi2NDF->cd(1+i);
-// 			hSliceXYChi2NDF[i]->Draw("E");
-// 
-// 			for (uint j = 0; j < ctx.cy.bins; ++j)
-// 			{
-// 				float cnt = hSliceXYChi2NDF[i]->GetBinContent(1+j);
-// 				float err_lo = cnt - hSliceXYChi2NDF[i]->GetBinErrorLow(1+j);
-// 				float err_up = cnt + hSliceXYChi2NDF[i]->GetBinErrorUp(1+j);
-// 
-// 				if (cnt and (err_lo or err_up))
-// 				{
-// 					if (cn_min == 0.)
-// 						cn_min = err_lo;
-// 					else
-// 						cn_min = err_lo < cn_min ? err_lo : cn_min;
-// 
-// 					if (cn_max == 0.)
-// 						cn_max = err_up;
-// 					else
-// 						cn_max = err_up > cn_max ? err_up : cn_max;
-// 				}
-// 			}
-// 		}
-// 
-// 		if (cSliceXYprojX)
-// 		{
-// 			cSliceXYprojX->cd();
-// 
-// 			int bmaxx, bmaxy, bmaxz; hDiscreteXYSig->GetMaximumBin(bmaxx, bmaxy, bmaxz);
-// 			int bminx, bminy, bminz; hDiscreteXYSig->GetMinimumBin(bminx, bminy, bminz);
-// 			double max = hDiscreteXYSig->GetBinContent(bmaxx, bmaxy, bmaxz);
-// 			double min = hDiscreteXYSig->GetBinContent(bminx, bminy, bminz);
-// 			double ddelta = (max - min) * 0.1;
-// 
-// 			char buff[1000];
-// 			for (uint j = 0; j < ctx.cy.bins; ++j)
-// 			{
-// 				sprintf(buff, "h_%s_xysig_proj_%d", ctx.histPrefix.Data(), j);
-// 				TH1 * h = hDiscreteXYSig->ProjectionX(buff, 1+j, 1+j);
-// 				h->SetLineWidth(1);
-// 				h->SetLineColor(j*4);
-// 				h->SetMarkerStyle(j+20);
-// 				h->SetMarkerColor(j*4);
-// 
-// 				if (j == 0)
-// 				{
-// 					h->Draw("hist,E,C");
-// 					h->GetYaxis()->SetRangeUser(min - ddelta, max + ddelta);
-// 				}
-// 				else
-// 				{
-// 					h->Draw("hist,E,C,same");
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	float qa_del = 0.05 * (qa_max - qa_min);
-// 	float cn_del = 0.05 * (cn_max - cn_min);
-// 
-// 	for (uint i = 0; i < ctx.cx.bins; ++i)
-// 	{
-// 		if (cSliceXYFitQA)
-// 		{
-// 			cSliceXYFitQA->cd(1+i);
-// 			hSliceXYFitQA[i]->GetYaxis()->SetRangeUser(qa_min - qa_del, qa_max + qa_del);
-// 		}
-// 
-// 		if (cSliceXYChi2NDF)
-// 		{
-// 			cSliceXYChi2NDF->cd(1+i);
-// 			hSliceXYChi2NDF[i]->GetYaxis()->SetRangeUser(cn_min - cn_del, cn_max + cn_del);
-// 		}
-// 	}
-}
-
 // TODO this two should be moved somewhere else, not in library
 void Dim3AnalysisFactory::applyAngDists(double a2, double a4, double corr_a2, double corr_a4)
 {
@@ -735,19 +451,6 @@ void Dim3AnalysisFactory::applyBinomErrors(TH2* N)
 void Dim3AnalysisFactory::applyBinomErrors(TH2* q, TH2* N)
 {
 	RootTools::calcBinomialErrors(q, N);
-}
-
-TH2** Dim3AnalysisFactory::getSigsArray(size_t & size)
-{
-	size = 4;
-
-	TH2 ** hmap = new TH2*[size];
-	hmap[0] = hSignalCounter;
-// 	hmap[1] = hSignalWithCutsXY;
-// 	hmap[2] = hDiscreteXY;
-// 	hmap[3] = hDiscreteXYSig;
-
-	return hmap;
 }
 
 void Dim3AnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only)
@@ -926,4 +629,16 @@ bool Dim3AnalysisFactory::fitDiffHist(TH1 * hist, HistFitParams & hfp, double mi
 	tfLambdaSig->SetBit(TF1::kNotDraw);
 
 	return res;
+}
+
+bool Dim3AnalysisFactory::write(const char* filename, bool verbose)
+{
+  return Dim3DistributionFactory::write(filename, verbose)
+      && MultiDimAnalysisExtension::write(filename, verbose);
+}
+
+bool Dim3AnalysisFactory::write(TFile* f, bool verbose)
+{
+return Dim3DistributionFactory::write(f, verbose)
+      && MultiDimAnalysisExtension::write(f, verbose);
 }

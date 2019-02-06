@@ -22,13 +22,28 @@
 #include <string>
 #include "getopt.h"
 
+#include "TCanvas.h"
+#include "TChain.h"
+#include "TDirectory.h"
+#include "TError.h"
+#include "TF1.h"
+#include "TFile.h"
+#include "TGaxis.h"
+#include "TGraphErrors.h"
+#include "TGraph.h"
+#include "TH2.h"
+#include "TImage.h"
 #include "TLatex.h"
+#include "TLegend.h"
+#include "TMath.h"
+#include "TStyle.h"
 #include "TSystem.h"
+#include "TVector.h"
 
 #endif /* __CINT__ */
 
 #include "RootTools.h"
-#include "Dim2AnalysisFactory.h"
+#include "MultiDimAnalysisExtension.h"
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
@@ -43,169 +58,78 @@ const Option_t h1opts[] = "h,E1";
 const TString flags_fit_a = "B,Q,0";
 const TString flags_fit_b = "";
 
-Dim2AnalysisFactory::Dim2AnalysisFactory()
-  : Dim2DistributionFactory()
-  , MultiDimAnalysisExtension(MultiDimAnalysisContext())
+MultiDimAnalysisExtension::MultiDimAnalysisExtension()
+  : ctx(MultiDimAnalysisContext())
+  , diffs(nullptr)
+  , c_Diffs(nullptr)
+  , objectsFits(nullptr)
+  , fitCallback(nullptr)
 {
-  Dim2DistributionFactory::prepare(DIM2);
-  MultiDimAnalysisExtension::prepare();
 }
 
-Dim2AnalysisFactory::Dim2AnalysisFactory(const MultiDimAnalysisContext & context)
-  : Dim2DistributionFactory(context)
-  , MultiDimAnalysisExtension(context)
+MultiDimAnalysisExtension::MultiDimAnalysisExtension(const MultiDimAnalysisContext & context)
+  : ctx(context)
+  , diffs(nullptr)
+  , c_Diffs(nullptr)
+  , objectsFits(nullptr)
+  , fitCallback(nullptr)
 {
-  Dim2DistributionFactory::prepare(DIM2);
-  MultiDimAnalysisExtension::prepare();
 }
 
-Dim2AnalysisFactory::Dim2AnalysisFactory(const MultiDimAnalysisContext * context)
-  : Dim2DistributionFactory(context)
-  , MultiDimAnalysisExtension(context)
+MultiDimAnalysisExtension::MultiDimAnalysisExtension(const MultiDimAnalysisContext * context)
+  : ctx(*context)
+  , diffs(nullptr)
+  , c_Diffs(nullptr)
+  , objectsFits(nullptr)
+  , fitCallback(nullptr)
 {
-  Dim2DistributionFactory::prepare(DIM2);
-  MultiDimAnalysisExtension::prepare();
 }
 
-Dim2AnalysisFactory::~Dim2AnalysisFactory()
+MultiDimAnalysisExtension::~MultiDimAnalysisExtension()
 {
-// 	gSystem->ProcessEvents();
+	gSystem->ProcessEvents();
+  delete diffs;
+
+	if (objectsFits)	delete objectsFits;
 }
 
-Dim2AnalysisFactory & Dim2AnalysisFactory::operator=(const Dim2AnalysisFactory & fa)
+MultiDimAnalysisExtension & MultiDimAnalysisExtension::operator=(const MultiDimAnalysisExtension & fa)
 {
-	Dim2AnalysisFactory * nthis = this;//new Dim2AnalysisFactory(fa.ctx);
+	MultiDimAnalysisExtension * nthis = this;//new MultiDimAnalysisExtension(fa.ctx);
 
-	*nthis = fa;
+	nthis->ctx = fa.ctx;
+	nthis->ctx.histPrefix = fa.ctx.histPrefix;
+
+	nthis->objectsFits = new TObjArray();
+
+	nthis->objectsFits->SetName(ctx.histPrefix + "Fits");
+
 	return *nthis;
 }
 
-void Dim2AnalysisFactory::init()
+void MultiDimAnalysisExtension::prepare()
 {
-  Dim2DistributionFactory::init();
-  MultiDimAnalysisExtension::init(hSignalCounter);
+	ctx.update();
 
-		// Signal with cut
-// 		if (ctx.useCuts())
-// 		{
-// 			hname = "@@@d/h_@@@a_Lambda";
-// 			cname = "@@@d/c_@@@a_Lambda";
-// 			hSignalWithCutsXY = RegTH2<TH2D>(hname, htitle, ctx.x.bins, ctx.x.min, ctx.x.max,
-// 				ctx.y.bins, ctx.y.min, ctx.y.max);
-// 			hSignalWithCutsXY->GetZaxis()->SetTitle(htitlez);
-// 
-// 			cSignalWithCutsXY = RegCanvas(cname, htitle, can_width, can_height);
-// 		}
-	
-// 		if (ctx.useClip())
-// 		{
-// 			hname = "@@@d/h_@@@a_LambdaInvMass";
-// 			cname = "@@@d/c_@@@a_LambdaInvMass";
-// 
-// 			// Lambda: X vs Y
-// 			if (ctx.cx.bins_arr and ctx.cy.bins_arr)
-// 				hDiscreteXY = RegTH2<TH2D>(hname, htitlec, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
-// 			else
-// 				hDiscreteXY = RegTH2<TH2D>(hname, htitlec,
-// 					ctx.cx.bins, ctx.cx.min, ctx.cx.max,
-// 					ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// 
-// 			hDiscreteXY->GetZaxis()->SetTitle(htitlez);
-// 
-// 			cDiscreteXY = RegCanvas(cname, htitle, can_width, can_height);
-// 
-// 			cname += "Full";
-// 			cDiscreteXYFull = RegCanvas(cname, htitle, can_width, can_height);
-// 		}
-
-	// histograms for fitting
-// 	if (s == FIT or s == ALL)
-	{
-// 		if (ctx.useDiff())
-// 		{
-// 			GetDiffs();
-// 		}
-	}
-
-// 	if (s == SIG or s == ALL)
-	{
-// 		if (ctx.useDiff())
-// 		{
-// 			objectsSlices = new TObjArray();
-// 			objectsSlices->SetName(ctx.histPrefix + "Slices");
-// 
-// 			hSliceXYDiff = new TH1D*[ctx.cx.bins];
-// 			hSliceXYFitQA = new TH1D*[ctx.cx.bins];
-// 			hSliceXYChi2NDF = new TH1D*[ctx.cx.bins];
-// 
-// 			for (uint i = 0; i < ctx.cx.bins; ++i)
-// 			{
-// 				// common title for all
-// 				htitle = TString::Format("#Lambda: %s[%d]=%.1f-%.1f;%s%s;Stat", "X", i,
-// 										 ctx.cx.min+ctx.cx.delta*i, ctx.cx.min+ctx.cx.delta*(i+1),
-// 										 ctx.y.label.Data(), ctx.y.format_unit().c_str());
-// 
-// 				// slices
-// 				hname = TString::Format("@@@d/Slices/h_@@@a_LambdaInvMassSlice_%s%02d", "X", i);
-// 				hSliceXYDiff[i] = RegTH1<TH1D>(hname, htitle, ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// 				objectsSlices->AddLast(hSliceXYDiff[i]);
-// 
-// 				// Fit QA
-// 				hname = TString::Format("@@@d/Slices/h_@@@a_LambdaInvMassFitQA_%s%02d", "X", i);
-// 				hSliceXYFitQA[i] = RegTH1<TH1D>(hname, htitle,ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// 				objectsSlices->AddLast(hSliceXYFitQA[i]);
-// 
-// 				// Chi2/NDF
-// 				hname = TString::Format("@@@d/Slices/h_@@@a_LambdaInvMassChi2NDF_%s%02d", "X", i);
-// 				hSliceXYChi2NDF[i] = RegTH1<TH1D>(hname, htitle, ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// 				objectsSlices->AddLast(hSliceXYChi2NDF[i]);
-// 			}
-// 
-// 			// Lambda: X vs Y
-// 			hname = "@@@d/h_@@@a_LambdaInvMassSig";
-// 
-// #ifdef HAVE_HISTASYMMERRORS
-// 			if (ctx.cx.bins_arr and ctx.cy.bins_arr)
-// 				hDiscreteXYSig = RegTH2<TH2DA>(hname, htitlec, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
-// 			else
-// 				hDiscreteXYSig = RegTH2<TH2DA>(hname, htitlec,
-// 					ctx.cx.bins, ctx.cx.min, ctx.cx.max,
-// 					ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// #else
-// 			if (ctx.cx.bins_arr and ctx.cy.bins_arr)
-// 				hDiscreteXYSig = RegTH2<TH2D>(hname, htitlec, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
-// 			else
-// 				hDiscreteXYSig = RegTH2<TH2D>(hname, htitlec,
-// 					ctx.cx.bins, ctx.cx.min, ctx.cx.max,
-// 					ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// #endif
-// 			hDiscreteXYSig->GetZaxis()->SetTitle(htitlez);
-// 
-// 			cname = "@@@d/c_@@@a_LambdaInvMassSig";
-// 			cDiscreteXYSig = RegCanvas(cname, htitle, can_width, can_height);
-// 
-// 			cname += "Full";
-// 			cDiscreteXYSigFull = RegCanvas(cname, htitle, can_width, can_height);
-// 
-// 			// Slices
-// 			cname = "@@@d/Slices/c_@@@a_LambdaInvMassSlice";
-// 			cSliceXYDiff = RegCanvas(cname.Data(), "#Lambda: Slice of Y distribution", can_width, can_height, ctx.cx.bins);
-// 
-// 			// Fit QA
-// 			cname = "@@@d/Slices/c_@@@a_LambdaInvMassFitQA";
-// 			cSliceXYFitQA = RegCanvas(cname.Data(), "#Lambda: Slice of Y distribution", can_width, can_height, ctx.cx.bins);
-// 
-// 			// Chi2NDF
-// 			cname = "@@@d/Slices/c_@@@a_LambdaInvMassChi2NDF";
-// 			cSliceXYChi2NDF = RegCanvas(cname.Data(), "#Lambda: Slice of Y distribution", can_width, can_height, ctx.cx.bins);
-// 
-// 			cname = "@@@d/Slices/c_@@@a_LambdaInvMassProjX";
-// 			cSliceXYprojX = RegCanvas(cname.Data(), "#Lambda: ProjectionsX of Y distribution", can_width, can_height, ctx.cx.bins);
-// 		}
-	}
+	objectsFits = new TObjArray();
+	objectsFits->SetName(ctx.histPrefix + "Fits");
 }
 
-void Dim2AnalysisFactory::GetDiffs(bool with_canvases)
+static TString format_hist_axes(const MultiDimAnalysisContext & ctx)
+{
+	TString htitle = TString::Format(";%s%s;%s%s",
+									 ctx.x.label.Data(), ctx.x.format_unit().Data(),
+									 ctx.y.label.Data(), ctx.y.format_unit().Data());
+
+	return htitle;
+}
+
+void MultiDimAnalysisExtension::init(TH1 * h)
+{
+  diffs = new ExtraDimensionMapper(ctx.histPrefix.Data(), h, ctx.V, "@@@d/diffs/h_@@@a_Signal");
+}
+
+void MultiDimAnalysisExtension::GetDiffs(bool with_canvases)
 {
 	Int_t can_width = 800, can_height = 600;
 	TString hname, htitle, cname;
@@ -250,34 +174,65 @@ void Dim2AnalysisFactory::GetDiffs(bool with_canvases)
 // 	}
 }
 
-void Dim2AnalysisFactory::proceed()
+void MultiDimAnalysisExtension::proceed()
 {
-	Bool_t isInRange = kFALSE;
-
-  Dim2DistributionFactory::proceed();
-
-  MultiDimAnalysisContext & ctx = MultiDimAnalysisExtension::ctx;
-
-  diffs->Fill2D(*ctx.x.var, *ctx.y.var, *ctx.V.var, *ctx.var_weight);
+  if (ctx.z.bins > 0)
+    diffs->Fill3D(*ctx.x.var, *ctx.y.var, *ctx.V.var, *ctx.var_weight);
+  else if (ctx.y.bins > 0)
+    diffs->Fill2D(*ctx.x.var, *ctx.y.var, *ctx.V.var, *ctx.var_weight);
+  else
+    diffs->Fill1D(*ctx.x.var, *ctx.V.var, *ctx.var_weight);
 }
 
-void Dim2AnalysisFactory::binnorm()
+void MultiDimAnalysisExtension::scale(Float_t factor)
 {
-  Dim2DistributionFactory::binnorm();
+ 	if (diffs)
+ 	{
+		for (uint i = 0; i < diffs->getNHists(); ++i)
+		{
+      TH1 * h = (*diffs)[i];
+      if (h) h->Scale(factor);
+// 				if (hSliceXYDiff) hSliceXYDiff[i]->Scale(factor);
+		}
+ 	}
 }
 
-void Dim2AnalysisFactory::scale(Float_t factor)
+void MultiDimAnalysisExtension::finalize(bool flag_details)
 {
-  Dim2DistributionFactory::scale(factor);
-  MultiDimAnalysisExtension::scale(factor);
+  prepareDiffCanvas();
 }
 
-void Dim2AnalysisFactory::finalize(bool flag_details)
+void MultiDimAnalysisExtension::niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
 {
-  Dim2DistributionFactory::finalize(flag_details);
+	if (diffs)
+	{
+    for (uint i = 0; i < diffs->getNHists(); ++i)
+    {
+// 			TVirtualPad * p = c_Diffs[i]->cd(1+i); FIXME
+// 			RootTools::NicePad(p, mt, mr, mb, ml);
+
+			TH1 * h = (*diffs)[i];
+			RootTools::NiceHistogram(h, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
+		}
+	}
 }
 
-void Dim2AnalysisFactory::prepareDiffCanvas()
+void MultiDimAnalysisExtension::niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
+{
+// 	if (ctx.useDiff())
+// 	{
+// 	for (uint i = 0; i < ctx.cx.bins; ++i)
+// 	{
+// 		TVirtualPad * p = cSliceXYDiff->cd(1+i);
+// 		RootTools::NicePad(p, mt, mr, mb, ml);
+// 
+// 		TH1 * h = hSliceXYDiff[i];
+// 		RootTools::NiceHistogram(h, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
+// 	}
+// 	}
+}
+
+void MultiDimAnalysisExtension::prepareDiffCanvas()
 {
 	TLatex * latex = new TLatex();
 	latex->SetNDC();
@@ -376,69 +331,8 @@ void Dim2AnalysisFactory::prepareDiffCanvas()
 	latex->Delete();
 }
 
-// TODO this two should be moved somewhere else, not in library
-void Dim2AnalysisFactory::applyAngDists(double a2, double a4, double corr_a2, double corr_a4)
-{
-// 	const size_t hists_num = 4;
-// 	TH2 * hist_to_map[hists_num] = { hSignalCounter, hSignalWithCutsXY, hDiscreteXY, hDiscreteXYSig };
-// 
-// 	for (size_t x = 0; x < hists_num; ++x)
-// 		applyAngDists(hist_to_map[x], a2, a4, corr_a2, corr_a4);
-}
-
-void Dim2AnalysisFactory::applyAngDists(TH2 * h, double a2, double a4, double corr_a2, double corr_a4)
-{
-	TF1 * f = new TF1("local_legpol", "angdist", -1, 1);
-	f->SetParameter(0, 1.0);
-	f->SetParameter(1, a2);
-	f->SetParameter(2, a4);
-
-	bool has_corr = false;
-	TF1 * f_corr = nullptr;
-	if ( corr_a2 != 0.0 or corr_a4 != 0.0 )
-	{
-		has_corr = true;
-		f_corr = new TF1("local_legpol_corr", "angdist", -1, 1);
-
-		f_corr->SetParameter(0, 1.0);
-		f_corr->SetParameter(1, corr_a2);
-		f_corr->SetParameter(2, corr_a4);
-	}
-
-	size_t bins_x = h->GetXaxis()->GetNbins();
-	size_t bins_y = h->GetYaxis()->GetNbins();
-
-	for (size_t x = 1; x <= bins_x; ++x)
-	{
-		double bin_l = h->GetXaxis()->GetBinLowEdge(x);
-		double bin_r = h->GetXaxis()->GetBinUpEdge(x);
-		double bin_w = bin_r - bin_l;
-		double corr_factor = 1.0;
-
-		double angmap = f->Integral(bin_l, bin_r);
-
-		if (has_corr)
-		{
-			corr_factor = f_corr->Integral(bin_l, bin_r);
-		}
-		else
-		{
-			angmap /= bin_w;
-		}
-
-		double scaling_factor = angmap / corr_factor;
-		for (size_t y = 1; y <= bins_y; ++y)
-		{
-			double tmp_val = h->GetBinContent(x, y);
-			h->SetBinContent(x, y, tmp_val * scaling_factor);
-		}
-	}
-	f->Delete();
-	if (f_corr) f_corr->Delete();
-}
-
 // TODO move away
-void Dim2AnalysisFactory::applyBinomErrors(TH2* N)
+void MultiDimAnalysisExtension::applyBinomErrors(TH2* N)
 {
 // 	const size_t hists_num = 4;
 // 	TH2 * hmap[hists_num] = { hSignalCounter, hSignalWithCutsXY, hDiscreteXY, hDiscreteXYSig };
@@ -448,12 +342,12 @@ void Dim2AnalysisFactory::applyBinomErrors(TH2* N)
 }
 
 // TODO move away
-void Dim2AnalysisFactory::applyBinomErrors(TH2* q, TH2* N)
+void MultiDimAnalysisExtension::applyBinomErrors(TH2* q, TH2* N)
 {
 	RootTools::calcBinomialErrors(q, N);
 }
 
-void Dim2AnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only)
+void MultiDimAnalysisExtension::fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only)
 {
 // // 	FitResultData res;
 // 	bool res;
@@ -591,7 +485,7 @@ void Dim2AnalysisFactory::fitDiffHists(FitterFactory & ff, HistFitParams & stdfi
 // 	printf("Raw/fine binning counts:  %f / %f  for %s\n", hDiscreteXY->Integral(), hDiscreteXYSig->Integral(), ctx.histPrefix.Data());
 }
 
-bool Dim2AnalysisFactory::fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries)
+bool MultiDimAnalysisExtension::fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries)
 {
 	Int_t bin_l = hist->FindBin(hfp.fun_l);
 	Int_t bin_u = hist->FindBin(hfp.fun_u);
@@ -631,14 +525,12 @@ bool Dim2AnalysisFactory::fitDiffHist(TH1 * hist, HistFitParams & hfp, double mi
 	return res;
 }
 
-bool Dim2AnalysisFactory::write(const char* filename, bool verbose)
+bool MultiDimAnalysisExtension::write(const char* filename, bool verbose)
 {
-  return Dim2DistributionFactory::write(filename, verbose)
-      && MultiDimAnalysisExtension::write(filename, verbose);
+  return diffs->write(filename, verbose);
 }
 
-bool Dim2AnalysisFactory::write(TFile* f, bool verbose)
+bool MultiDimAnalysisExtension::write(TFile* f, bool verbose)
 {
-return Dim2DistributionFactory::write(f, verbose)
-      && MultiDimAnalysisExtension::write(f, verbose);
+  return diffs->write(f, verbose);
 }
