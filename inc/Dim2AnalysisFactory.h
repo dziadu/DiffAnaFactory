@@ -27,8 +27,9 @@
 #include "TDirectory.h"
 #include "RootTools.h"
 
-#include "MultiDimAnalysisContext.h"
+#include "Dim2DistributionFactory.h"
 #include "ExtraDimensionMapper.h"
+#include "MultiDimAnalysisContext.h"
 #include "SmartFactory.h"
 #include "FitterFactory.h"
 
@@ -53,7 +54,7 @@ class Dim2AnalysisFactory;
 
 typedef void (FitCallback)(Dim2AnalysisFactory * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
 
-class Dim2AnalysisFactory : public TObject, public SmartFactory {
+class Dim2AnalysisFactory : public Dim2DistributionFactory {
 public:
 	Dim2AnalysisFactory();
 	Dim2AnalysisFactory(const MultiDimAnalysisContext & ctx);
@@ -73,20 +74,13 @@ public:
 	virtual void binnorm();
 	virtual void scale(Float_t factor);
 
-	static void niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
-
-// 	void niceHists(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
-	void niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format);
 	void niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 	void niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 
 	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
 	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
 
-	virtual const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
-
 	virtual void prepareDiffCanvas();
-	virtual void prepareSigCanvas(bool flag_details = false);
 
 	void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
 	static void applyAngDists(TH2 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
@@ -102,7 +96,6 @@ public:
   bool write(const char * filename/* = nullptr*/, bool verbose = false);
 
 protected:
-  enum Dimensions { DIM1, DIM2, DIM3 };
 	virtual void prepare(Dimensions dim);
 	virtual bool copyHistogram(TH1 * src, TH1 * dst);
 
@@ -116,8 +109,6 @@ public:
 // #else
 // 	TH2D * hSignalCounter;			//->	// discrete X-Y, signal extracted
 // #endif
-  TH2 * hSignalCounter;			//->	// discrete X-Y, signal extracted
-	TCanvas * cSignalCounter;			//->
 
 // 	TCanvas * cDiscreteXYSig;		//->
 // 	TCanvas * cDiscreteXYSigFull;	//->
@@ -141,7 +132,6 @@ public:
 	TObjArray * objectsFits;		//!
 
 protected:
-  Dimensions dim_version;
 
 private:
 	FitCallback * fitCallback;

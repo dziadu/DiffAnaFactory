@@ -60,27 +60,23 @@ public:
 
 	Dim3DistributionFactory & operator=(const Dim3DistributionFactory & fa);
 
-	enum Stages { RECO, FIT, SIG, ALL };
-	void Init(Stages s = ALL);
 	void GetDiffs(bool with_canvases = true);
 
-	void Proceed();
-	void Finalize(Stages s = ALL, bool flag_details = false);
+  virtual void init();
+	virtual void proceed();
+	virtual void finalize(bool flag_details = false);
 
-	void binnorm();
-	void scale(Float_t factor);
+	virtual void binnorm();
+	virtual void scale(Float_t factor);
 
 	static void niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 
 // 	void niceHists(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 	void niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format);
-	void niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
-	void niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 
-	const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
+	virtual const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
 
-	void prepareDiffCanvas();
-	void prepareSigCanvas(bool flag_details = false);
+	virtual void prepareSigCanvas(bool flag_details = false);
 
 	void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
 	static void applyAngDists(TH2 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
@@ -88,39 +84,29 @@ public:
 	void applyBinomErrors(TH2 * N);
 	static void applyBinomErrors(TH2 * q, TH2 * N);
 
-	TH3 ** getSigsArray(size_t & size);
+	virtual TH3 ** getSigsArray(size_t & size);
 
-private:
-	void prepare();
-	bool copyHistogram(TH1 * src, TH1 * dst);
+protected:
+	enum Dimensions { DIM1, DIM2, DIM3 };
+	virtual void prepare(Dimensions dim);
+	virtual bool copyHistogram(TH1 * src, TH1 * dst);
 
 public:
 	MultiDimDistributionContext ctx;		//||
 
 // #ifdef HAVE_HISTASYMMERRORS
-// 	TH2DA * hSignalXY;
+// 	TH2DA * hSignalCounter;
 // #else
-	TH3D * hSignalXY;			//->	// discrete X-Y, signal extracted
+// 	TH2D * hSignalCounter;			//->	// discrete X-Y, signal extracted
 // #endif
-	TCanvas * cSignalXY;			//->
-// 
+  TH2 * hSignalCounter;			//->	// discrete X-Y, signal extracted
+	TCanvas * cSignalCounter;			//->
+
 // 	TCanvas * cDiscreteXYSig;		//->
 // 	TCanvas * cDiscreteXYSigFull;	//->
 
-// 	TH1D *** hDiscreteXYDiff;		//[10]	// 3rd var distribution in diff bin
-
-// 	TH1D ** hSliceXYFitQA;			//[10]	// QA values
-// 	TCanvas * cSliceXYFitQA;		//!
-// 
-// 	TH1D ** hSliceXYChi2NDF;		//[10]	// Chi2/NDF values
-// 	TCanvas * cSliceXYChi2NDF;		//!
-// 	TCanvas * cSliceXYprojX;		//!
-// 
-// 	TH1D ** hSliceXYDiff;			//!		// slice of x-var in discrete X-Y
-// 	TCanvas * cSliceXYDiff;			//!
-// 
-// 	TObjArray * objectsDiffs;		//!
-// 	TObjArray * objectsSlices;		//!
+protected:
+  Dimensions dim_version;
 
 	ClassDef(Dim3DistributionFactory, 1);
 };

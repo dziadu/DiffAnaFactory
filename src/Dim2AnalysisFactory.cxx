@@ -59,45 +59,33 @@ const TString flags_fit_a = "B,Q,0";
 const TString flags_fit_b = "";
 
 Dim2AnalysisFactory::Dim2AnalysisFactory()
-  : SmartFactory("null")
+  : Dim2DistributionFactory()
   , ctx(MultiDimAnalysisContext())
-  , hSignalCounter(nullptr)
-  , cSignalCounter(nullptr)
   , diffs(nullptr)
   , c_Diffs(nullptr)
   , objectsFits(nullptr)
-  , dim_version(DIM1)
   , fitCallback(nullptr)
 {
-  prepare(DIM2);
 }
 
 Dim2AnalysisFactory::Dim2AnalysisFactory(const MultiDimAnalysisContext & context)
-  : SmartFactory(context.AnaName())
+  : Dim2DistributionFactory(context)
   , ctx(context)
-  , hSignalCounter(nullptr)
-  , cSignalCounter(nullptr)
   , diffs(nullptr)
   , c_Diffs(nullptr)
   , objectsFits(nullptr)
-  , dim_version(DIM1)
   , fitCallback(nullptr)
 {
-  prepare(DIM2);
 }
 
 Dim2AnalysisFactory::Dim2AnalysisFactory(const MultiDimAnalysisContext * context)
-  : SmartFactory(context->AnaName())
+  : Dim2DistributionFactory(context)
   , ctx(*context)
-  , hSignalCounter(nullptr)
-  , cSignalCounter(nullptr)
   , diffs(nullptr)
   , c_Diffs(nullptr)
   , objectsFits(nullptr)
-  , dim_version(DIM1)
   , fitCallback(nullptr)
 {
-  prepare(DIM2);
 }
 
 Dim2AnalysisFactory::~Dim2AnalysisFactory()
@@ -182,25 +170,7 @@ TString format_hist_Vaxis(const MultiDimAnalysisContext & ctx)
 
 void Dim2AnalysisFactory::init()
 {
-	Int_t can_width = 800, can_height = 600;
-	TString htitle = format_hist_axes(ctx);
-	TString htitleV = format_hist_Vaxis(ctx);
-
-	// input histograms
-	if (!hSignalCounter)
-	{
-#ifdef HAVE_HISTASYMMERRORS
-		hSignalCounter = RegTH2<TH2DA>("@@@d/h_@@@a_Signal", htitle,
-#else
-    hSignalCounter = RegTH2<TH2D>("@@@d/h_@@@a_Signal", htitle,
-#endif
-				ctx.x.bins, ctx.x.min, ctx.x.max,
-				ctx.y.bins, ctx.y.min, ctx.y.max);
-		hSignalCounter->GetZaxis()->SetTitle(htitleV);
-  }
-
-  if (!cSignalCounter)
-    cSignalCounter = RegCanvas("@@@d/c_@@@a_Signal", htitle, can_width, can_height);
+	Dim2DistributionFactory::init();
 
   diffs = new ExtraDimensionMapper(ctx.histPrefix.Data(), hSignalCounter, ctx.V, "@@@d/diffs/h_@@@a_Signal");
 
@@ -463,40 +433,6 @@ void Dim2AnalysisFactory::finalize(bool flag_details)
 // 	}
 }
 
-void Dim2AnalysisFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
-{
-	RootTools::NicePad(pad, mt, mr, mb, ml);
-	RootTools::NiceHistogram(hist, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
-}
-
-void Dim2AnalysisFactory::niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format)
-{
-// 	RootTools::NicePad(cSignalXY->cd(), pf);
-	RootTools::NiceHistogram(hSignalCounter, format);
-	hSignalCounter->GetYaxis()->CenterTitle(kTRUE);
-// 
-// 	// Signal with cut
-// 	if (ctx.useCuts())
-// 	{
-// 		RootTools::NicePad(cSignalWithCutsXY->cd(), pf);
-// 		RootTools::NiceHistogram(hSignalWithCutsXY, format);
-// 		hSignalWithCutsXY->GetYaxis()->CenterTitle(kTRUE);
-// 	}
-// 
-// 	if (ctx.useClip())
-// 	{
-// 		RootTools::NicePad(cDiscreteXY->cd(), pf);
-// 		RootTools::NicePad(cDiscreteXYFull->cd(), pf);
-// 		RootTools::NiceHistogram(hDiscreteXY, format);
-// 		hDiscreteXY->GetYaxis()->CenterTitle(kTRUE);
-// 
-// 		RootTools::NicePad(cDiscreteXYSig->cd(), pf);
-// 		RootTools::NicePad(cDiscreteXYSigFull->cd(), pf);
-// 		RootTools::NiceHistogram(hDiscreteXYSig, format);
-// 		hDiscreteXYSig->GetYaxis()->CenterTitle(kTRUE);
-// 	}
-}
-
 void Dim2AnalysisFactory::niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
 {
 	if (diffs)
@@ -624,181 +560,6 @@ void Dim2AnalysisFactory::prepareDiffCanvas()
 // 	}
 
 	latex->Delete();
-}
-
-void Dim2AnalysisFactory::prepareSigCanvas(bool flag_details)
-{
-	TString colzopts = "colz";
-	if (flag_details)
-		colzopts += ",text";
-	TString coltopts = "col,text";
-
-	hSignalCounter->GetXaxis()->SetTitle(ctx.x.format_string());
-	hSignalCounter->GetYaxis()->SetTitle(ctx.y.format_string());
-	hSignalCounter->GetZaxis()->SetTitle(ctx.z.format_string());
-
-	cSignalCounter->cd(0);
-	hSignalCounter->Draw("colz");
-	RootTools::NicePalette(hSignalCounter, 0.05);
-	RootTools::NoPalette(hSignalCounter);
-	gPad->Update();
-
-// 	if (cDiscreteXY)
-// 	{
-// 		hDiscreteXY->GetXaxis()->SetTitle(haxx);
-// 		hDiscreteXY->GetYaxis()->SetTitle(haxy);
-// 		hDiscreteXY->GetZaxis()->SetTitle(haxz);
-// 
-// 		cDiscreteXY->cd(0);
-// 		hDiscreteXY->Draw(colzopts);
-// 		RootTools::NicePalette(hDiscreteXY, 0.05);
-// 		hDiscreteXY->SetMarkerSize(1.6);
-// 		gPad->Update();
-// 
-// 		cDiscreteXYFull->cd(0);
-// 		TH2I * h1 = (TH2I *)hSignalCounter->DrawCopy("colz"); FIXME
-// 		hDiscreteXY->Draw(coltopts+",same");
-// 		RootTools::NoPalette(h1);
-// 		gPad->Update();
-// 	}
-
-// 	if (cDiscreteXYSig)
-// 	{
-// 		hDiscreteXYSig->GetXaxis()->SetTitle(haxx);
-// 		hDiscreteXYSig->GetYaxis()->SetTitle(haxy);
-// 		hDiscreteXYSig->GetZaxis()->SetTitle(haxz);
-// 
-// 		hDiscreteXYSig->SetMarkerColor(kWhite);
-// 		hDiscreteXYSig->SetMarkerSize(1.6);
-// 
-// 		cDiscreteXYSig->cd(0);
-// 		hDiscreteXYSig->Draw(colzopts);
-// 		RootTools::NicePalette(hDiscreteXYSig, 0.05);
-// 		gPad->Update();
-// 
-// 		cDiscreteXYSigFull->cd(0);
-// 		TH2I * h2 = (TH2I *)hSignalWithCutsXY->DrawCopy("colz");
-// 		hDiscreteXYSig->Draw(coltopts+",same");
-// 		RootTools::NoPalette(h2);
-// 		gPad->Update();
-// 	}
-
-	float qa_min = 0.;
-	float qa_max = 0.;
-
-	float cn_min = 0.;
-	float cn_max = 0.;
-
-// 	for (uint i = 0; i < ctx.cx.bins; ++i)
-// 	{
-// 		if (cSliceXYDiff)
-// 		{
-// 			cSliceXYDiff->cd(1+i);
-// 			hSliceXYDiff[i]->Draw("E");
-// 		}
-// 
-// 		if (cSliceXYFitQA)
-// 		{
-// 			cSliceXYFitQA->cd(1+i);
-// 			hSliceXYFitQA[i]->Draw("E");
-// 
-// 			for (uint j = 0; j < ctx.cy.bins; ++j)
-// 			{
-// 				float cnt = hSliceXYFitQA[i]->GetBinContent(1+j);
-// 				float err_lo = cnt - hSliceXYFitQA[i]->GetBinErrorLow(1+j);
-// 				float err_up = cnt + hSliceXYFitQA[i]->GetBinErrorUp(1+j);
-// 
-// 				if (cnt and (err_lo or err_up))
-// 				{
-// 					if (qa_min == 0.)
-// 						qa_min = err_lo;
-// 					else
-// 						qa_min = err_lo < qa_min ? err_lo : qa_min;
-// 
-// 					if (qa_max == 0.)
-// 						qa_max = err_up;
-// 					else
-// 						qa_max = err_up > qa_max ? err_up : qa_max;
-// 				}
-// 			}
-// 		}
-// 
-// 		if (cSliceXYChi2NDF)
-// 		{
-// 			cSliceXYChi2NDF->cd(1+i);
-// 			hSliceXYChi2NDF[i]->Draw("E");
-// 
-// 			for (uint j = 0; j < ctx.cy.bins; ++j)
-// 			{
-// 				float cnt = hSliceXYChi2NDF[i]->GetBinContent(1+j);
-// 				float err_lo = cnt - hSliceXYChi2NDF[i]->GetBinErrorLow(1+j);
-// 				float err_up = cnt + hSliceXYChi2NDF[i]->GetBinErrorUp(1+j);
-// 
-// 				if (cnt and (err_lo or err_up))
-// 				{
-// 					if (cn_min == 0.)
-// 						cn_min = err_lo;
-// 					else
-// 						cn_min = err_lo < cn_min ? err_lo : cn_min;
-// 
-// 					if (cn_max == 0.)
-// 						cn_max = err_up;
-// 					else
-// 						cn_max = err_up > cn_max ? err_up : cn_max;
-// 				}
-// 			}
-// 		}
-// 
-// 		if (cSliceXYprojX)
-// 		{
-// 			cSliceXYprojX->cd();
-// 
-// 			int bmaxx, bmaxy, bmaxz; hDiscreteXYSig->GetMaximumBin(bmaxx, bmaxy, bmaxz);
-// 			int bminx, bminy, bminz; hDiscreteXYSig->GetMinimumBin(bminx, bminy, bminz);
-// 			double max = hDiscreteXYSig->GetBinContent(bmaxx, bmaxy, bmaxz);
-// 			double min = hDiscreteXYSig->GetBinContent(bminx, bminy, bminz);
-// 			double ddelta = (max - min) * 0.1;
-// 
-// 			char buff[1000];
-// 			for (uint j = 0; j < ctx.cy.bins; ++j)
-// 			{
-// 				sprintf(buff, "h_%s_xysig_proj_%d", ctx.histPrefix.Data(), j);
-// 				TH1 * h = hDiscreteXYSig->ProjectionX(buff, 1+j, 1+j);
-// 				h->SetLineWidth(1);
-// 				h->SetLineColor(j*4);
-// 				h->SetMarkerStyle(j+20);
-// 				h->SetMarkerColor(j*4);
-// 
-// 				if (j == 0)
-// 				{
-// 					h->Draw("hist,E,C");
-// 					h->GetYaxis()->SetRangeUser(min - ddelta, max + ddelta);
-// 				}
-// 				else
-// 				{
-// 					h->Draw("hist,E,C,same");
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	float qa_del = 0.05 * (qa_max - qa_min);
-// 	float cn_del = 0.05 * (cn_max - cn_min);
-// 
-// 	for (uint i = 0; i < ctx.cx.bins; ++i)
-// 	{
-// 		if (cSliceXYFitQA)
-// 		{
-// 			cSliceXYFitQA->cd(1+i);
-// 			hSliceXYFitQA[i]->GetYaxis()->SetRangeUser(qa_min - qa_del, qa_max + qa_del);
-// 		}
-// 
-// 		if (cSliceXYChi2NDF)
-// 		{
-// 			cSliceXYChi2NDF->cd(1+i);
-// 			hSliceXYChi2NDF[i]->GetYaxis()->SetRangeUser(cn_min - cn_del, cn_max + cn_del);
-// 		}
-// 	}
 }
 
 // TODO this two should be moved somewhere else, not in library

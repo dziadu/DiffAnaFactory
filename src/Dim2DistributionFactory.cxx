@@ -71,7 +71,7 @@ Dim2DistributionFactory::Dim2DistributionFactory()
 Dim2DistributionFactory::Dim2DistributionFactory(const MultiDimDistributionContext & context)
   : SmartFactory(context.AnaName())
   , ctx(context)
- , hSignalCounter(nullptr)
+  , hSignalCounter(nullptr)
   , cSignalCounter(nullptr)
   , dim_version(DIM1)
 {
@@ -81,7 +81,7 @@ Dim2DistributionFactory::Dim2DistributionFactory(const MultiDimDistributionConte
 Dim2DistributionFactory::Dim2DistributionFactory(const MultiDimDistributionContext * context)
   : SmartFactory(context->AnaName())
   , ctx(*context)
- , hSignalCounter(nullptr)
+  , hSignalCounter(nullptr)
   , cSignalCounter(nullptr)
   , dim_version(DIM1)
 {
