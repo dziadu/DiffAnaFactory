@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(MultiDimAnalysisFactory CXX)
+project(MultiDimensionalFactory CXX)
 string(TOUPPER "${PROJECT_NAME}" CAPS_PROJECT_NAME)
 
 ##### the version number
@@ -71,7 +71,7 @@ link_directories(
 )
 
 ##### make targets
-ROOT_STANDARD_LIBRARY_PACKAGE(MultiDimAnalysisFactory
+ROOT_STANDARD_LIBRARY_PACKAGE(MultiDimensionalFactory
 	DEPENDENCIES
 		${jsoncpp_dep} ${ROOT_LIBRARIES} ${ROOTTOOLS_LIBRARIES}
 		${HISTASYMMERRORS_LIBRARIES}
@@ -100,11 +100,11 @@ install(FILES
 	DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 
 # Add all targets to the build-tree export set
-export(TARGETS MultiDimAnalysisFactory
+export(TARGETS MultiDimensionalFactory
 	FILE ${CMAKE_PROJECT_NAME}Targets.cmake)
 
 # Install the export set for use with the install-tree
-install(TARGETS MultiDimAnalysisFactory
+install(TARGETS MultiDimensionalFactory
 	EXPORT ${CMAKE_PROJECT_NAME}Targets
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	COMPONENT shlib COMPONENT dev)

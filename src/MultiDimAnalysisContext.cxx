@@ -16,8 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#include "Dim3AnalysisContext.h"
+#include "MultiDimAnalysisContext.h"
 #include <json/json.h>
 
 
@@ -28,16 +27,28 @@
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
-void Dim3AnalysisContext::format_z_axis()
+void MultiDimAnalysisContext::format_V_axis()
 {
-	TString hunit = TString::Format("1/%s%s", x.unit.Data(), y.unit.Data());
-	TString htitle = TString::Format("d^{2}%s/d%sd%s", diff_var_name.Data(), x.label.Data(), y.label.Data());
+	TString hunit = "1/";
+  if (x.bins) hunit += x.unit.Data();
+  if (y.bins) hunit += y.unit.Data();
+  if (z.bins) hunit += z.unit.Data();
 
-	z.label = htitle;
-	z.unit = hunit;
+  UInt_t dim_cnt = 0;
+  if (x.bins) ++dim_cnt;
+  if (y.bins) ++dim_cnt;
+  if (z.bins) ++dim_cnt;
+
+	TString htitle = TString::Format("d^{%d}%s/", dim_cnt, diff_var_name.Data());
+  if (x.bins) htitle += TString("d")+x.label.Data();
+  if (y.bins) htitle += TString("d")+y.label.Data();
+  if (z.bins) htitle += TString("d")+z.label.Data();
+
+	V.label = htitle;
+	V.unit = hunit;
 }
 
-Dim3AnalysisContext::Dim3AnalysisContext() : Dim2AnalysisContext(), json_found(false)
+MultiDimAnalysisContext::MultiDimAnalysisContext() : MultiDimDistributionContext()
 {
 	// config
 	TString histPrefix = "Dummy";	// prefix for histograms	
@@ -49,35 +60,18 @@ Dim3AnalysisContext::Dim3AnalysisContext() : Dim2AnalysisContext(), json_found(f
 // 	cutMin = cutMax = 0;
 
 	// variables to use for diff analysis
-// 	var_weight = 0;
+	var_weight = 0;
 	// variable used for cuts when cutCut==kTRUE
 }
 
-Dim3AnalysisContext::Dim3AnalysisContext(const Dim3AnalysisContext & ctx) : Dim2AnalysisContext()
+MultiDimAnalysisContext::MultiDimAnalysisContext(const MultiDimAnalysisContext & ctx) : MultiDimDistributionContext()
 {
 	*this = ctx;
 	histPrefix = ctx.histPrefix;
 }
 
-void Dim3AnalysisContext::update() const
-{
-	z.delta = ((z.max - z.min)/z.bins);
 
-  Dim2AnalysisContext::update();
-}
-
-bool Dim3AnalysisContext::validate() const
-{
-	if (!z.var)
-		return false;
-
-  Dim2AnalysisContext::validate();
-// 	update();
-
-	return true;
-}
-
-Dim3AnalysisContext::~Dim3AnalysisContext()
+MultiDimAnalysisContext::~MultiDimAnalysisContext()
 {}
 
 extern bool jsonReadTStringKey(const Json::Value & jsondata, const char * key, TString & target);
@@ -86,7 +80,7 @@ extern bool jsonReadUIntKey(const Json::Value & jsondata, const char * key, uint
 extern bool jsonReadFloatKey(const Json::Value & jsondata, const char * key, float & target);
 extern bool jsonReadDoubleKey(const Json::Value & jsondata, const char * key, double & target);
 
-bool Dim3AnalysisContext::configureFromJson(const char * name)
+bool MultiDimAnalysisContext::configureFromJson(const char * name)
 {
 	std::ifstream ifs(json_fn.Data());
 	if (!ifs.is_open())
@@ -114,9 +108,9 @@ bool Dim3AnalysisContext::configureFromJson(const char * name)
 
 	cfg = ana[name];
 
-	const size_t axis_num = 4;
-	const char * axis_labels[axis_num] = { "x", "y", "z", "V" };
-	AxisCfg * axis_ptrs[axis_num] = { &x, &y, &z, &V};
+	const size_t axis_num = 3;
+	const char * axis_labels[axis_num] = { "x", "y", "V" };
+	AxisCfg * axis_ptrs[axis_num] = { &x, &y, &V };
 
 	for (uint i = 0; i < axis_num; ++i)
 	{
@@ -138,7 +132,7 @@ bool Dim3AnalysisContext::configureFromJson(const char * name)
 	return true;
 }
 
-bool Dim3AnalysisContext::configureToJson(const char * name, const char * jsonfile)
+bool MultiDimAnalysisContext::configureToJson(const char * name, const char * jsonfile)
 {
 	(void)jsonfile;
 
@@ -165,10 +159,10 @@ bool Dim3AnalysisContext::configureToJson(const char * name, const char * jsonfi
 	axis["bins"]	= 100;
 	axis["min"]		= 0;
 	axis["max"]		= 100;
-	axis["label"]	= "zlabel";
+	axis["label"]	= "Vlabel";
 	axis["var"]		= "none";
 
-	cfg["z"] = axis;
+	cfg["V"] = axis;
 
 	ana[name] = cfg;
 
@@ -183,62 +177,18 @@ bool Dim3AnalysisContext::configureToJson(const char * name, const char * jsonfi
 	return true;
 }
 
-bool Dim3AnalysisContext::findJsonFile(const char * initial_path, const char * filename, int search_depth)
-{
-	const size_t max_len = 1024*16;
-	int depth_counter = 0;
-	char * resolv_name = new char[max_len];
-	char * test_path = new char[max_len];
-	struct stat buffer;
-
-	strncpy(test_path, initial_path, max_len);
-
-	char * ret_val = 0;
-	while (true)
-	{
-		ret_val = realpath(test_path, resolv_name);
-		if (!ret_val)
-			break;
-
-		std::string name = resolv_name;
-		name += "/";
-		name += filename;
-
-		if (stat (name.c_str(), &buffer) == 0)
-		{
-			json_found = true;
-			json_fn = name;
-			break;
-		}
-
-		strncpy(test_path, resolv_name, max_len);
-		strncpy(test_path+strlen(test_path), "/..", 4);
-
-		if (strcmp(resolv_name, "/") == 0)
-			break;
-
-		++depth_counter;
-		if (search_depth >= 0 and (depth_counter > search_depth))
-			break;
-	}
-
-	if (json_found)
-		printf(" Found json config at %s\n", json_fn.Data());
-
-	delete [] resolv_name;
-	delete [] test_path;
-
-	return json_found;
-}
-
-Dim3AnalysisContext & Dim3AnalysisContext::operator=(const Dim3AnalysisContext & ctx)
+MultiDimAnalysisContext & MultiDimAnalysisContext::operator=(const MultiDimAnalysisContext & ctx)
 {
 // 	histPrefix = ctx.histPrefix;
 	ctxName = ctx.ctxName;
 
 	x = ctx.x;
 	y = ctx.y;
-	z = ctx.z;
+  z = ctx.z;
+	V = ctx.V;
+
+// 	cutMin = ctx.cutMin;
+// 	cutMax = ctx.cutMax;
 
 	var_weight = ctx.var_weight;
 
@@ -247,30 +197,21 @@ Dim3AnalysisContext & Dim3AnalysisContext::operator=(const Dim3AnalysisContext &
 	return *this;
 }
 
-bool Dim3AnalysisContext::operator==(const Dim3AnalysisContext & ctx)
+bool MultiDimAnalysisContext::operator==(const MultiDimAnalysisContext & ctx)
 {
-	if (this->x != ctx.x)
-	{
-		fprintf(stderr, "Different number of x bins: %d vs %d\n", this->x.bins, ctx.x.bins);
-		return false;
-	}
+  bool res = (MultiDimDistributionContext)*this == (MultiDimDistributionContext)ctx;
+  if (!res) return false;
 
-	if (this->y != ctx.y)
+	if (this->V != ctx.V)
 	{
-		fprintf(stderr, "Different number of y bins: %d vs %d\n", this->y.bins, ctx.y.bins);
-		return false;
-	}
-
-	if (this->z != ctx.z)
-	{
-		fprintf(stderr, "Different number of z bins: %d vs %d\n", this->z.bins, ctx.z.bins);
+		fprintf(stderr, "Different number of z bins: %d vs %d\n", this->V.bins, ctx.V.bins);
 		return false;
 	}
 
 	return true;
 }
 
-bool Dim3AnalysisContext::operator!=(const Dim3AnalysisContext & ctx)
+bool MultiDimAnalysisContext::operator!=(const MultiDimAnalysisContext & ctx)
 {
 	return !operator==(ctx);
 }

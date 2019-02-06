@@ -60,7 +60,7 @@ const TString flags_fit_b = "";
 
 Dim2AnalysisFactory::Dim2AnalysisFactory()
   : SmartFactory("null")
-  , ctx(Dim2AnalysisContext())
+  , ctx(MultiDimAnalysisContext())
   , hSignalXY(nullptr)
   , diffs(nullptr)
   , c_Diffs(nullptr)
@@ -70,7 +70,7 @@ Dim2AnalysisFactory::Dim2AnalysisFactory()
 	prepare();
 }
 
-Dim2AnalysisFactory::Dim2AnalysisFactory(const Dim2AnalysisContext & context)
+Dim2AnalysisFactory::Dim2AnalysisFactory(const MultiDimAnalysisContext & context)
   : SmartFactory(context.AnaName())
   , ctx(context)
   , hSignalXY(nullptr)
@@ -82,7 +82,7 @@ Dim2AnalysisFactory::Dim2AnalysisFactory(const Dim2AnalysisContext & context)
 	prepare();
 }
 
-Dim2AnalysisFactory::Dim2AnalysisFactory(const Dim2AnalysisContext * context)
+Dim2AnalysisFactory::Dim2AnalysisFactory(const MultiDimAnalysisContext * context)
   : SmartFactory(context->AnaName())
   , ctx(*context)
   , hSignalXY(nullptr)
@@ -96,7 +96,7 @@ Dim2AnalysisFactory::Dim2AnalysisFactory(const Dim2AnalysisContext * context)
 
 // Dim2AnalysisFactory::Dim2AnalysisFactory() :
 // 	SmartFactory("null"),
-// 	ctx(Dim2AnalysisContext()),
+// 	ctx(MultiDimAnalysisContext()),
 // 	hSignalXY(nullptr), cSignalXY(nullptr),
 // 	hSignalWithCutsXY(nullptr), cSignalWithCutsXY(nullptr),
 // 	hDiscreteXY(nullptr), cDiscreteXY(nullptr), cDiscreteXYFull(nullptr),
@@ -111,7 +111,7 @@ Dim2AnalysisFactory::Dim2AnalysisFactory(const Dim2AnalysisContext * context)
 // 	prepare();
 // }
 // 
-// Dim2AnalysisFactory::Dim2AnalysisFactory(const Dim2AnalysisContext & context) :
+// Dim2AnalysisFactory::Dim2AnalysisFactory(const MultiDimAnalysisContext & context) :
 // 	SmartFactory(context.AnaName()),
 // 	ctx(context),
 // 	hSignalXY(nullptr), cSignalXY(nullptr),
@@ -128,7 +128,7 @@ Dim2AnalysisFactory::Dim2AnalysisFactory(const Dim2AnalysisContext * context)
 // 	prepare();
 // }
 // 
-// Dim2AnalysisFactory::Dim2AnalysisFactory(const Dim2AnalysisContext * context) :
+// Dim2AnalysisFactory::Dim2AnalysisFactory(const MultiDimAnalysisContext * context) :
 // 	SmartFactory(context->AnaName()),
 // 	ctx(*context),
 // 	hSignalXY(nullptr), cSignalXY(nullptr),
@@ -205,7 +205,7 @@ void Dim2AnalysisFactory::prepare()
 	objectsFits->SetName(ctx.histPrefix + "Fits");
 }
 
-TString format_hist_axes(const Dim2AnalysisContext & ctx)
+static TString format_hist_axes(const MultiDimAnalysisContext & ctx)
 {
 	TString htitle = TString::Format(";%s%s;%s%s",
 									 ctx.x.label.Data(), ctx.x.format_unit().c_str(),
@@ -214,7 +214,7 @@ TString format_hist_axes(const Dim2AnalysisContext & ctx)
 	return htitle;
 }
 
-// TString format_hist_caxes(const Dim2AnalysisContext & ctx)
+// TString format_hist_caxes(const MultiDimAnalysisContext & ctx)
 // {
 // 	TString htitle = TString::Format(";%s%s;%s%s",
 // 									 ctx.cx.label.Data(), ctx.cx.format_unit().c_str(),
@@ -223,21 +223,22 @@ TString format_hist_axes(const Dim2AnalysisContext & ctx)
 // 	return htitle;
 // }
 
-TString format_hist_xaxis(const Dim2AnalysisContext & ctx)
+TString format_hist_xaxis(const MultiDimAnalysisContext & ctx)
 {
 	TString htitle = TString::Format("%s%s", ctx.x.label.Data(), ctx.x.format_unit().c_str());
 
 	return htitle;
 }
 
-TString format_hist_yaxis(const Dim2AnalysisContext & ctx)
+TString format_hist_yaxis(const MultiDimAnalysisContext & ctx)
 {
 	TString htitle = TString::Format("%s%s", ctx.y.label.Data(), ctx.y.format_unit().c_str());
 
 	return htitle;
 }
 
-TString format_hist_Vaxis(const Dim2AnalysisContext & ctx)
+
+TString format_hist_Vaxis(const MultiDimAnalysisContext & ctx)
 {
 	TString htitle = TString::Format("%s%s", ctx.V.label.Data(), ctx.V.format_unit().c_str());
 

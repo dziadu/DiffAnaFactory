@@ -17,8 +17,8 @@
 */
 
 
-#ifndef DIM2ANALYSISCONTEXT_H
-#define DIM2ANALYSISCONTEXT_H
+#ifndef MULTIDIMDISTRIBUTIONCONTEXT_H
+#define MULTIDIMDISTRIBUTIONCONTEXT_H
 
 #include <TNamed.h>
 #include <TString.h>
@@ -44,8 +44,8 @@ public:
 	Double_t min;			// minimum axis value
 	Double_t max;			// maximum axis value
 	Double_t * bins_arr;	// here one can put custom bins division array
-	mutable Double_t delta, cdelta;	// CAUTION: overriden by validate(), do not set by hand
-	Float_t * var;		//!	here is the address of the variable which is used to fill data
+	mutable Double_t delta;	// CAUTION: overriden by validate(), do not set by hand
+  Float_t * var;		//!	here is the address of the variable which is used to fill data
 
 	std::string format_unit() const;
 
@@ -53,10 +53,10 @@ public:
 	static std::string format_unit(const TString & unit);
 	static std::string format_unit(const std::string & unit);
 
-	ClassDef(AxisCfg, 2);
+	ClassDef(AxisCfg, 1);
 };
 
-class Dim2AnalysisContext : public TNamed
+class MultiDimDistributionContext : public TNamed
 {
 public:
 	// config
@@ -64,7 +64,7 @@ public:
 	mutable TString ctxName;	// prefix for histograms
 	TString diff_var_name;
 
-	AxisCfg x, y, V;     // x, y are two dimensions, V is a final Variable axis
+	AxisCfg x, y, z;     // x, y are two dimensions, V is a final Variable axis
 
 	// cut range when useCut==kTRUE
 // 	Double_t cutMin;			// Cut: min
@@ -74,21 +74,19 @@ public:
 	Float_t * var_weight;	//!
 	// variable used for cuts when cutCut==kTRUE
 
-	Dim2AnalysisContext();
-	Dim2AnalysisContext(const Dim2AnalysisContext & ctx);
-	virtual ~Dim2AnalysisContext();
+	MultiDimDistributionContext();
+	MultiDimDistributionContext(const MultiDimDistributionContext & ctx);
+	virtual ~MultiDimDistributionContext();
 
-	virtual Dim2AnalysisContext & operator=(const Dim2AnalysisContext & ctx);
-	virtual bool operator==(const Dim2AnalysisContext & ctx);
-	virtual bool operator!=(const Dim2AnalysisContext & ctx);
+	MultiDimDistributionContext & operator=(const MultiDimDistributionContext & ctx);
+	bool operator==(const MultiDimDistributionContext & ctx);
+	bool operator!=(const MultiDimDistributionContext & ctx);
 
 	virtual void update() const;
 	virtual bool validate() const;
 
 	// flags
 // 	virtual bool useCuts() const { return (cutMin or cutMax); }
-
-	virtual void format_V_axis();
 
 	virtual const char * GetName() const { return ctxName.Data(); }
 	virtual void SetName(const char* name) { ctxName = name; }
@@ -98,10 +96,11 @@ public:
 	virtual bool configureFromJson(const char * name);
 	virtual bool configureToJson(const char * name, const char * jsonfile);
 
-private:
+protected:
 	TString json_fn;
 	bool json_found;
-	ClassDef(Dim2AnalysisContext, 2);
+
+  ClassDef(MultiDimDistributionContext, 1);
 };
 
-#endif // DIM2ANALYSISCONTEXT_H
+#endif // MULTIDIMDISTRIBUTIONCONTEXT_H

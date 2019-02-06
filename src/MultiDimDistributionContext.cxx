@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Dim2AnalysisContext.h"
+#include "MultiDimDistributionContext.h"
 #include <json/json.h>
 
 
@@ -27,7 +27,7 @@
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
-// AxisCfg::AxisCfg() : label(), unit(), bins(0), min(0), max(0), bins_arr(nullptr), delta(0), cdelta(0), var(nullptr)
+// AxisCfg::AxisCfg() : label(), unit(), bins(0), min(0), max(0), bins_arr(nullptr), delta(0), var(nullptr)
 // {
 // }
 
@@ -50,7 +50,6 @@ AxisCfg & AxisCfg::operator=(const AxisCfg & a)
 	max = a.max;
 	bins_arr = a.bins_arr;
 	delta = a.delta;
-	cdelta = a.cdelta;
 	var = a.var;
 
 	return *this;
@@ -102,16 +101,7 @@ std::string AxisCfg::format_unit(const std::string & unit)
 	return funit;
 }
 
-void Dim2AnalysisContext::format_V_axis()
-{
-	TString hunit = TString::Format("1/%s%s", x.unit.Data(), y.unit.Data());
-	TString htitle = TString::Format("d^{2}%s/d%sd%s", diff_var_name.Data(), x.label.Data(), y.label.Data());
-
-	V.label = htitle;
-	V.unit = hunit;
-}
-
-Dim2AnalysisContext::Dim2AnalysisContext() : TNamed(), json_found(false)
+MultiDimDistributionContext::MultiDimDistributionContext() : TNamed(), json_found(false)
 {
 	// config
 	TString histPrefix = "Dummy";	// prefix for histograms	
@@ -127,24 +117,26 @@ Dim2AnalysisContext::Dim2AnalysisContext() : TNamed(), json_found(false)
 	// variable used for cuts when cutCut==kTRUE
 }
 
-Dim2AnalysisContext::Dim2AnalysisContext(const Dim2AnalysisContext & ctx) : TNamed()
+MultiDimDistributionContext::MultiDimDistributionContext(const MultiDimDistributionContext & ctx) : TNamed()
 {
 	*this = ctx;
 	histPrefix = ctx.histPrefix;
 }
 
-void Dim2AnalysisContext::update() const
+void MultiDimDistributionContext::update() const
 {
 	x.delta = ((x.max - x.min)/x.bins);
 	y.delta = ((y.max - y.min)/y.bins);
+  z.delta = ((z.max - z.min)/z.bins);
 
 	ctxName = histPrefix + "Ctx";
 }
 
-bool Dim2AnalysisContext::validate() const
+bool MultiDimDistributionContext::validate() const
 {
-	if (!x.var and !y.var and !var_weight)
-		return false;
+  if (x.bins and !x.var) return false;
+  if (y.bins and !y.var) return false;
+  if (z.bins and !z.var) return false;
 
 // 	if (useCuts() and !V.var)
 // 		return false;
@@ -154,7 +146,7 @@ bool Dim2AnalysisContext::validate() const
 	return true;
 }
 
-Dim2AnalysisContext::~Dim2AnalysisContext()
+MultiDimDistributionContext::~MultiDimDistributionContext()
 {}
 
 bool jsonReadTStringKey(const Json::Value & jsondata, const char * key, TString & target)
@@ -212,7 +204,7 @@ bool jsonReadDoubleKey(const Json::Value & jsondata, const char * key, double & 
 	return false;
 }
 
-bool Dim2AnalysisContext::configureFromJson(const char * name)
+bool MultiDimDistributionContext::configureFromJson(const char * name)
 {
 	std::ifstream ifs(json_fn.Data());
 	if (!ifs.is_open())
@@ -241,8 +233,8 @@ bool Dim2AnalysisContext::configureFromJson(const char * name)
 	cfg = ana[name];
 
 	const size_t axis_num = 3;
-	const char * axis_labels[axis_num] = { "x", "y", "V" };
-	AxisCfg * axis_ptrs[axis_num] = { &x, &y, &V };
+	const char * axis_labels[axis_num] = { "x", "y", "z" };
+	AxisCfg * axis_ptrs[axis_num] = { &x, &y, &z };
 
 	for (uint i = 0; i < axis_num; ++i)
 	{
@@ -264,7 +256,7 @@ bool Dim2AnalysisContext::configureFromJson(const char * name)
 	return true;
 }
 
-bool Dim2AnalysisContext::configureToJson(const char * name, const char * jsonfile)
+bool MultiDimDistributionContext::configureToJson(const char * name, const char * jsonfile)
 {
 	(void)jsonfile;
 
@@ -272,28 +264,15 @@ bool Dim2AnalysisContext::configureToJson(const char * name, const char * jsonfi
 
 	cfg["title"]	= "d^{2}N/dp_{t}dy.{cm}";
 
-	axis["bins"]	= 100;
+	axis["bins"]	= 0;
 	axis["min"]		= 0;
-	axis["max"]		= 100;
-	axis["label"]	= "xlabel";
-	axis["var"]		= "y.{cm}";
+	axis["max"]		= 0;
+	axis["label"]	= "";
+	axis["var"]		= "";
 
 	cfg["x"] = axis;
-
-	axis["bins"]	= 100;
-	axis["min"]		= 0;
-	axis["max"]		= 100;
-	axis["label"]	= "ylabel";
-	axis["var"]		= "p_{t}";
-
 	cfg["y"] = axis;
-
-	axis["bins"]	= 100;
-	axis["min"]		= 0;
-	axis["max"]		= 100;
-	axis["label"]	= "Vlabel";
-	axis["var"]		= "none";
-
+	cfg["z"] = axis;
 	cfg["V"] = axis;
 
 	ana[name] = cfg;
@@ -309,7 +288,7 @@ bool Dim2AnalysisContext::configureToJson(const char * name, const char * jsonfi
 	return true;
 }
 
-bool Dim2AnalysisContext::findJsonFile(const char * initial_path, const char * filename, int search_depth)
+bool MultiDimDistributionContext::findJsonFile(const char * initial_path, const char * filename, int search_depth)
 {
 	const size_t max_len = 1024*16;
 	int depth_counter = 0;
@@ -357,14 +336,14 @@ bool Dim2AnalysisContext::findJsonFile(const char * initial_path, const char * f
 	return json_found;
 }
 
-Dim2AnalysisContext & Dim2AnalysisContext::operator=(const Dim2AnalysisContext & ctx)
+MultiDimDistributionContext & MultiDimDistributionContext::operator=(const MultiDimDistributionContext & ctx)
 {
 // 	histPrefix = ctx.histPrefix;
 	ctxName = ctx.ctxName;
 
 	x = ctx.x;
 	y = ctx.y;
-	V = ctx.V;
+  z = ctx.z;
 
 // 	cutMin = ctx.cutMin;
 // 	cutMax = ctx.cutMax;
@@ -376,8 +355,11 @@ Dim2AnalysisContext & Dim2AnalysisContext::operator=(const Dim2AnalysisContext &
 	return *this;
 }
 
-bool Dim2AnalysisContext::operator==(const Dim2AnalysisContext & ctx)
+bool MultiDimDistributionContext::operator==(const MultiDimDistributionContext & ctx)
 {
+  if (this == &ctx)
+    return true;
+
 	if (this->x != ctx.x)
 	{
 		fprintf(stderr, "Different number of x bins: %d vs %d\n", this->x.bins, ctx.x.bins);
@@ -390,16 +372,16 @@ bool Dim2AnalysisContext::operator==(const Dim2AnalysisContext & ctx)
 		return false;
 	}
 
-	if (this->V != ctx.V)
+	if (this->z != ctx.z)
 	{
-		fprintf(stderr, "Different number of z bins: %d vs %d\n", this->V.bins, ctx.V.bins);
+		fprintf(stderr, "Different number of z bins: %d vs %d\n", this->z.bins, ctx.z.bins);
 		return false;
 	}
 
 	return true;
 }
 
-bool Dim2AnalysisContext::operator!=(const Dim2AnalysisContext & ctx)
+bool MultiDimDistributionContext::operator!=(const MultiDimDistributionContext & ctx)
 {
 	return !operator==(ctx);
 }

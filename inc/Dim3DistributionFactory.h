@@ -17,8 +17,8 @@
 */
 
 
-#ifndef DIM2ANALYSISFACTORY_H
-#define DIM2ANALYSISFACTORY_H
+#ifndef DIM3DISTRIBUTIONFACTORY_H
+#define DIM3DISTRIBUTIONFACTORY_H
 
 #include "TObject.h"
 #include "TString.h"
@@ -27,7 +27,7 @@
 #include "TDirectory.h"
 #include "RootTools.h"
 
-#include "MultiDimAnalysisContext.h"
+#include "MultiDimDistributionContext.h"
 #include "ExtraDimensionMapper.h"
 #include "SmartFactory.h"
 #include "FitterFactory.h"
@@ -42,6 +42,8 @@ class TH1;
 class TH1D;
 class TH2;
 class TH2D;
+class TH3;
+class TH3D;
 class TStyle;
 class TVirtualPad;
 
@@ -49,18 +51,14 @@ class TVirtualPad;
 #include "TH2DA.h"
 #endif
 
-class Dim2AnalysisFactory;
-
-typedef void (FitCallbackDim2)(Dim2AnalysisFactory * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
-
-class Dim2AnalysisFactory : public TObject, public SmartFactory {
+class Dim3DistributionFactory : public TObject, public SmartFactory {
 public:
-	Dim2AnalysisFactory();
-	Dim2AnalysisFactory(const MultiDimAnalysisContext & ctx);
-	Dim2AnalysisFactory(const MultiDimAnalysisContext * ctx);
-	virtual ~Dim2AnalysisFactory();
+	Dim3DistributionFactory();
+	Dim3DistributionFactory(const MultiDimDistributionContext & ctx);
+	Dim3DistributionFactory(const MultiDimDistributionContext * ctx);
+	virtual ~Dim3DistributionFactory();
 
-	Dim2AnalysisFactory & operator=(const Dim2AnalysisFactory & fa);
+	Dim3DistributionFactory & operator=(const Dim3DistributionFactory & fa);
 
 	enum Stages { RECO, FIT, SIG, ALL };
 	void Init(Stages s = ALL);
@@ -79,9 +77,6 @@ public:
 	void niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 	void niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 
-	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
-	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
-
 	const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
 
 	void prepareDiffCanvas();
@@ -93,30 +88,26 @@ public:
 	void applyBinomErrors(TH2 * N);
 	static void applyBinomErrors(TH2 * q, TH2 * N);
 
-	TH2 ** getSigsArray(size_t & size);
-
-	inline void setFitCallback(FitCallbackDim2 * cb) { fitCallback = cb; }
+	TH3 ** getSigsArray(size_t & size);
 
 private:
 	void prepare();
 	bool copyHistogram(TH1 * src, TH1 * dst);
 
 public:
-	MultiDimAnalysisContext ctx;		//||
+	MultiDimDistributionContext ctx;		//||
 
-#ifdef HAVE_HISTASYMMERRORS
-	TH2DA * hSignalXY;
-#else
-	TH2D * hSignalXY;			//->	// discrete X-Y, signal extracted
-#endif
-// 	TCanvas * cSignalXY;			//->
+// #ifdef HAVE_HISTASYMMERRORS
+// 	TH2DA * hSignalXY;
+// #else
+	TH3D * hSignalXY;			//->	// discrete X-Y, signal extracted
+// #endif
+	TCanvas * cSignalXY;			//->
 // 
 // 	TCanvas * cDiscreteXYSig;		//->
 // 	TCanvas * cDiscreteXYSigFull;	//->
 
-  ExtraDimensionMapper * diffs;
 // 	TH1D *** hDiscreteXYDiff;		//[10]	// 3rd var distribution in diff bin
-	TCanvas ** c_Diffs;		//!
 
 // 	TH1D ** hSliceXYFitQA;			//[10]	// QA values
 // 	TCanvas * cSliceXYFitQA;		//!
@@ -130,12 +121,8 @@ public:
 // 
 // 	TObjArray * objectsDiffs;		//!
 // 	TObjArray * objectsSlices;		//!
-	TObjArray * objectsFits;		//!
 
-	ClassDef(Dim2AnalysisFactory, 1);
-
-private:
-	FitCallbackDim2 * fitCallback;
+	ClassDef(Dim3DistributionFactory, 1);
 };
 
-#endif // DIM2ANALYSISFACTORY_H
+#endif // DIM3DISTRIBUTIONFACTORY_H

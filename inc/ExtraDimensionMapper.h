@@ -24,7 +24,7 @@
 #include <TObject.h>
 #include <Rtypes.h>
 
-#include "Dim2AnalysisContext.h"
+#include "MultiDimDistributionContext.h"
 #include "SmartFactory.h"
 
 class TCanvas;

@@ -27,7 +27,7 @@
 #include "TDirectory.h"
 #include "RootTools.h"
 
-#include "Dim3AnalysisContext.h"
+#include "MultiDimAnalysisContext.h"
 #include "ExtraDimensionMapper.h"
 #include "SmartFactory.h"
 #include "FitterFactory.h"
@@ -56,8 +56,8 @@ typedef void (FitCallbackDim3)(Dim3AnalysisFactory * fac, int fit_res, TH1 * h, 
 class Dim3AnalysisFactory : public TObject, public SmartFactory {
 public:
 	Dim3AnalysisFactory();
-	Dim3AnalysisFactory(const Dim3AnalysisContext & ctx);
-	Dim3AnalysisFactory(const Dim3AnalysisContext * ctx);
+	Dim3AnalysisFactory(const MultiDimAnalysisContext & ctx);
+	Dim3AnalysisFactory(const MultiDimAnalysisContext * ctx);
 	virtual ~Dim3AnalysisFactory();
 
 	Dim3AnalysisFactory & operator=(const Dim3AnalysisFactory & fa);
@@ -102,7 +102,7 @@ private:
 	bool copyHistogram(TH1 * src, TH1 * dst);
 
 public:
-	Dim3AnalysisContext ctx;		//||
+	MultiDimAnalysisContext ctx;		//||
 
 #ifdef HAVE_HISTASYMMERRORS
 	TH2DA * hSignalXY;
