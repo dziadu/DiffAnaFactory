@@ -65,38 +65,27 @@ bool AxisCfg::operator!=(const AxisCfg & ctx)
 	return (this->bins != ctx.bins);
 }
 
-std::string AxisCfg::format_unit() const
+TString AxisCfg::format_unit() const
 {
 	return format_unit(unit);
 }
 
-std::string AxisCfg::format_unit(const char * unit)
+TString AxisCfg::format_string() const
 {
-	std::string funit;
-	if (strlen(unit))
-	{
-		funit = " [";
-		funit += unit;
-		funit += "]";
-	}
-	else
-		funit = "";
-
-	return funit;
+  return TString::Format("%s%s", label.Data(), format_unit().Data());
 }
 
-std::string AxisCfg::format_unit(const TString & unit)
+
+TString AxisCfg::format_unit(const char * unit)
 {
-	return format_unit(unit.Data());
+  return format_unit(TString(unit));
 }
 
-std::string AxisCfg::format_unit(const std::string & unit)
+TString AxisCfg::format_unit(const TString & unit)
 {
-	std::string funit;
-	if (unit.size())
+	TString funit;
+	if (unit.Length())
 		funit = " [" + unit + "]";
-	else
-		funit = "";
 
 	return funit;
 }
@@ -134,6 +123,8 @@ void MultiDimDistributionContext::update() const
 
 bool MultiDimDistributionContext::validate() const
 {
+  if (0 == histPrefix.Length()) return false;
+
   if (x.bins and !x.var) return false;
   if (y.bins and !y.var) return false;
   if (z.bins and !z.var) return false;

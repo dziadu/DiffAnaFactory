@@ -60,12 +60,11 @@ public:
 
 	Dim3AnalysisFactory & operator=(const Dim3AnalysisFactory & fa);
 
-	enum Stages { RECO, FIT, SIG, ALL };
-	void Init(Stages s = ALL);
 	void GetDiffs(bool with_canvases = true);
 
-	void Proceed();
-	void Finalize(Stages s = ALL, bool flag_details = false);
+	virtual void init();
+	void proceed();
+	void finalize(bool flag_details = false);
 
 	void binnorm();
 
@@ -77,16 +76,11 @@ public:
                        float zls, float zts, float zto,
                        bool centerY = false, bool centerX = false);
 
-// 	void niceHists(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
-	void niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format);
-	void niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
-	void niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
-
 	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
 	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
 
   void prepareDiffCanvas();
-	void prepareSigCanvas(bool flag_details = false);
+	virtual void prepareSigCanvas(bool flag_details = false);
 
 	void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
 	static void applyAngDists(TH2 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
@@ -96,19 +90,8 @@ public:
 
 	virtual TH2 ** getSigsArray(size_t & size);
 
-private:
-	void prepare();
-	bool copyHistogram(TH1 * src, TH1 * dst);
-
 public:
 
-#ifdef HAVE_HISTASYMMERRORS
-	TH2DA * hSignalXY;
-#else
-	TH2D * hSignalXY;			//->	// discrete X-Y, signal extracted
-#endif
-// 	TCanvas * cSignalXY;			//->
-// 
 // 	TCanvas * cDiscreteXYSig;		//->
 // 	TCanvas * cDiscreteXYSigFull;	//->
 

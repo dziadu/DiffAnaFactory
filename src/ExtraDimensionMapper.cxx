@@ -59,9 +59,10 @@ const Option_t h1opts[] = "h,E1";
 const TString flags_fit_a = "B,Q,0";
 const TString flags_fit_b = "";
 
-ExtraDimensionMapper::ExtraDimensionMapper(TH1 * hist, const AxisCfg & axis, std::string dir)
-  : SmartFactory("null")
+ExtraDimensionMapper::ExtraDimensionMapper(const std::string & name, TH1 * hist, const AxisCfg & axis, const std::string & dir_and_name)
+  : SmartFactory(name.c_str())
   , axis(axis)
+  , prefix_name(dir_and_name)
   , refHist(hist)
 {
   nbins_x = hist->GetNbinsX();
@@ -84,13 +85,10 @@ ExtraDimensionMapper::ExtraDimensionMapper(TH1 * hist, const AxisCfg & axis, std
 ExtraDimensionMapper::~ExtraDimensionMapper()
 {
 	gSystem->ProcessEvents();
-  for (UInt_t i = 0; i < nhists; ++i)
-    delete histograms[i];
-
   delete [] histograms;
 }
 
-UInt_t ExtraDimensionMapper::getBin(UInt_t x, UInt_t y, UInt_t z)
+UInt_t ExtraDimensionMapper::getBin(UInt_t x, UInt_t y, UInt_t z) const
 {
   return z * (nbins_x * nbins_y) + y * nbins_x + x;
 }
@@ -146,11 +144,11 @@ void ExtraDimensionMapper::map3D(TH1* hist, const AxisCfg& axis)
 void ExtraDimensionMapper::formatName(char* buff, TH1* hist, UInt_t x, UInt_t y, UInt_t z)
 {
   if (nbins_y == 0)
-    sprintf(buff, "%s_X%02d", hist->GetName(), x);
+    sprintf(buff, "%s_X%02d", prefix_name.c_str(), x);
   else if (nbins_z == 0)
-    sprintf(buff, "%s_X%02d_Y%02d", hist->GetName(), x, y);
+    sprintf(buff, "%s_X%02d_Y%02d", prefix_name.c_str(), x, y);
   else
-    sprintf(buff, "%s_X%02d_Y%02d_Z%02d", hist->GetName(), x, y, z);
+    sprintf(buff, "%s_X%02d_Y%02d_Z%02d", prefix_name.c_str(), x, y, z);
 }
 
 

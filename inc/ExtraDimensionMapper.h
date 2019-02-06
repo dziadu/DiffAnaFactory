@@ -52,10 +52,14 @@ class ExtraDimensionMapper;
 
 class ExtraDimensionMapper : public TObject, public SmartFactory {
 public:
-	ExtraDimensionMapper(TH1 * hist, const AxisCfg & axis, std::string dir = "");
+	ExtraDimensionMapper(const std::string & name, TH1 * hist, const AxisCfg & axis, const std::string & dir_and_name);
 	virtual ~ExtraDimensionMapper();
 
-  UInt_t getBin(UInt_t x, UInt_t y = 0, UInt_t z = 0);
+  UInt_t getBinsX() const { return nbins_x; }
+  UInt_t getBinsY() const { return nbins_y; }
+  UInt_t getBinsZ() const { return nbins_z; }
+
+  UInt_t getBin(UInt_t x, UInt_t y = 0, UInt_t z = 0) const;
 
   TH1D * get(UInt_t x, UInt_t y = 0, UInt_t z = 0);
   TH1D * find(Double_t x, Double_t y = 0.0, Double_t z = 0.0);
@@ -77,6 +81,7 @@ private:
 
 public:
 	AxisCfg axis;        //||
+	std::string prefix_name;
 
 	UInt_t nhists;
   UInt_t nbins_x, nbins_y, nbins_z;

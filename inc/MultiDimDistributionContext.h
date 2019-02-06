@@ -43,15 +43,15 @@ public:
 	UInt_t bins;			// number of bins
 	Double_t min;			// minimum axis value
 	Double_t max;			// maximum axis value
-	Double_t * bins_arr;	// here one can put custom bins division array
+	Double_t * bins_arr;	//! here one can put custom bins division array
 	mutable Double_t delta;	// CAUTION: overriden by validate(), do not set by hand
   Float_t * var;		//!	here is the address of the variable which is used to fill data
 
-	std::string format_unit() const;
+	TString format_unit() const;
+  TString format_string() const;
 
-	static std::string format_unit(const char * unit);
-	static std::string format_unit(const TString & unit);
-	static std::string format_unit(const std::string & unit);
+	static TString format_unit(const char * unit);
+	static TString format_unit(const TString & unit);
 
 	ClassDef(AxisCfg, 1);
 };

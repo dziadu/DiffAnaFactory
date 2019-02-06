@@ -164,9 +164,9 @@ void Dim3DistributionFactory::prepare()
 static TString format_hist_axes(const MultiDimDistributionContext & ctx)
 {
 	TString htitle = TString::Format(";%s%s%s;%s%s%s",
-									 ctx.x.label.Data(), ctx.x.format_unit().c_str(),
-									 ctx.y.label.Data(), ctx.y.format_unit().c_str(),
-                   ctx.z.label.Data(), ctx.z.format_unit().c_str());
+									 ctx.x.label.Data(), ctx.x.format_unit().Data(),
+									 ctx.y.label.Data(), ctx.y.format_unit().Data(),
+                   ctx.z.label.Data(), ctx.z.format_unit().Data());
 
 	return htitle;
 }
@@ -179,12 +179,9 @@ static TString format_hist_axes(const MultiDimDistributionContext & ctx)
 // 	return htitle;
 // }
 
-extern TString format_hist_xaxis(const MultiDimDistributionContext & ctx);
-extern TString format_hist_yaxis(const MultiDimDistributionContext & ctx);
-
 TString format_hist_zaxis(const MultiDimDistributionContext & ctx)
 {
-	TString htitle = TString::Format("%s%s", ctx.y.label.Data(), ctx.y.format_unit().c_str());
+	TString htitle = TString::Format("%s%s", ctx.y.label.Data(), ctx.y.format_unit().Data());
 
 	return htitle;
 }
@@ -652,22 +649,15 @@ void Dim3DistributionFactory::prepareSigCanvas(bool flag_details)
 		colzopts += ",text";
 	TString coltopts = "col,text";
 
-	TString haxx = format_hist_xaxis(ctx);
-	TString haxy = format_hist_yaxis(ctx);
-	TString haxz = format_hist_zaxis(ctx);
+	hSignalXY->GetXaxis()->SetTitle(ctx.x.format_string());
+	hSignalXY->GetYaxis()->SetTitle(ctx.y.format_string());
+	hSignalXY->GetZaxis()->SetTitle(ctx.z.format_string());
 
-// 	if (cSignalXY)
-// 	{
-		hSignalXY->GetXaxis()->SetTitle(haxx);
-		hSignalXY->GetYaxis()->SetTitle(haxy);
-		hSignalXY->GetZaxis()->SetTitle(haxz);
-// 
 // 		cSignalXY->cd(0);
 // 		hSignalXY->Draw("colz"); FIXME
 // 		RootTools::NicePalette(hSignalXY, 0.05); FIXME
 // 		RootTools::NoPalette(hSignalXY); FIXME
 // 		gPad->Update();
-// 	}
 
 	// Signal with cut
 // 	if (cSignalWithCutsXY)

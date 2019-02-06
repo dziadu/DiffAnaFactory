@@ -63,11 +63,12 @@ public:
 	Dim2AnalysisFactory & operator=(const Dim2AnalysisFactory & fa);
 
 	enum Stages { RECO, FIT, SIG, ALL };
-	void Init(Stages s = ALL);
+
 	void GetDiffs(bool with_canvases = true);
 
-	virtual void Proceed();
-	virtual void Finalize(Stages s = ALL, bool flag_details = false);
+  virtual void init();
+	virtual void proceed();
+	virtual void finalize(bool flag_details = false);
 
 	virtual void binnorm();
 	virtual void scale(Float_t factor);
@@ -84,8 +85,8 @@ public:
 
 	virtual const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
 
-	void prepareDiffCanvas();
-	void prepareSigCanvas(bool flag_details = false);
+	virtual void prepareDiffCanvas();
+	virtual void prepareSigCanvas(bool flag_details = false);
 
 	void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
 	static void applyAngDists(TH2 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
@@ -97,20 +98,27 @@ public:
 
 	inline void setFitCallback(FitCallback * cb) { fitCallback = cb; }
 
+  bool write(TFile * f/* = nullptr*/, bool verbose = false);
+  bool write(const char * filename/* = nullptr*/, bool verbose = false);
+
+protected:
+  enum Dimensions { DIM1, DIM2, DIM3 };
+	virtual void prepare(Dimensions dim);
+	virtual bool copyHistogram(TH1 * src, TH1 * dst);
+
 private:
-	void prepare();
-	bool copyHistogram(TH1 * src, TH1 * dst);
 
 public:
 	MultiDimAnalysisContext ctx;		//||
 
-#ifdef HAVE_HISTASYMMERRORS
-	TH2DA * hSignalXY;
-#else
-	TH2D * hSignalXY;			//->	// discrete X-Y, signal extracted
-#endif
-// 	TCanvas * cSignalXY;			//->
-// 
+// #ifdef HAVE_HISTASYMMERRORS
+// 	TH2DA * hSignalCounter;
+// #else
+// 	TH2D * hSignalCounter;			//->	// discrete X-Y, signal extracted
+// #endif
+  TH2 * hSignalCounter;			//->	// discrete X-Y, signal extracted
+	TCanvas * cSignalCounter;			//->
+
 // 	TCanvas * cDiscreteXYSig;		//->
 // 	TCanvas * cDiscreteXYSigFull;	//->
 
@@ -133,6 +141,9 @@ public:
 	TObjArray * objectsFits;		//!
 
 	ClassDef(Dim2AnalysisFactory, 1);
+
+protected:
+  Dimensions dim_version;
 
 private:
 	FitCallback * fitCallback;

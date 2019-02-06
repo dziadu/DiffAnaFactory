@@ -163,31 +163,8 @@ void Dim2DistributionFactory::prepare()
 static TString format_hist_axes(const MultiDimDistributionContext & ctx)
 {
 	TString htitle = TString::Format(";%s%s;%s%s",
-									 ctx.x.label.Data(), ctx.x.format_unit().c_str(),
-									 ctx.y.label.Data(), ctx.y.format_unit().c_str());
-
-	return htitle;
-}
-
-// TString format_hist_caxes(const MultiDimDistributionContext & ctx)
-// {
-// 	TString htitle = TString::Format(";%s%s;%s%s",
-// 									 ctx.cx.label.Data(), ctx.cx.format_unit().c_str(),
-// 									 ctx.cy.label.Data(), ctx.cy.format_unit().c_str());
-// 
-// 	return htitle;
-// }
-
-TString format_hist_xaxis(const MultiDimDistributionContext & ctx)
-{
-	TString htitle = TString::Format("%s%s", ctx.x.label.Data(), ctx.x.format_unit().c_str());
-
-	return htitle;
-}
-
-TString format_hist_yaxis(const MultiDimDistributionContext & ctx)
-{
-	TString htitle = TString::Format("%s%s", ctx.y.label.Data(), ctx.y.format_unit().c_str());
+									 ctx.x.label.Data(), ctx.x.format_unit().Data(),
+									 ctx.y.label.Data(), ctx.y.format_unit().Data());
 
 	return htitle;
 }
@@ -655,14 +632,10 @@ void Dim2DistributionFactory::prepareSigCanvas(bool flag_details)
 		colzopts += ",text";
 	TString coltopts = "col,text";
 
-	TString haxx = format_hist_xaxis(ctx);
-	TString haxy = format_hist_yaxis(ctx);
-// 	TString haxz = format_hist_Vaxis(ctx); FIXME
-
 // 	if (cSignalXY)
 // 	{
-		hSignalXY->GetXaxis()->SetTitle(haxx);
-		hSignalXY->GetYaxis()->SetTitle(haxy);
+		hSignalXY->GetXaxis()->SetTitle(ctx.x.format_string());
+		hSignalXY->GetYaxis()->SetTitle(ctx.y.format_string());
 // 		hSignalXY->GetZaxis()->SetTitle(haxz);
 // 
 // 		cSignalXY->cd(0);

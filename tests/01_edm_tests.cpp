@@ -40,9 +40,9 @@ void BasicCase::setUp()
   axis.min = -3;
   axis.max = 3;
 
-  edm1 = new ExtraDimensionMapper(h1, axis, "");
-  edm2 = new ExtraDimensionMapper(h2, axis, "");
-  edm3 = new ExtraDimensionMapper(h3, axis, "");
+  edm1 = new ExtraDimensionMapper("edm1", h1, axis, "edm1");
+  edm2 = new ExtraDimensionMapper("edm2", h2, axis, "edm2");
+  edm3 = new ExtraDimensionMapper("edm3", h3, axis, "edm3");
 }
 
 void BasicCase::MyTest()

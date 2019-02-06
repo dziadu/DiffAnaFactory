@@ -28,6 +28,7 @@ void DistCtxCase::setUp()
   min = 0;
   max = 10;
 
+  d3ctx.histPrefix;
   d3ctx.x.label = "d2_x"; d3ctx.x.unit = "mm";
   d3ctx.y.label = "d2_y";
   d3ctx.z.label = "d2_z"; d3ctx.z.unit = "cm";
