@@ -64,7 +64,7 @@ Dim2AnalysisFactory & Dim2AnalysisFactory::operator=(const Dim2AnalysisFactory &
 void Dim2AnalysisFactory::init()
 {
   Dim2DistributionFactory::init();
-  MultiDimAnalysisExtension::init(hSignalCounter);
+  MultiDimAnalysisExtension::init(hSignalCounter, this);
 }
 
 void Dim2AnalysisFactory::GetDiffs(bool with_canvases)
@@ -114,12 +114,7 @@ void Dim2AnalysisFactory::GetDiffs(bool with_canvases)
 
 void Dim2AnalysisFactory::proceed()
 {
-	Bool_t isInRange = kFALSE;
-
   Dim2DistributionFactory::proceed();
-
-  MultiDimAnalysisContext & ctx = MultiDimAnalysisExtension::ctx;
-
   MultiDimAnalysisExtension::proceed(DIM2);
 }
 

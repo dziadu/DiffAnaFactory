@@ -29,7 +29,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( BasicCase );
 
 void BasicCase::setUp()
 {
-  bins = 10;
+  bins = 3;
   min = 0;
   max = 10;
   h1 = new TH1D("h1", "h1", bins, min, max);

@@ -32,15 +32,45 @@
 // const TString flags_fit_b = "";
 
 ExtraDimensionMapper::ExtraDimensionMapper(const std::string & name, TH1 * hist, const AxisCfg & axis, const std::string & dir_and_name)
-  : SmartFactory(name.c_str())
+  : SmartFactory("")
   , axis(axis)
   , prefix_name(dir_and_name)
-  , refHist(hist)
+  , ref_hist(hist)
 {
   nbins_x = hist->GetNbinsX();
   nbins_y = hist->GetNbinsY();
   nbins_z = hist->GetNbinsZ();
   nhists = nbins_x * nbins_y * nbins_z;
+
+  histograms = new TH1D*[nhists];
+  if (nbins_y == 0)
+    map1D(hist, axis);
+  else if (nbins_z == 0)
+    map2D(hist, axis);
+  else
+    map3D(hist, axis);
+
+//   objectsFits = new TObjArray();
+// 	objectsFits->SetName(ctx.histPrefix + "Fits");
+}
+
+ExtraDimensionMapper::ExtraDimensionMapper(const std::string & name, TH1 * hist, const AxisCfg & axis, const std::string & dir_and_name, SmartFactory * sf)
+  : SmartFactory("")
+  , axis(axis)
+  , prefix_name(dir_and_name)
+  , ref_hist(hist)
+{
+  nbins_x = hist->GetNbinsX();
+  nbins_y = hist->GetNbinsY();
+  nbins_z = hist->GetNbinsZ();
+  nhists = nbins_x * nbins_y * nbins_z;
+
+  setSource(sf->getSource());
+  setSourceName(sf->getSourceName());
+  setTarget(sf->getTarget());
+  setTargetName(sf->getTargetName());
+  chdir(sf->directory_name().c_str());
+  rename(sf->objects_name().c_str());
 
   histograms = new TH1D*[nhists];
   if (nbins_y == 0)
@@ -150,33 +180,33 @@ TH1D * ExtraDimensionMapper::get(UInt_t x, UInt_t y, UInt_t z)
 
 TH1D * ExtraDimensionMapper::find(Double_t x, Double_t y, Double_t z)
 {
-  UInt_t bin = refHist->FindBin(x, y, z);
+  UInt_t bin = ref_hist->FindBin(x, y, z);
   Int_t bx, by, bz;
-  refHist->GetBinXYZ(bin, bx, by, bz);
+  ref_hist->GetBinXYZ(bin, bx, by, bz);
   return histograms[getBin(bx-1, by-1, bz-1)];
 }
 
 
 void ExtraDimensionMapper::Fill1D(Double_t x, Double_t v, Double_t w)
 {
-  UInt_t bin = refHist->FindBin(x);
+  UInt_t bin = ref_hist->FindBin(x);
   Int_t bx, by, bz;
-  refHist->GetBinXYZ(bin, bx, by, bz);
+  ref_hist->GetBinXYZ(bin, bx, by, bz);
   histograms[getBin(bx-1, by-1, bz-1)]->Fill(v, w);
 }
 
 void ExtraDimensionMapper::Fill2D(Double_t x, Double_t y, Double_t v, Double_t w)
 {
-  UInt_t bin = refHist->FindBin(x, y);
+  UInt_t bin = ref_hist->FindBin(x, y);
   Int_t bx, by, bz;
-  refHist->GetBinXYZ(bin, bx, by, bz);
+  ref_hist->GetBinXYZ(bin, bx, by, bz);
   histograms[getBin(bx-1, by-1, bz-1)]->Fill(v, w);
 }
 
 void ExtraDimensionMapper::Fill3D(Double_t x, Double_t y, Double_t z, Double_t v, Double_t w)
 {
-  UInt_t bin = refHist->FindBin(x, y, z);
+  UInt_t bin = ref_hist->FindBin(x, y, z);
   Int_t bx, by, bz;
-  refHist->GetBinXYZ(bin, bx, by, bz);
+  ref_hist->GetBinXYZ(bin, bx, by, bz);
   histograms[getBin(bx-1, by-1, bz-1)]->Fill(v, w);
 }

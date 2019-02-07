@@ -44,7 +44,7 @@ public:
 
 	void GetDiffs(bool with_canvases = true);
 
-  virtual void init(TH1 * h);
+  virtual void init(TH1 * h, SmartFactory * sf);
 	virtual void proceed(MultiDimDefinition::Dimensions dim);
   virtual void proceed1();
   virtual void proceed2();
@@ -73,11 +73,8 @@ public:
 protected:
 	virtual void prepare();
 
-private:
-
 public:
-	MultiDimAnalysisContext ctx;		//||
-
+	MultiDimAnalysisContext mda_ctx;		//||
   ExtraDimensionMapper * diffs;
 	TCanvas ** c_Diffs;		//!
 	TObjArray * objectsFits;		//!

@@ -30,7 +30,7 @@
 // const Option_t h1opts[] = "h,E1";
 
 Dim3DistributionFactory::Dim3DistributionFactory()
-  : SmartFactory("null")
+  : SmartFactory("")
   , MultiDimDefinition(DIM3)
   , ctx(MultiDimDistributionContext())
   , hSignalCounter(nullptr)
@@ -40,7 +40,7 @@ Dim3DistributionFactory::Dim3DistributionFactory()
 }
 
 Dim3DistributionFactory::Dim3DistributionFactory(const MultiDimDistributionContext & context)
-  : SmartFactory(context.AnaName())
+  : SmartFactory("")
   , MultiDimDefinition(DIM3)
   , ctx(context)
   , hSignalCounter(nullptr)
@@ -50,7 +50,7 @@ Dim3DistributionFactory::Dim3DistributionFactory(const MultiDimDistributionConte
 }
 
 Dim3DistributionFactory::Dim3DistributionFactory(const MultiDimDistributionContext * context)
-  : SmartFactory(context->AnaName())
+  : SmartFactory("")
   , MultiDimDefinition(DIM3)
   , ctx(*context)
   , hSignalCounter(nullptr)
@@ -69,7 +69,7 @@ Dim3DistributionFactory & Dim3DistributionFactory::operator=(const Dim3Distribut
 	Dim3DistributionFactory * nthis = this;//new Dim3DistributionFactory(fa.ctx);
 
 	nthis->ctx = fa.ctx;
-	nthis->ctx.histPrefix = fa.ctx.histPrefix;
+	nthis->ctx.name = fa.ctx.name;
 
 	copyHistogram(fa.hSignalCounter, hSignalCounter);
   return *nthis;
@@ -78,6 +78,8 @@ Dim3DistributionFactory & Dim3DistributionFactory::operator=(const Dim3Distribut
 void Dim3DistributionFactory::prepare()
 {
   ctx.update();
+  rename(ctx.hist_name.Data());
+  chdir(ctx.hist_name.Data());
 }
 
 void Dim3DistributionFactory::init()
@@ -89,7 +91,7 @@ void Dim3DistributionFactory::init()
 	// input histograms
 	if (!hSignalCounter)
 	{
-		hSignalCounter = (TH2*)RegTH3<TH3D>("@@@d/h_@@@a_Signal", htitle,
+		hSignalCounter = RegTH3<TH3D>("@@@d/h_@@@a_Signal", htitle,
 				ctx.x.bins, ctx.x.min, ctx.x.max,
 				ctx.y.bins, ctx.y.min, ctx.y.max,
         ctx.z.bins, ctx.z.min, ctx.z.max);
@@ -97,125 +99,6 @@ void Dim3DistributionFactory::init()
 
   if (!cSignalCounter)
     cSignalCounter = RegCanvas("@@@d/c_@@@a_Signal", htitle, can_width, can_height);
-
-		// Signal with cut
-// 		if (ctx.useCuts())
-// 		{
-// 			hname = "@@@d/h_@@@a_Lambda";
-// 			cname = "@@@d/c_@@@a_Lambda";
-// 			hSignalWithCutsXY = RegTH2<TH2D>(hname, htitle, ctx.x.bins, ctx.x.min, ctx.x.max,
-// 				ctx.y.bins, ctx.y.min, ctx.y.max);
-// 			hSignalWithCutsXY->GetZaxis()->SetTitle(htitlez);
-// 
-// 			cSignalWithCutsXY = RegCanvas(cname, htitle, can_width, can_height);
-// 		}
-	
-// 		if (ctx.useClip())
-// 		{
-// 			hname = "@@@d/h_@@@a_LambdaInvMass";
-// 			cname = "@@@d/c_@@@a_LambdaInvMass";
-// 
-// 			// Lambda: X vs Y
-// 			if (ctx.cx.bins_arr and ctx.cy.bins_arr)
-// 				hDiscreteXY = RegTH2<TH2D>(hname, htitlec, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
-// 			else
-// 				hDiscreteXY = RegTH2<TH2D>(hname, htitlec,
-// 					ctx.cx.bins, ctx.cx.min, ctx.cx.max,
-// 					ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// 
-// 			hDiscreteXY->GetZaxis()->SetTitle(htitlez);
-// 
-// 			cDiscreteXY = RegCanvas(cname, htitle, can_width, can_height);
-// 
-// 			cname += "Full";
-// 			cDiscreteXYFull = RegCanvas(cname, htitle, can_width, can_height);
-// 		}
-
-	// histograms for fitting
-// 	if (s == FIT or s == ALL)
-	{
-// 		if (ctx.useDiff())
-// 		{
-// 			GetDiffs();
-// 		}
-	}
-
-// 	if (s == SIG or s == ALL)
-	{
-// 		if (ctx.useDiff())
-// 		{
-// 			objectsSlices = new TObjArray();
-// 			objectsSlices->SetName(ctx.histPrefix + "Slices");
-// 
-// 			hSliceXYDiff = new TH1D*[ctx.cx.bins];
-// 			hSliceXYFitQA = new TH1D*[ctx.cx.bins];
-// 			hSliceXYChi2NDF = new TH1D*[ctx.cx.bins];
-// 
-// 			for (uint i = 0; i < ctx.cx.bins; ++i)
-// 			{
-// 				// common title for all
-// 				htitle = TString::Format("#Lambda: %s[%d]=%.1f-%.1f;%s%s;Stat", "X", i,
-// 										 ctx.cx.min+ctx.cx.delta*i, ctx.cx.min+ctx.cx.delta*(i+1),
-// 										 ctx.y.label.Data(), ctx.y.format_unit().c_str());
-// 
-// 				// slices
-// 				hname = TString::Format("@@@d/Slices/h_@@@a_LambdaInvMassSlice_%s%02d", "X", i);
-// 				hSliceXYDiff[i] = RegTH1<TH1D>(hname, htitle, ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// 				objectsSlices->AddLast(hSliceXYDiff[i]);
-// 
-// 				// Fit QA
-// 				hname = TString::Format("@@@d/Slices/h_@@@a_LambdaInvMassFitQA_%s%02d", "X", i);
-// 				hSliceXYFitQA[i] = RegTH1<TH1D>(hname, htitle,ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// 				objectsSlices->AddLast(hSliceXYFitQA[i]);
-// 
-// 				// Chi2/NDF
-// 				hname = TString::Format("@@@d/Slices/h_@@@a_LambdaInvMassChi2NDF_%s%02d", "X", i);
-// 				hSliceXYChi2NDF[i] = RegTH1<TH1D>(hname, htitle, ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// 				objectsSlices->AddLast(hSliceXYChi2NDF[i]);
-// 			}
-// 
-// 			// Lambda: X vs Y
-// 			hname = "@@@d/h_@@@a_LambdaInvMassSig";
-// 
-// #ifdef HAVE_HISTASYMMERRORS
-// 			if (ctx.cx.bins_arr and ctx.cy.bins_arr)
-// 				hDiscreteXYSig = RegTH2<TH2DA>(hname, htitlec, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
-// 			else
-// 				hDiscreteXYSig = RegTH2<TH2DA>(hname, htitlec,
-// 					ctx.cx.bins, ctx.cx.min, ctx.cx.max,
-// 					ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// #else
-// 			if (ctx.cx.bins_arr and ctx.cy.bins_arr)
-// 				hDiscreteXYSig = RegTH2<TH2D>(hname, htitlec, ctx.cx.bins, ctx.cx.bins_arr, ctx.cy.bins, ctx.cy.bins_arr);
-// 			else
-// 				hDiscreteXYSig = RegTH2<TH2D>(hname, htitlec,
-// 					ctx.cx.bins, ctx.cx.min, ctx.cx.max,
-// 					ctx.cy.bins, ctx.cy.min, ctx.cy.max);
-// #endif
-// 			hDiscreteXYSig->GetZaxis()->SetTitle(htitlez);
-// 
-// 			cname = "@@@d/c_@@@a_LambdaInvMassSig";
-// 			cDiscreteXYSig = RegCanvas(cname, htitle, can_width, can_height);
-// 
-// 			cname += "Full";
-// 			cDiscreteXYSigFull = RegCanvas(cname, htitle, can_width, can_height);
-// 
-// 			// Slices
-// 			cname = "@@@d/Slices/c_@@@a_LambdaInvMassSlice";
-// 			cSliceXYDiff = RegCanvas(cname.Data(), "#Lambda: Slice of Y distribution", can_width, can_height, ctx.cx.bins);
-// 
-// 			// Fit QA
-// 			cname = "@@@d/Slices/c_@@@a_LambdaInvMassFitQA";
-// 			cSliceXYFitQA = RegCanvas(cname.Data(), "#Lambda: Slice of Y distribution", can_width, can_height, ctx.cx.bins);
-// 
-// 			// Chi2NDF
-// 			cname = "@@@d/Slices/c_@@@a_LambdaInvMassChi2NDF";
-// 			cSliceXYChi2NDF = RegCanvas(cname.Data(), "#Lambda: Slice of Y distribution", can_width, can_height, ctx.cx.bins);
-// 
-// 			cname = "@@@d/Slices/c_@@@a_LambdaInvMassProjX";
-// 			cSliceXYprojX = RegCanvas(cname.Data(), "#Lambda: ProjectionsX of Y distribution", can_width, can_height, ctx.cx.bins);
-// 		}
-	}
 }
 
 void Dim3DistributionFactory::GetDiffs(bool with_canvases)
@@ -388,8 +271,8 @@ void Dim3DistributionFactory::prepareSigCanvas(bool flag_details)
 
 	cSignalCounter->cd(0);
 	hSignalCounter->Draw("colz");
-	RootTools::NicePalette(hSignalCounter, 0.05);
-	RootTools::NoPalette(hSignalCounter);
+	RootTools::NicePalette((TH2*)hSignalCounter, 0.05);
+	RootTools::NoPalette((TH2*)hSignalCounter);
 	gPad->Update();
 
 // 	if (cDiscreteXY)

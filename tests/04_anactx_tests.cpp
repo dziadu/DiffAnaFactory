@@ -35,7 +35,7 @@ void AnaCtxCase::MyTest()
 {
   std::string output_string;
 
-  a3ctx.histPrefix = "test";
+  a3ctx.name = "test";
   a3ctx.x.bins = 10; a3ctx.x.label = "a2_x"; a3ctx.x.unit = "mm";
   a3ctx.y.bins = 10; a3ctx.y.label = "a2_y";
   a3ctx.format_V_axis();

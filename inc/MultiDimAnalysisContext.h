@@ -42,6 +42,7 @@ public:
 	virtual bool configureFromJson(const char * name);
 	virtual bool configureToJson(const char * name, const char * jsonfile);
 
+  void print() const;
 private:
 	TString json_fn;
 	ClassDef(MultiDimAnalysisContext, 2);

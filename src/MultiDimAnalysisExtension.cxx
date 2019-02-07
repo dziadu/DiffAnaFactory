@@ -41,7 +41,7 @@ const TString flags_fit_a = "B,Q,0";
 const TString flags_fit_b = "";
 
 MultiDimAnalysisExtension::MultiDimAnalysisExtension(MultiDimDefinition::Dimensions dim)
-  : ctx(MultiDimAnalysisContext())
+  : mda_ctx(MultiDimAnalysisContext())
   , diffs(nullptr)
   , c_Diffs(nullptr)
   , objectsFits(nullptr)
@@ -50,7 +50,7 @@ MultiDimAnalysisExtension::MultiDimAnalysisExtension(MultiDimDefinition::Dimensi
 }
 
 MultiDimAnalysisExtension::MultiDimAnalysisExtension(const MultiDimAnalysisContext & context)
-  : ctx(context)
+  : mda_ctx(context)
   , diffs(nullptr)
   , c_Diffs(nullptr)
   , objectsFits(nullptr)
@@ -59,7 +59,7 @@ MultiDimAnalysisExtension::MultiDimAnalysisExtension(const MultiDimAnalysisConte
 }
 
 MultiDimAnalysisExtension::MultiDimAnalysisExtension(const MultiDimAnalysisContext * context)
-  : ctx(*context)
+  : mda_ctx(*context)
   , diffs(nullptr)
   , c_Diffs(nullptr)
   , objectsFits(nullptr)
@@ -79,27 +79,30 @@ MultiDimAnalysisExtension & MultiDimAnalysisExtension::operator=(const MultiDimA
 {
 	MultiDimAnalysisExtension * nthis = this;//new MultiDimAnalysisExtension(fa.ctx);
 
-	nthis->ctx = fa.ctx;
-	nthis->ctx.histPrefix = fa.ctx.histPrefix;
+	nthis->mda_ctx = fa.mda_ctx;
+	nthis->mda_ctx.name = fa.mda_ctx.name;
 
 	nthis->objectsFits = new TObjArray();
 
-	nthis->objectsFits->SetName(ctx.histPrefix + "Fits");
+	nthis->objectsFits->SetName(mda_ctx.name + "Fits");
 
 	return *nthis;
 }
 
 void MultiDimAnalysisExtension::prepare()
 {
-	ctx.update();
+	mda_ctx.update();
 
 	objectsFits = new TObjArray();
-	objectsFits->SetName(ctx.histPrefix + "Fits");
+	objectsFits->SetName(mda_ctx.name + "Fits");
 }
 
-void MultiDimAnalysisExtension::init(TH1 * h)
+void MultiDimAnalysisExtension::init(TH1 * h, SmartFactory * sf)
 {
-  diffs = new ExtraDimensionMapper(ctx.histPrefix.Data(), h, ctx.V, "@@@d/diffs/h_@@@a_Signal");
+  diffs = new ExtraDimensionMapper(mda_ctx.name.Data(), h,
+                                   mda_ctx.V,
+                                   "@@@d/diffs/h_@@@a_Signal",
+                                   sf);
 }
 
 void MultiDimAnalysisExtension::GetDiffs(bool with_canvases)
@@ -150,26 +153,44 @@ void MultiDimAnalysisExtension::GetDiffs(bool with_canvases)
 void MultiDimAnalysisExtension::proceed(MultiDimDefinition::Dimensions dim)
 {
   if (MultiDimDefinition::DIM3 == dim)
-    diffs->Fill3D(*ctx.x.var, *ctx.y.var, *ctx.z.var, *ctx.V.var, *ctx.var_weight);
+    diffs->Fill3D(*mda_ctx.x.var,
+                  *mda_ctx.y.var,
+                  *mda_ctx.z.var,
+                  *mda_ctx.V.var,
+                  *mda_ctx.var_weight);
   else if (MultiDimDefinition::DIM2 == dim)
-    diffs->Fill2D(*ctx.x.var, *ctx.y.var, *ctx.V.var, *ctx.var_weight);
+    diffs->Fill2D(*mda_ctx.x.var,
+                  *mda_ctx.y.var,
+                  *mda_ctx.V.var,
+                  *mda_ctx.var_weight);
   else if (MultiDimDefinition::DIM1 == dim)
-    diffs->Fill1D(*ctx.x.var, *ctx.V.var, *ctx.var_weight);
+    diffs->Fill1D(*mda_ctx.x.var,
+                  *mda_ctx.V.var,
+                  *mda_ctx.var_weight);
 }
 
 void MultiDimAnalysisExtension::proceed1()
 {
-  diffs->Fill1D(*ctx.x.var, *ctx.V.var, *ctx.var_weight);
+  diffs->Fill1D(*mda_ctx.x.var,
+                *mda_ctx.V.var,
+                *mda_ctx.var_weight);
 }
 
 void MultiDimAnalysisExtension::proceed2()
 {
-  diffs->Fill2D(*ctx.x.var, *ctx.y.var, *ctx.V.var, *ctx.var_weight);
+  diffs->Fill2D(*mda_ctx.x.var,
+                *mda_ctx.y.var,
+                *mda_ctx.V.var,
+                *mda_ctx.var_weight);
 }
 
 void MultiDimAnalysisExtension::proceed3()
 {
-  diffs->Fill3D(*ctx.x.var, *ctx.y.var, *ctx.z.var, *ctx.V.var, *ctx.var_weight);
+  diffs->Fill3D(*mda_ctx.x.var,
+                *mda_ctx.y.var,
+                *mda_ctx.z.var,
+                *mda_ctx.V.var,
+                *mda_ctx.var_weight);
 }
 
 void MultiDimAnalysisExtension::scale(Float_t factor)

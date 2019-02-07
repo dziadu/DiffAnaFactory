@@ -48,7 +48,7 @@ void MultiDimAnalysisContext::format_V_axis()
 MultiDimAnalysisContext::MultiDimAnalysisContext()
 {
 	// config
-	TString histPrefix = "Dummy";	// prefix for histograms	
+	name = "Dummy";	// prefix for histograms
 
 	// basic
 	// x and y binning for full range
@@ -64,7 +64,7 @@ MultiDimAnalysisContext::MultiDimAnalysisContext()
 MultiDimAnalysisContext::MultiDimAnalysisContext(const MultiDimAnalysisContext & ctx) : MultiDimDistributionContext(ctx)
 {
 	*this = ctx;
-	histPrefix = ctx.histPrefix;
+	name = ctx.name;
 }
 
 
@@ -177,19 +177,9 @@ bool MultiDimAnalysisContext::configureToJson(const char * name, const char * js
 MultiDimAnalysisContext & MultiDimAnalysisContext::operator=(const MultiDimAnalysisContext & ctx)
 {
 // 	histPrefix = ctx.histPrefix;
-	ctxName = ctx.ctxName;
-
-	x = ctx.x;
-	y = ctx.y;
-  z = ctx.z;
+  MultiDimDistributionContext::operator=(ctx);
+	name = ctx.name;
 	V = ctx.V;
-
-// 	cutMin = ctx.cutMin;
-// 	cutMax = ctx.cutMax;
-
-	var_weight = ctx.var_weight;
-
-	diff_var_name = ctx.diff_var_name;
 
 	return *this;
 }
@@ -211,4 +201,10 @@ bool MultiDimAnalysisContext::operator==(const MultiDimAnalysisContext & ctx)
 bool MultiDimAnalysisContext::operator!=(const MultiDimAnalysisContext & ctx)
 {
 	return !operator==(ctx);
+}
+
+void MultiDimAnalysisContext::print() const
+{
+  MultiDimDistributionContext::print();
+  V.print();
 }

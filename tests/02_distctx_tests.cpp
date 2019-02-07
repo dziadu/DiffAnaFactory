@@ -28,10 +28,12 @@ void DistCtxCase::setUp()
   min = 0;
   max = 10;
 
-  d3ctx.histPrefix = "test";
+  d3ctx.name = "test";
   d3ctx.x.label = "d2_x"; d3ctx.x.unit = "mm";
   d3ctx.y.label = "d2_y";
   d3ctx.z.label = "d2_z"; d3ctx.z.unit = "cm";
+
+//   d3ctx.print();
 }
 
 void DistCtxCase::MyTest()

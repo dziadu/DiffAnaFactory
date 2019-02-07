@@ -88,54 +88,70 @@ TString AxisCfg::format_unit(const TString & unit)
 	return funit;
 }
 
+void AxisCfg::print() const
+{
+  if (!bins_arr)
+    printf(" Axis: %d in [ %f; %f ] -- %s\n",
+           bins, min, max, format_string().Data());
+  else
+  {
+    TString buff;
+    for (int i = 0; i < bins; ++i)
+    {
+      buff += "| ";
+      buff += bins_arr[i];
+      buff += " ";
+    }
+    buff += "|";
+    printf(" Axis: %d in %s -- %s\n",
+           bins, buff.Data(), format_string().Data());
+  }
+}
+
 MultiDimDistributionContext::MultiDimDistributionContext()
   : TNamed()
+  , name("")
+  , hist_name("Dummy")
+  , diff_var_name("")
+  , var_weight(nullptr)
   , json_found(false)
 {
-	// config
-	TString histPrefix = "Dummy";	// prefix for histograms	
 
-	// basic
-	// x and y binning for full range
-
-	// cut range when useCut==kTRUE
-// 	cutMin = cutMax = 0;
-
-	// variables to use for diff analysis
-	var_weight = 0;
-	// variable used for cuts when cutCut==kTRUE
 }
 
 MultiDimDistributionContext::MultiDimDistributionContext(const MultiDimDistributionContext & ctx)
   : TNamed()
 {
 	*this = ctx;
-	histPrefix = ctx.histPrefix;
+	name = ctx.name;
 }
 
-void MultiDimDistributionContext::update() const
+bool MultiDimDistributionContext::update()
 {
 	x.delta = ((x.max - x.min)/x.bins);
 	y.delta = ((y.max - y.min)/y.bins);
   z.delta = ((z.max - z.min)/z.bins);
 
-	ctxName = histPrefix + "Ctx";
+  if (0 == hist_name.Length())
+    hist_name = name;
+
+  if (name.EndsWith("Ctx"))
+    SetName(name);
+  else
+    SetName(name+"Ctx");
+
+  return true;
 }
 
 bool MultiDimDistributionContext::validate() const
 {
-  if (0 == histPrefix.Length()) return false;
+  if (0 == name.Length()) return false;
 
   if (x.bins and !x.var) return false;
   if (y.bins and !y.var) return false;
   if (z.bins and !z.var) return false;
 
-// 	if (useCuts() and !V.var)
-// 		return false;
-
-	update();
-
-	return true;
+// 	return update();
 }
 
 MultiDimDistributionContext::~MultiDimDistributionContext()
@@ -330,15 +346,12 @@ bool MultiDimDistributionContext::findJsonFile(const char * initial_path, const 
 
 MultiDimDistributionContext & MultiDimDistributionContext::operator=(const MultiDimDistributionContext & ctx)
 {
-// 	histPrefix = ctx.histPrefix;
-	ctxName = ctx.ctxName;
+// 	ctx_name = ctx.ctx_name;
+	hist_name = ctx.hist_name;
 
-	x = ctx.x;
+  x = ctx.x;
 	y = ctx.y;
   z = ctx.z;
-
-// 	cutMin = ctx.cutMin;
-// 	cutMax = ctx.cutMax;
 
 	var_weight = ctx.var_weight;
 
@@ -393,4 +406,13 @@ TString MultiDimDistributionContext::format_hist_axes(MultiDimDefinition::Dimens
                            x.label.Data(), x.format_unit().Data());
 
   return TString(";;");
+}
+
+void MultiDimDistributionContext::print() const
+{
+  printf("Context: %s   Hist name: %s\n", name.Data(), hist_name.Data());
+  printf(" Var name: %s\n", diff_var_name.Data());
+  x.print();
+  y.print();
+  z.print();
 }

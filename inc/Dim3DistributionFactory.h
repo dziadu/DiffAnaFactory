@@ -78,7 +78,7 @@ public:
 // #else
 // 	TH2D * hSignalCounter;			//->	// discrete X-Y, signal extracted
 // #endif
-  TH2 * hSignalCounter;			//->	// discrete X-Y, signal extracted
+  TH3 * hSignalCounter;			//->	// discrete X-Y, signal extracted
 	TCanvas * cSignalCounter;			//->
 
 // 	TCanvas * cDiscreteXYSig;		//->

@@ -51,6 +51,8 @@ public:
 	static TString format_unit(const char * unit);
 	static TString format_unit(const TString & unit);
 
+  void print() const;
+
 	ClassDef(AxisCfg, 1);
 };
 
@@ -67,8 +69,8 @@ class MultiDimDistributionContext : public TNamed
 {
 public:
 	// config
-	TString histPrefix;	// prefix for histograms
-	mutable TString ctxName;	// prefix for histograms
+	mutable TString name;      // prefix for histograms
+	TString hist_name;         // name for histograms
 	TString diff_var_name;
 
 	AxisCfg x, y, z;     // x, y are two dimensions, V is a final Variable axis
@@ -89,21 +91,18 @@ public:
 	bool operator==(const MultiDimDistributionContext & ctx);
 	bool operator!=(const MultiDimDistributionContext & ctx);
 
-	virtual void update() const;
+	virtual bool update();
 	virtual bool validate() const;
 
   TString format_hist_axes(MultiDimDefinition::Dimensions dim) const;
 
-	// flags
-// 	virtual bool useCuts() const { return (cutMin or cutMax); }
-
-	virtual const char * GetName() const { return ctxName.Data(); }
-	virtual void SetName(const char* name) { ctxName = name; }
-	virtual const char * AnaName() const { return histPrefix.Data(); }
+	virtual const char * AnaName() const { return name.Data(); }
 
 	virtual bool findJsonFile(const char * initial_path, const char * filename, int search_depth = -1);
 	virtual bool configureFromJson(const char * name);
 	virtual bool configureToJson(const char * name, const char * jsonfile);
+
+  void print() const;
 
 protected:
 	TString json_fn;

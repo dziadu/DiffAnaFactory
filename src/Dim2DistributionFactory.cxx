@@ -27,10 +27,8 @@
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
-const Option_t h1opts[] = "h,E1";
-
 Dim2DistributionFactory::Dim2DistributionFactory()
-  : SmartFactory("null")
+  : SmartFactory("")
   , MultiDimDefinition(DIM2)
   , ctx(MultiDimDistributionContext())
   , hSignalCounter(nullptr)
@@ -40,7 +38,7 @@ Dim2DistributionFactory::Dim2DistributionFactory()
 }
 
 Dim2DistributionFactory::Dim2DistributionFactory(const MultiDimDistributionContext & context)
-  : SmartFactory(context.AnaName())
+  : SmartFactory("")
   , MultiDimDefinition(DIM2)
   , ctx(context)
   , hSignalCounter(nullptr)
@@ -50,7 +48,7 @@ Dim2DistributionFactory::Dim2DistributionFactory(const MultiDimDistributionConte
 }
 
 Dim2DistributionFactory::Dim2DistributionFactory(const MultiDimDistributionContext * context)
-  : SmartFactory(context->AnaName())
+  : SmartFactory("")
   , MultiDimDefinition(DIM2)
   , ctx(*context)
   , hSignalCounter(nullptr)
@@ -69,7 +67,7 @@ Dim2DistributionFactory & Dim2DistributionFactory::operator=(const Dim2Distribut
 	Dim2DistributionFactory * nthis = this;//new Dim2DistributionFactory(fa.ctx);
 
 	nthis->ctx = fa.ctx;
-	nthis->ctx.histPrefix = fa.ctx.histPrefix;
+	nthis->ctx.name = fa.ctx.name;
 
 	copyHistogram(fa.hSignalCounter, hSignalCounter);
   return *nthis;
@@ -78,6 +76,8 @@ Dim2DistributionFactory & Dim2DistributionFactory::operator=(const Dim2Distribut
 void Dim2DistributionFactory::prepare()
 {
 	ctx.update();
+  rename(ctx.hist_name);
+  chdir(ctx.hist_name.Data());
 }
 
 void Dim2DistributionFactory::init()
