@@ -11,15 +11,17 @@ class AnaFacCase : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST_SUITE( AnaFacCase );
 	CPPUNIT_TEST( InitializationTest );
   CPPUNIT_TEST( ScaleTest );
+  CPPUNIT_TEST( FillTest );
 	CPPUNIT_TEST_SUITE_END();
 
 public:
-	void setUp();
-  void tearDown();
+	void setUp() override;
+  void tearDown() override;
 
 protected:
 	void InitializationTest();
   void ScaleTest();
+  void FillTest();
 
   int bins;
   float min, max;
@@ -86,11 +88,28 @@ void AnaFacCase::ScaleTest()
   std::string output_string;
   output_string = a3ctx.V.label;
   CPPUNIT_ASSERT_EQUAL(std::string("d^{3}/da3_xda3_yda3_z"), output_string);
-
-  TFile * file = TFile::Open("/tmp/res.root", "RECREATE");
   a3fac->finalize();
 
-  a3fac->MultiDimAnalysisExtension::ctx.Write();
-  a3fac->write(file, true);
-  file->Close();
+//   TFile * file = TFile::Open("/tmp/res.root", "RECREATE");
+//
+//   a3fac->MultiDimAnalysisExtension::ctx.Write();
+//   a3fac->write(file, true);
+//   file->Close();
+}
+
+void AnaFacCase::FillTest()
+{
+  ExtraDimensionMapper * edm;
+
+  edm = a2fac->diffs;
+
+  CPPUNIT_ASSERT_EQUAL(a3ctx.x.bins, edm->getBinsX());
+  CPPUNIT_ASSERT_EQUAL(a3ctx.y.bins, edm->getBinsY());
+//   CPPUNIT_ASSERT_EQUAL(a3ctx.z.bins, edm->getBinsZ());
+
+  edm = a3fac->diffs;
+
+  CPPUNIT_ASSERT_EQUAL(a3ctx.x.bins, edm->getBinsX());
+  CPPUNIT_ASSERT_EQUAL(a3ctx.y.bins, edm->getBinsY());
+  CPPUNIT_ASSERT_EQUAL(a3ctx.z.bins, edm->getBinsZ());
 }

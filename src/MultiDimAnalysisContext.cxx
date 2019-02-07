@@ -19,9 +19,6 @@
 #include "MultiDimAnalysisContext.h"
 #include <json/json.h>
 
-
-#include <sys/stat.h>
-#include <cstdlib>
 #include <iostream>
 #include <fstream>
 
@@ -48,7 +45,7 @@ void MultiDimAnalysisContext::format_V_axis()
 	V.unit = hunit;
 }
 
-MultiDimAnalysisContext::MultiDimAnalysisContext() : MultiDimDistributionContext()
+MultiDimAnalysisContext::MultiDimAnalysisContext()
 {
 	// config
 	TString histPrefix = "Dummy";	// prefix for histograms	
@@ -64,7 +61,7 @@ MultiDimAnalysisContext::MultiDimAnalysisContext() : MultiDimDistributionContext
 	// variable used for cuts when cutCut==kTRUE
 }
 
-MultiDimAnalysisContext::MultiDimAnalysisContext(const MultiDimAnalysisContext & ctx) : MultiDimDistributionContext()
+MultiDimAnalysisContext::MultiDimAnalysisContext(const MultiDimAnalysisContext & ctx) : MultiDimDistributionContext(ctx)
 {
 	*this = ctx;
 	histPrefix = ctx.histPrefix;

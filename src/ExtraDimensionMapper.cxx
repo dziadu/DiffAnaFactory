@@ -18,46 +18,18 @@
 
 #ifndef __CINT__
 
-#include <fstream>
-#include <string>
-#include "getopt.h"
-
-#include "TCanvas.h"
-#include "TChain.h"
-#include "TDirectory.h"
-#include "TError.h"
-#include "TF1.h"
-#include "TFile.h"
-#include "TGaxis.h"
-#include "TGraphErrors.h"
-#include "TGraph.h"
-#include "TH2.h"
-#include "TH3.h"
-#include "TImage.h"
-#include "TLatex.h"
-#include "TLegend.h"
-#include "TMath.h"
-#include "TStyle.h"
 #include "TSystem.h"
-#include "TVector.h"
 
 #endif /* __CINT__ */
 
-#include "RootTools.h"
 #include "ExtraDimensionMapper.h"
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
-using namespace RootTools;
+// const Option_t h1opts[] = "h,E1";
 
-// Processing data bar width
-const Int_t bar_dotqty = 10000;
-const Int_t bar_width = 20;
-
-const Option_t h1opts[] = "h,E1";
-
-const TString flags_fit_a = "B,Q,0";
-const TString flags_fit_b = "";
+// const TString flags_fit_a = "B,Q,0";
+// const TString flags_fit_b = "";
 
 ExtraDimensionMapper::ExtraDimensionMapper(const std::string & name, TH1 * hist, const AxisCfg & axis, const std::string & dir_and_name)
   : SmartFactory(name.c_str())

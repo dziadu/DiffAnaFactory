@@ -18,75 +18,45 @@
 
 #ifndef __CINT__
 
-#include <fstream>
-#include <string>
-#include "getopt.h"
-
 #include "TCanvas.h"
-#include "TChain.h"
-#include "TDirectory.h"
-#include "TError.h"
-#include "TF1.h"
-#include "TFile.h"
-#include "TGaxis.h"
-#include "TGraphErrors.h"
-#include "TGraph.h"
-#include "TH2.h"
-#include "TH3.h"
-#include "TImage.h"
-#include "TLatex.h"
-#include "TLegend.h"
-#include "TMath.h"
-#include "TStyle.h"
 #include "TSystem.h"
-#include "TVector.h"
 
 #endif /* __CINT__ */
 
-#include "RootTools.h"
 #include "Dim3DistributionFactory.h"
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
-using namespace RootTools;
-
-// Processing data bar width
-const Int_t bar_dotqty = 10000;
-const Int_t bar_width = 20;
-
-const Option_t h1opts[] = "h,E1";
-
-const TString flags_fit_a = "B,Q,0";
-const TString flags_fit_b = "";
+// const Option_t h1opts[] = "h,E1";
 
 Dim3DistributionFactory::Dim3DistributionFactory()
   : SmartFactory("null")
+  , MultiDimDefinition(DIM3)
   , ctx(MultiDimDistributionContext())
   , hSignalCounter(nullptr)
   , cSignalCounter(nullptr)
-  , dim_version(DIM1)
 {
-  prepare(DIM2);
+  prepare();
 }
 
 Dim3DistributionFactory::Dim3DistributionFactory(const MultiDimDistributionContext & context)
   : SmartFactory(context.AnaName())
+  , MultiDimDefinition(DIM3)
   , ctx(context)
   , hSignalCounter(nullptr)
   , cSignalCounter(nullptr)
-  , dim_version(DIM1)
 {
-  prepare(DIM2);
+  prepare();
 }
 
 Dim3DistributionFactory::Dim3DistributionFactory(const MultiDimDistributionContext * context)
   : SmartFactory(context->AnaName())
+  , MultiDimDefinition(DIM3)
   , ctx(*context)
   , hSignalCounter(nullptr)
   , cSignalCounter(nullptr)
-  , dim_version(DIM1)
 {
-  prepare(DIM2);
+  prepare();
 }
 
 Dim3DistributionFactory::~Dim3DistributionFactory()
@@ -105,39 +75,16 @@ Dim3DistributionFactory & Dim3DistributionFactory::operator=(const Dim3Distribut
   return *nthis;
 }
 
-void Dim3DistributionFactory::prepare(Dimensions dim)
+void Dim3DistributionFactory::prepare()
 {
-  if (dim_version < dim)
-  {
-//     delete diffs;           diffs = nullptr;
-//     delete hSignalCounter;  hSignalCounter = nullptr;
-  }
-
-  dim_version = dim;
-
-	ctx.update();
-}
-
-static TString format_hist_axes(const MultiDimDistributionContext & ctx)
-{
-	TString htitle = TString::Format(";%s%s%s;%s%s%s",
-									 ctx.x.label.Data(), ctx.x.format_unit().Data(),
-									 ctx.y.label.Data(), ctx.y.format_unit().Data(),
-                   ctx.z.label.Data(), ctx.z.format_unit().Data());
-
-	return htitle;
-}
-
-TString format_hist_zaxis(const MultiDimDistributionContext & ctx)
-{
-	return TString::Format("%s%s", ctx.z.label.Data(), ctx.z.format_unit().Data());
+  ctx.update();
 }
 
 void Dim3DistributionFactory::init()
 {
 	Int_t can_width = 800, can_height = 600;
-	TString htitle = ctx.format_hist_axes();
-	TString htitlez = format_hist_zaxis(ctx);
+	TString htitle = ctx.format_hist_axes(dim_version);
+	TString htitlez = ctx.z.format_string();
 
 	// input histograms
 	if (!hSignalCounter)

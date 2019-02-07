@@ -18,27 +18,9 @@
 
 #ifndef __CINT__
 
-#include <fstream>
-#include <string>
-#include "getopt.h"
-
-#include "TCanvas.h"
-#include "TChain.h"
-#include "TDirectory.h"
-#include "TError.h"
-#include "TF1.h"
-#include "TFile.h"
-#include "TGaxis.h"
-#include "TGraphErrors.h"
-#include "TGraph.h"
-#include "TH2.h"
-#include "TImage.h"
 #include "TLatex.h"
-#include "TLegend.h"
-#include "TMath.h"
-#include "TStyle.h"
+#include "TList.h"
 #include "TSystem.h"
-#include "TVector.h"
 
 #endif /* __CINT__ */
 
@@ -58,7 +40,7 @@ const Option_t h1opts[] = "h,E1";
 const TString flags_fit_a = "B,Q,0";
 const TString flags_fit_b = "";
 
-MultiDimAnalysisExtension::MultiDimAnalysisExtension()
+MultiDimAnalysisExtension::MultiDimAnalysisExtension(MultiDimDefinition::Dimensions dim)
   : ctx(MultiDimAnalysisContext())
   , diffs(nullptr)
   , c_Diffs(nullptr)
@@ -115,15 +97,6 @@ void MultiDimAnalysisExtension::prepare()
 	objectsFits->SetName(ctx.histPrefix + "Fits");
 }
 
-static TString format_hist_axes(const MultiDimAnalysisContext & ctx)
-{
-	TString htitle = TString::Format(";%s%s;%s%s",
-									 ctx.x.label.Data(), ctx.x.format_unit().Data(),
-									 ctx.y.label.Data(), ctx.y.format_unit().Data());
-
-	return htitle;
-}
-
 void MultiDimAnalysisExtension::init(TH1 * h)
 {
   diffs = new ExtraDimensionMapper(ctx.histPrefix.Data(), h, ctx.V, "@@@d/diffs/h_@@@a_Signal");
@@ -174,14 +147,29 @@ void MultiDimAnalysisExtension::GetDiffs(bool with_canvases)
 // 	}
 }
 
-void MultiDimAnalysisExtension::proceed()
+void MultiDimAnalysisExtension::proceed(MultiDimDefinition::Dimensions dim)
 {
-  if (ctx.z.bins > 0)
-    diffs->Fill3D(*ctx.x.var, *ctx.y.var, *ctx.V.var, *ctx.var_weight);
-  else if (ctx.y.bins > 0)
+  if (MultiDimDefinition::DIM3 == dim)
+    diffs->Fill3D(*ctx.x.var, *ctx.y.var, *ctx.z.var, *ctx.V.var, *ctx.var_weight);
+  else if (MultiDimDefinition::DIM2 == dim)
     diffs->Fill2D(*ctx.x.var, *ctx.y.var, *ctx.V.var, *ctx.var_weight);
-  else
+  else if (MultiDimDefinition::DIM1 == dim)
     diffs->Fill1D(*ctx.x.var, *ctx.V.var, *ctx.var_weight);
+}
+
+void MultiDimAnalysisExtension::proceed1()
+{
+  diffs->Fill1D(*ctx.x.var, *ctx.V.var, *ctx.var_weight);
+}
+
+void MultiDimAnalysisExtension::proceed2()
+{
+  diffs->Fill2D(*ctx.x.var, *ctx.y.var, *ctx.V.var, *ctx.var_weight);
+}
+
+void MultiDimAnalysisExtension::proceed3()
+{
+  diffs->Fill3D(*ctx.x.var, *ctx.y.var, *ctx.z.var, *ctx.V.var, *ctx.var_weight);
 }
 
 void MultiDimAnalysisExtension::scale(Float_t factor)

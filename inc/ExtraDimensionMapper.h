@@ -20,27 +20,8 @@
 #ifndef EXTRADIMENSIONMAPPER_H
 #define EXTRADIMENSIONMAPPER_H
 
-#include <TH1.h>
-#include <TObject.h>
-#include <Rtypes.h>
-
 #include "MultiDimDistributionContext.h"
 #include "SmartFactory.h"
-
-class TCanvas;
-class TChain;
-class TF1;
-class TFile;
-class TGraph;
-class TGraphErrors;
-class TH1;
-class TH1D;
-class TH2;
-class TH2D;
-class TH3;
-class TH3D;
-class TStyle;
-class TVirtualPad;
 
 #ifdef HAVE_HISTASYMMERRORS
 #include "TH2DA.h"

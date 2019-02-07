@@ -21,8 +21,6 @@
 #define MULTIDIMDISTRIBUTIONCONTEXT_H
 
 #include <TNamed.h>
-#include <TString.h>
-#include <Rtypes.h>
 
 class AxisCfg
 {
@@ -56,6 +54,15 @@ public:
 	ClassDef(AxisCfg, 1);
 };
 
+class MultiDimDefinition {
+public:
+  enum Dimensions { DIM0, DIM1, DIM2, DIM3 };
+  MultiDimDefinition(Dimensions dim)
+    : dim_version(dim) {}
+protected:
+  const Dimensions dim_version;
+};
+
 class MultiDimDistributionContext : public TNamed
 {
 public:
@@ -85,7 +92,7 @@ public:
 	virtual void update() const;
 	virtual bool validate() const;
 
-  TString format_hist_axes() const;
+  TString format_hist_axes(MultiDimDefinition::Dimensions dim) const;
 
 	// flags
 // 	virtual bool useCuts() const { return (cutMin or cutMax); }

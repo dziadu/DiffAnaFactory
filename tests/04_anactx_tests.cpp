@@ -9,7 +9,7 @@ class AnaCtxCase : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST_SUITE_END();
 
 public:
-	void setUp();
+	void setUp() override;
 
 protected:
 	void MyTest();
@@ -32,7 +32,7 @@ void AnaCtxCase::setUp()
 }
 
 void AnaCtxCase::MyTest()
-{return;
+{
   std::string output_string;
 
   a3ctx.histPrefix = "test";

@@ -19,9 +19,7 @@
 #include "MultiDimDistributionContext.h"
 #include <json/json.h>
 
-
 #include <sys/stat.h>
-#include <cstdlib>
 #include <iostream>
 #include <fstream>
 
@@ -90,7 +88,9 @@ TString AxisCfg::format_unit(const TString & unit)
 	return funit;
 }
 
-MultiDimDistributionContext::MultiDimDistributionContext() : TNamed(), json_found(false)
+MultiDimDistributionContext::MultiDimDistributionContext()
+  : TNamed()
+  , json_found(false)
 {
 	// config
 	TString histPrefix = "Dummy";	// prefix for histograms	
@@ -106,7 +106,8 @@ MultiDimDistributionContext::MultiDimDistributionContext() : TNamed(), json_foun
 	// variable used for cuts when cutCut==kTRUE
 }
 
-MultiDimDistributionContext::MultiDimDistributionContext(const MultiDimDistributionContext & ctx) : TNamed()
+MultiDimDistributionContext::MultiDimDistributionContext(const MultiDimDistributionContext & ctx)
+  : TNamed()
 {
 	*this = ctx;
 	histPrefix = ctx.histPrefix;
@@ -377,17 +378,19 @@ bool MultiDimDistributionContext::operator!=(const MultiDimDistributionContext &
 	return !operator==(ctx);
 }
 
-TString MultiDimDistributionContext::format_hist_axes() const {
-  if (z.bins > 0)
+TString MultiDimDistributionContext::format_hist_axes(MultiDimDefinition::Dimensions dim) const {
+  if (MultiDimDefinition::DIM3 == dim)
     return TString::Format(";%s%s%s;%s%s%s",
                            x.label.Data(), x.format_unit().Data(),
                            y.label.Data(), y.format_unit().Data(),
                            z.label.Data(), z.format_unit().Data());
-  else if (y.bins > 0)
+  if (MultiDimDefinition::DIM2 == dim)
     return TString::Format(";%s%s;%s%s",
                            x.label.Data(), x.format_unit().Data(),
                            y.label.Data(), y.format_unit().Data());
-  else
-    return TString::Format(";%s;%s",
+  if (MultiDimDefinition::DIM1 == dim)
+    return TString::Format(";%s;Counts [aux]",
                            x.label.Data(), x.format_unit().Data());
+
+  return TString(";;");
 }

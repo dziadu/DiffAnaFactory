@@ -16,15 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef DIM2DISTRIBUTIONFACTORY_H
 #define DIM2DISTRIBUTIONFACTORY_H
 
-#include "TObject.h"
-#include "TString.h"
-#include "TChain.h"
-#include "Rtypes.h"
-#include "TDirectory.h"
 #include "RootTools.h"
 
 #include "MultiDimDistributionContext.h"
@@ -32,24 +26,11 @@
 #include "SmartFactory.h"
 #include "FitterFactory.h"
 
-class TCanvas;
-class TChain;
-class TF1;
-class TFile;
-class TGraph;
-class TGraphErrors;
-class TH1;
-class TH1D;
-class TH2;
-class TH2D;
-class TStyle;
-class TVirtualPad;
-
 #ifdef HAVE_HISTASYMMERRORS
 #include "TH2DA.h"
 #endif
 
-class Dim2DistributionFactory : public TObject, public SmartFactory {
+class Dim2DistributionFactory : public TObject, public SmartFactory, public MultiDimDefinition {
 public:
 	Dim2DistributionFactory();
 	Dim2DistributionFactory(const MultiDimDistributionContext & ctx);
@@ -85,8 +66,7 @@ public:
 	virtual TH2 ** getSigsArray(size_t & size);
 
 protected:
-	enum Dimensions { DIM1, DIM2, DIM3 };
-	virtual void prepare(Dimensions dim);
+	virtual void prepare();
 	virtual bool copyHistogram(TH1 * src, TH1 * dst);
 
 public:

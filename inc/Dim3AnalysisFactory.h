@@ -16,37 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef DIM3ANALYSISFACTORY_H
 #define DIM3ANALYSISFACTORY_H
 
-#include "TObject.h"
-#include "TString.h"
-#include "TChain.h"
-#include "Rtypes.h"
-#include "TDirectory.h"
-#include "RootTools.h"
-
 #include "Dim3DistributionFactory.h"
-#include "ExtraDimensionMapper.h"
 #include "MultiDimAnalysisContext.h"
 #include "MultiDimAnalysisExtension.h"
-
-#include "SmartFactory.h"
-#include "FitterFactory.h"
-
-class TCanvas;
-class TChain;
-class TF1;
-class TFile;
-class TGraph;
-class TGraphErrors;
-class TH1;
-class TH1D;
-class TH2;
-class TH2D;
-class TStyle;
-class TVirtualPad;
 
 #ifdef HAVE_HISTASYMMERRORS
 #include "TH2DA.h"
@@ -70,11 +45,6 @@ public:
 	virtual void binnorm();
 	virtual void scale(Float_t factor);
 
-	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
-	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
-
-  void prepareDiffCanvas();
-
 	void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
 	static void applyAngDists(TH2 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
 
@@ -85,7 +55,6 @@ public:
   bool write(const char * filename/* = nullptr*/, bool verbose = false);
 
 public:
-
 
 	ClassDef(Dim3AnalysisFactory, 1);
 };

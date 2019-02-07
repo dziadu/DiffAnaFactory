@@ -20,31 +20,10 @@
 #ifndef MULTIDIMANALYSISEXTENSION_H
 #define MULTIDIMANALYSISEXTENSION_H
 
-#include "TObject.h"
-#include "TString.h"
-#include "TChain.h"
-#include "Rtypes.h"
-#include "TDirectory.h"
-#include "RootTools.h"
-
-#include "Dim2DistributionFactory.h"
 #include "ExtraDimensionMapper.h"
 #include "MultiDimAnalysisContext.h"
-#include "SmartFactory.h"
+#include "MultiDimDistributionContext.h"
 #include "FitterFactory.h"
-
-class TCanvas;
-class TChain;
-class TF1;
-class TFile;
-class TGraph;
-class TGraphErrors;
-class TH1;
-class TH1D;
-class TH2;
-class TH2D;
-class TStyle;
-class TVirtualPad;
 
 #ifdef HAVE_HISTASYMMERRORS
 #include "TH2DA.h"
@@ -52,11 +31,11 @@ class TVirtualPad;
 
 class MultiDimAnalysisExtension;
 
-typedef void (FitCallbackMD)(MultiDimAnalysisExtension * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
+typedef void (FitCallback)(MultiDimAnalysisExtension * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
 
 class MultiDimAnalysisExtension {
 public:
-	MultiDimAnalysisExtension();
+	MultiDimAnalysisExtension(MultiDimDefinition::Dimensions dim);
 	MultiDimAnalysisExtension(const MultiDimAnalysisContext & ctx);
 	MultiDimAnalysisExtension(const MultiDimAnalysisContext * ctx);
 	virtual ~MultiDimAnalysisExtension();
@@ -66,7 +45,11 @@ public:
 	void GetDiffs(bool with_canvases = true);
 
   virtual void init(TH1 * h);
-	virtual void proceed();
+	virtual void proceed(MultiDimDefinition::Dimensions dim);
+  virtual void proceed1();
+  virtual void proceed2();
+  virtual void proceed3();
+
 	virtual void finalize(bool flag_details = false);
 
 	virtual void scale(Float_t factor);
@@ -82,7 +65,7 @@ public:
 	void applyBinomErrors(TH2 * N);
 	static void applyBinomErrors(TH2 * q, TH2 * N);
 
-	inline void setFitCallback(FitCallbackMD * cb) { fitCallback = cb; }
+	inline void setFitCallback(FitCallback * cb) { fitCallback = cb; }
 
   bool write(TFile * f/* = nullptr*/, bool verbose = false);
   bool write(const char * filename/* = nullptr*/, bool verbose = false);
@@ -102,7 +85,7 @@ public:
 protected:
 
 private:
-	FitCallbackMD * fitCallback;
+	FitCallback * fitCallback;
 
 	ClassDef(MultiDimAnalysisExtension, 1);
 };
