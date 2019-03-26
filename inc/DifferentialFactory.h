@@ -16,75 +16,70 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef DIFFERENTIALFACTORY_H
+#define DIFFERENTIALFACTORY_H
 
-#ifndef MULTIDIMANALYSISEXTENSION_H
-#define MULTIDIMANALYSISEXTENSION_H
-
-#include "ExtraDimensionMapper.h"
-#include "MultiDimAnalysisContext.h"
-#include "MultiDimDistributionContext.h"
-#include "FitterFactory.h"
+#include "DistributionFactory.h"
+#include "DifferentialContext.h"
 
 #ifdef HAVE_HISTASYMMERRORS
 #include "TH2DA.h"
 #endif
 
-class MultiDimAnalysisExtension;
+class DifferentialFactory;
 
-typedef void (FitCallback)(MultiDimAnalysisExtension * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
+typedef void (FitCallback)(DifferentialFactory * fac, DistributionFactory * sigfac, int fit_res, TH1 * h, uint x_pos, uint y_pos, uint z_pos);
 
-class MultiDimAnalysisExtension {
+class DifferentialFactory : public DistributionFactory {
 public:
-	MultiDimAnalysisExtension(MultiDimDefinition::Dimensions dim);
-	MultiDimAnalysisExtension(const MultiDimAnalysisContext & ctx);
-	MultiDimAnalysisExtension(const MultiDimAnalysisContext * ctx);
-	virtual ~MultiDimAnalysisExtension();
+	DifferentialFactory();
+	DifferentialFactory(const DifferentialContext & ctx);
+	DifferentialFactory(const DifferentialContext * ctx);
+	virtual ~DifferentialFactory();
 
-	MultiDimAnalysisExtension & operator=(const MultiDimAnalysisExtension & fa);
+	DifferentialFactory & operator=(const DifferentialFactory & fa);
 
-	void GetDiffs(bool with_canvases = true);
+// 	void getDiffs(bool with_canvases = true);
 
-  virtual void init(TH1 * h, SmartFactory * sf);
-	virtual void proceed(MultiDimDefinition::Dimensions dim);
-  virtual void proceed1();
-  virtual void proceed2();
-  virtual void proceed3();
-
+  virtual void prepare();
+	virtual void init();
+	virtual void proceed();
 	virtual void finalize(bool flag_details = false);
 
+	virtual void binnorm();
 	virtual void scale(Float_t factor);
 
-	void niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
-	void niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
+	virtual void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
 
-	void fitDiffHists(FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
-	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
-
-	virtual void prepareDiffCanvas();
-
-	void applyBinomErrors(TH2 * N);
-	static void applyBinomErrors(TH2 * q, TH2 * N);
-
-	inline void setFitCallback(FitCallback * cb) { fitCallback = cb; }
+	virtual void applyBinomErrors(TH1 * N);
 
   bool write(TFile * f/* = nullptr*/, bool verbose = false);
   bool write(const char * filename/* = nullptr*/, bool verbose = false);
 
-protected:
-	virtual void prepare();
+	void niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
+	void niceSlices(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
+
+	void fitDiffHists(DistributionFactory * sigfac, FitterFactory & ff, HistFitParams & stdfit, bool integral_only = false);
+	bool fitDiffHist(TH1 * hist, HistFitParams & hfp, double min_entries = 0);
+
+  void setFitCallback(FitCallback * cb) { fitCallback = cb; }
+	virtual void prepareDiffCanvas();
+
+private:
+  virtual void proceed1();
+  virtual void proceed2();
+  virtual void proceed3();
 
 public:
-	MultiDimAnalysisContext mda_ctx;		//||
+  DifferentialContext ctx;
   ExtraDimensionMapper * diffs;
 	TCanvas ** c_Diffs;		//!
 	TObjArray * objectsFits;		//!
 
-protected:
-
 private:
 	FitCallback * fitCallback;
 
-	ClassDef(MultiDimAnalysisExtension, 1);
+	ClassDef(DifferentialFactory, 1);
 };
 
-#endif // MULTIDIMANALYSISEXTENSION_H
+#endif // DIFFERENTIALFACTORY_H

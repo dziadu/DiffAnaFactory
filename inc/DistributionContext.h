@@ -17,8 +17,8 @@
 */
 
 
-#ifndef MULTIDIMDISTRIBUTIONCONTEXT_H
-#define MULTIDIMDISTRIBUTIONCONTEXT_H
+#ifndef DISTRIBUTIONCONTEXT_H
+#define DISTRIBUTIONCONTEXT_H
 
 #include <TNamed.h>
 
@@ -47,6 +47,9 @@ public:
 
 	TString format_unit() const;
   TString format_string() const;
+  TString format_hist_string(const char * title = nullptr,
+                             const char * ylabel = "Counts")
+                            const;
 
 	static TString format_unit(const char * unit);
 	static TString format_unit(const TString & unit);
@@ -56,20 +59,17 @@ public:
 	ClassDef(AxisCfg, 1);
 };
 
-class MultiDimDefinition {
-public:
-  enum Dimensions { DIM0, DIM1, DIM2, DIM3 };
-  MultiDimDefinition(Dimensions dim)
-    : dim_version(dim) {}
-protected:
-  const Dimensions dim_version;
+enum Dimensions {
+  DIM0, DIM1, DIM2, DIM3
 };
 
-class MultiDimDistributionContext : public TNamed
+class DistributionContext : public TNamed
 {
 public:
+  Dimensions dim; // define dimension
 	// config
 	mutable TString name;      // prefix for histograms
+	TString dir_name;
 	TString hist_name;         // name for histograms
 	TString diff_var_name;
 
@@ -83,18 +83,19 @@ public:
 	Float_t * var_weight;	//!
 	// variable used for cuts when cutCut==kTRUE
 
-	MultiDimDistributionContext();
-	MultiDimDistributionContext(const MultiDimDistributionContext & ctx);
-	virtual ~MultiDimDistributionContext();
+	DistributionContext();
+	DistributionContext(Dimensions dim);
+	DistributionContext(const DistributionContext & ctx);
+	virtual ~DistributionContext();
 
-	MultiDimDistributionContext & operator=(const MultiDimDistributionContext & ctx);
-	bool operator==(const MultiDimDistributionContext & ctx);
-	bool operator!=(const MultiDimDistributionContext & ctx);
+	DistributionContext & operator=(const DistributionContext & ctx);
+	bool operator==(const DistributionContext & ctx);
+	bool operator!=(const DistributionContext & ctx);
 
 	virtual bool update();
-	virtual bool validate() const;
+	virtual int validate() const;
 
-  TString format_hist_axes(MultiDimDefinition::Dimensions dim) const;
+  TString format_hist_axes(const char * title = nullptr) const;
 
 	virtual const char * AnaName() const { return name.Data(); }
 
@@ -108,7 +109,7 @@ protected:
 	TString json_fn;
 	bool json_found;
 
-  ClassDef(MultiDimDistributionContext, 1);
+  ClassDef(DistributionContext, 1);
 };
 
-#endif // MULTIDIMDISTRIBUTIONCONTEXT_H
+#endif // DISTRIBUTIONCONTEXT_H

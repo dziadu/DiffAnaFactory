@@ -20,21 +20,21 @@
 #ifndef EXTRADIMENSIONMAPPER_H
 #define EXTRADIMENSIONMAPPER_H
 
-#include "MultiDimDistributionContext.h"
+#include "DistributionContext.h"
 #include "SmartFactory.h"
 
 #ifdef HAVE_HISTASYMMERRORS
 #include "TH2DA.h"
 #endif
 
+class TCanvas;
+class TVirtualPad;
 class ExtraDimensionMapper;
-
-// typedef void (FitCallback)(ExtraDimensionMapper * fac, int fit_res, TH1 * h, int x_pos, int y_pos);
 
 class ExtraDimensionMapper : public TObject, public SmartFactory {
 public:
-  ExtraDimensionMapper(const std::string & name, TH1 * hist, const AxisCfg & axis, const std::string & dir_and_name);
-	ExtraDimensionMapper(const std::string & name, TH1 * hist, const AxisCfg & axis, const std::string & dir_and_name, SmartFactory * sf);
+  ExtraDimensionMapper(Dimensions dim, const std::string & name, TH1 * hist, const AxisCfg & axis, const std::string & dir_and_name);
+	ExtraDimensionMapper(Dimensions dim,const std::string & name, TH1 * hist, const AxisCfg & axis, const std::string & dir_and_name, SmartFactory * sf);
 	virtual ~ExtraDimensionMapper();
 
   UInt_t getBinsX() const { return nbins_x; }
@@ -42,9 +42,14 @@ public:
   UInt_t getBinsZ() const { return nbins_z; }
 
   UInt_t getBin(UInt_t x, UInt_t y = 0, UInt_t z = 0) const;
+  bool reverseBin(UInt_t bin, UInt_t & x) const;
+  bool reverseBin(UInt_t bin, UInt_t & x, UInt_t & y) const;
+  bool reverseBin(UInt_t bin, UInt_t & x, UInt_t & y, UInt_t & z) const;
 
   TH1D * get(UInt_t x, UInt_t y = 0, UInt_t z = 0);
   TH1D * find(Double_t x, Double_t y = 0.0, Double_t z = 0.0);
+  TCanvas * getCanvas(UInt_t x, UInt_t y = 0);
+  TVirtualPad * getPad(UInt_t x, UInt_t y = 0, UInt_t z = 0);
 
   size_t getNHists() const { return nhists; }
   TH1 * operator[](int n) { return histograms[n]; }
@@ -56,12 +61,14 @@ public:
 
 // 	ExtraDimensionMapper & operator=(const ExtraDimensionMapper & fa);
 private:
-  void map1D(TH1 * hist, const AxisCfg & axis);
-  void map2D(TH1 * hist, const AxisCfg & axis);
-  void map3D(TH1 * hist, const AxisCfg & axis);
-  void formatName(char * buff, TH1 * hist, UInt_t x, UInt_t y = 0, UInt_t z = 0);
+  void map1D(const AxisCfg & axis);
+  void map2D(const AxisCfg & axis);
+  void map3D(const AxisCfg & axis);
+  void formatName(char * buff, UInt_t x, UInt_t y = 0, UInt_t z = 0);
+  void formatCanvasName(char * buff, UInt_t x, UInt_t y = 0);
 
 public:
+  Dimensions dim;
 	AxisCfg axis;        //||
 	std::string prefix_name;
 
@@ -70,6 +77,7 @@ public:
 
   TH1 * ref_hist;
 	TH1D ** histograms;   //!
+	TCanvas ** canvases;   //!
 
 // 	TObjArray * objectsFits;
 

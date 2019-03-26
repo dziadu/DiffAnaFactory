@@ -23,25 +23,23 @@
 
 #endif /* __CINT__ */
 
-#include "Dim3DistributionFactory.h"
+#include "DistributionFactory.h"
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
 // const Option_t h1opts[] = "h,E1";
 
-Dim3DistributionFactory::Dim3DistributionFactory()
+DistributionFactory::DistributionFactory()
   : SmartFactory("")
-  , MultiDimDefinition(DIM3)
-  , ctx(MultiDimDistributionContext())
+  , ctx(DistributionContext())
   , hSignalCounter(nullptr)
   , cSignalCounter(nullptr)
 {
   prepare();
 }
 
-Dim3DistributionFactory::Dim3DistributionFactory(const MultiDimDistributionContext & context)
+DistributionFactory::DistributionFactory(const DistributionContext & context)
   : SmartFactory("")
-  , MultiDimDefinition(DIM3)
   , ctx(context)
   , hSignalCounter(nullptr)
   , cSignalCounter(nullptr)
@@ -49,9 +47,8 @@ Dim3DistributionFactory::Dim3DistributionFactory(const MultiDimDistributionConte
   prepare();
 }
 
-Dim3DistributionFactory::Dim3DistributionFactory(const MultiDimDistributionContext * context)
+DistributionFactory::DistributionFactory(const DistributionContext * context)
   : SmartFactory("")
-  , MultiDimDefinition(DIM3)
   , ctx(*context)
   , hSignalCounter(nullptr)
   , cSignalCounter(nullptr)
@@ -59,14 +56,14 @@ Dim3DistributionFactory::Dim3DistributionFactory(const MultiDimDistributionConte
   prepare();
 }
 
-Dim3DistributionFactory::~Dim3DistributionFactory()
+DistributionFactory::~DistributionFactory()
 {
 	gSystem->ProcessEvents();
 }
 
-Dim3DistributionFactory & Dim3DistributionFactory::operator=(const Dim3DistributionFactory & fa)
+DistributionFactory & DistributionFactory::operator=(const DistributionFactory & fa)
 {
-	Dim3DistributionFactory * nthis = this;//new Dim3DistributionFactory(fa.ctx);
+	DistributionFactory * nthis = this;//new DistributionFactory(fa.ctx);
 
 	nthis->ctx = fa.ctx;
 	nthis->ctx.name = fa.ctx.name;
@@ -75,21 +72,26 @@ Dim3DistributionFactory & Dim3DistributionFactory::operator=(const Dim3Distribut
   return *nthis;
 }
 
-void Dim3DistributionFactory::prepare()
+void DistributionFactory::prepare()
 {
   ctx.update();
   rename(ctx.hist_name.Data());
-  chdir(ctx.hist_name.Data());
+  chdir(ctx.dir_name.Data());
 }
 
-void Dim3DistributionFactory::init()
+void DistributionFactory::init()
 {
 	Int_t can_width = 800, can_height = 600;
-	TString htitle = ctx.format_hist_axes(dim_version);
+	TString htitle = ctx.format_hist_axes();
 	TString htitlez = ctx.z.format_string();
 
+  if (DIM0 == ctx.dim) {
+    std::cerr << "No dimension specifiedn" << std::endl;
+    abort();
+  }
+
 	// input histograms
-	if (!hSignalCounter)
+	if (DIM3 == ctx.dim && !hSignalCounter)
 	{
 		hSignalCounter = RegTH3<TH3D>("@@@d/h_@@@a_Signal", htitle,
 				ctx.x.bins, ctx.x.min, ctx.x.max,
@@ -97,60 +99,34 @@ void Dim3DistributionFactory::init()
         ctx.z.bins, ctx.z.min, ctx.z.max);
   }
 
+  if (DIM2 == ctx.dim && !hSignalCounter)
+	{
+		hSignalCounter = RegTH2<TH2D>("@@@d/h_@@@a_Signal", htitle,
+				ctx.x.bins, ctx.x.min, ctx.x.max,
+				ctx.y.bins, ctx.y.min, ctx.y.max);
+  }
+
+  if (DIM1 == ctx.dim && !hSignalCounter)
+	{
+		hSignalCounter = RegTH1<TH1D>("@@@d/h_@@@a_Signal", htitle,
+				ctx.x.bins, ctx.x.min, ctx.x.max);
+  }
+
   if (!cSignalCounter)
     cSignalCounter = RegCanvas("@@@d/c_@@@a_Signal", htitle, can_width, can_height);
 }
 
-void Dim3DistributionFactory::GetDiffs(bool with_canvases)
+void DistributionFactory::proceed()
 {
-	Int_t can_width = 800, can_height = 600;
-	TString hname, htitle, cname;
+  if (DIM3 == ctx.dim)
+    ((TH3*)hSignalCounter)->Fill(*ctx.x.var, *ctx.y.var, *ctx.z.var, *ctx.var_weight);
 
-// 	if (ctx.useDiff())
-// 	{
-// 		objectsDiffs = new TObjArray();
-// 		objectsDiffs->SetName(ctx.histPrefix + "Diffs");
-// 
-// 		// Lambda: differential plots
-// 		hDiscreteXYDiff = new TH1D**[ctx.cx.bins];
-// 		if (with_canvases)
-// 			c_Diffs = new TCanvas*[ctx.cx.bins];
-// 
-// 		for (uint i = 0; i < ctx.cx.bins; ++i)
-// 		{
-// 			hDiscreteXYDiff[i] = new TH1D*[ctx.cy.bins];
-// 
-// 			for (uint j = 0; j < ctx.cy.bins; ++j)
-// 			{
-// 				hname = TString::Format("@@@d/Diffs/h_@@@a_LambdaDiff_%s%02d_%s%02d", "X", i, "Y", j);
-// 				htitle = TString::Format(
-// 					"#Lambda: %s[%d]=%.1f-%.1f, %s[%d]=%.0f-%.0f;M [MeV/c^{2}];Stat",
-// 					ctx.cx.label.Data(), i,
-// 					ctx.cx.min+ctx.cx.delta*i,
-// 					ctx.cx.min+ctx.cx.delta*(i+1),
-// 					ctx.cy.label.Data(), j,
-// 					ctx.cy.min+ctx.cy.delta*j,
-// 					ctx.cy.min+ctx.cy.delta*(j+1));
-// 
-// 					hDiscreteXYDiff[i][j] = RegTH1<TH1D>(hname, htitle, ctx.V.bins, ctx.V.min, ctx.V.max);
-// 
-// 					objectsDiffs->AddLast(hDiscreteXYDiff[i][j]);
-// 			}
-// 
-// 			if (with_canvases)
-// 			{
-// 				cname = TString::Format("@@@d/Diffs/c_@@@a_LambdaDiff_%s%02d", "X", i);
-// 				c_Diffs[i] = RegCanvas(cname, "test", can_width, can_height, ctx.cy.bins);
-// 			}
-// 		}
-// 	}
-}
+  if (DIM2 == ctx.dim)
+    ((TH2*)hSignalCounter)->Fill(*ctx.x.var, *ctx.y.var, *ctx.var_weight);
 
-void Dim3DistributionFactory::proceed()
-{
-	Bool_t isInRange = kFALSE;
+  if (DIM1 == ctx.dim)
+    ((TH1*)hSignalCounter)->Fill(*ctx.x.var, *ctx.var_weight);
 
-	((TH3*)hSignalCounter)->Fill(*ctx.x.var, *ctx.y.var, *ctx.z.var, *ctx.var_weight);
 // 	if (ctx.useClip() and
 // 			*ctx.x.var > ctx.cx.min and *ctx.x.var < ctx.cx.max and
 // 			*ctx.y.var > ctx.cy.min and *ctx.y.var < ctx.cy.max)
@@ -174,7 +150,7 @@ void Dim3DistributionFactory::proceed()
 // 	}
 }
 
-void Dim3DistributionFactory::binnorm()
+void DistributionFactory::binnorm()
 {
 	if (hSignalCounter) hSignalCounter->Scale( 1.0 / ( hSignalCounter->GetXaxis()->GetBinWidth(1) * hSignalCounter->GetYaxis()->GetBinWidth(1) ) );
 // 
@@ -203,12 +179,12 @@ void Dim3DistributionFactory::binnorm()
 // 	}
 }
 
-void Dim3DistributionFactory::scale(Float_t factor)
+void DistributionFactory::scale(Float_t factor)
 {
 	if (hSignalCounter) hSignalCounter->Scale(factor);
 }
 
-void Dim3DistributionFactory::finalize(bool flag_details)
+void DistributionFactory::finalize(bool flag_details)
 {
 // 	switch (s)
 // 	{
@@ -224,18 +200,18 @@ void Dim3DistributionFactory::finalize(bool flag_details)
 // 	}
 }
 
-void Dim3DistributionFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
+void DistributionFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
 {
 	RootTools::NicePad(pad, mt, mr, mb, ml);
 	RootTools::NiceHistogram(hist, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
 }
 
-void Dim3DistributionFactory::niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format)
+void DistributionFactory::niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format)
 {
-// 	RootTools::NicePad(cSignalXY->cd(), pf);
+	RootTools::NicePad(cSignalCounter->cd(), pf);
 	RootTools::NiceHistogram(hSignalCounter, format);
 	hSignalCounter->GetYaxis()->CenterTitle(kTRUE);
-// 
+
 // 	// Signal with cut
 // 	if (ctx.useCuts())
 // 	{
@@ -258,7 +234,7 @@ void Dim3DistributionFactory::niceHists(RootTools::PadFormat pf, const RootTools
 // 	}
 }
 
-void Dim3DistributionFactory::prepareSigCanvas(bool flag_details)
+void DistributionFactory::prepareSigCanvas(bool flag_details)
 {
 	TString colzopts = "colz";
 	if (flag_details)
@@ -315,11 +291,11 @@ void Dim3DistributionFactory::prepareSigCanvas(bool flag_details)
 // 		gPad->Update();
 // 	}
 
-	float qa_min = 0.;
-	float qa_max = 0.;
+// 	float qa_min = 0.;
+// 	float qa_max = 0.;
 
-	float cn_min = 0.;
-	float cn_max = 0.;
+// 	float cn_min = 0.;
+// 	float cn_max = 0.;
 
 // 	for (uint i = 0; i < ctx.cx.bins; ++i)
 // 	{
@@ -434,16 +410,16 @@ void Dim3DistributionFactory::prepareSigCanvas(bool flag_details)
 }
 
 // TODO this two should be moved somewhere else, not in library
-void Dim3DistributionFactory::applyAngDists(double a2, double a4, double corr_a2, double corr_a4)
+void DistributionFactory::applyAngDists(double a2, double a4, double corr_a2, double corr_a4)
 {
-// 	const size_t hists_num = 4;
-// 	TH2 * hist_to_map[hists_num] = { hSignalXY, hSignalWithCutsXY, hDiscreteXY, hDiscreteXYSig };
-// 
-// 	for (size_t x = 0; x < hists_num; ++x)
-// 		applyAngDists(hist_to_map[x], a2, a4, corr_a2, corr_a4);
+	const size_t hists_num = 1;
+	TH1 * hist_to_map[hists_num] = { hSignalCounter };
+
+	for (size_t x = 0; x < hists_num; ++x)
+		applyAngDists(hist_to_map[x], a2, a4, corr_a2, corr_a4);
 }
 
-void Dim3DistributionFactory::applyAngDists(TH2 * h, double a2, double a4, double corr_a2, double corr_a4)
+void DistributionFactory::applyAngDists(TH1 * h, double a2, double a4, double corr_a2, double corr_a4)
 {
 	TF1 * f = new TF1("local_legpol", "angdist", -1, 1);
 	f->SetParameter(0, 1.0);
@@ -495,22 +471,22 @@ void Dim3DistributionFactory::applyAngDists(TH2 * h, double a2, double a4, doubl
 }
 
 // TODO move away
-void Dim3DistributionFactory::applyBinomErrors(TH2* N)
+void DistributionFactory::applyBinomErrors(TH1* N)
 {
-// 	const size_t hists_num = 4;
-// 	TH2 * hmap[hists_num] = { hSignalXY, hSignalWithCutsXY, hDiscreteXY, hDiscreteXYSig };
-// 
-// 	for (size_t x = 0; x < hists_num; ++x)
-// 		applyBinomErrors(hmap[x], N);
+	const size_t hists_num = 1;
+	TH1 * hmap[hists_num] = { hSignalCounter };
+
+	for (size_t x = 0; x < hists_num; ++x)
+		applyBinomErrors(hmap[x], N);
 }
 
 // TODO move away
-void Dim3DistributionFactory::applyBinomErrors(TH2* q, TH2* N)
+void DistributionFactory::applyBinomErrors(TH1* q, TH1* N)
 {
 	RootTools::calcBinomialErrors(q, N);
 }
 
-TH3** Dim3DistributionFactory::getSigsArray(size_t & size)
+TH3** DistributionFactory::getSigsArray(size_t & size)
 {
 	size = 4;
 
@@ -523,7 +499,7 @@ TH3** Dim3DistributionFactory::getSigsArray(size_t & size)
 	return hmap;
 }
 
-bool Dim3DistributionFactory::copyHistogram(TH1 * src, TH1 * dst)
+bool DistributionFactory::copyHistogram(TH1 * src, TH1 * dst)
 {
 	if (!src or !dst)
 		return false;

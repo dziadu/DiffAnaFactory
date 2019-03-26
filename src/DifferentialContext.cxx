@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "MultiDimAnalysisContext.h"
+#include "DifferentialContext.h"
 #include <json/json.h>
 
 #include <iostream>
@@ -24,32 +24,34 @@
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
-void MultiDimAnalysisContext::format_V_axis()
+void DifferentialContext::format_diff_axis()
 {
 	TString hunit = "1/";
-  if (x.bins) hunit += x.unit.Data();
-  if (y.bins) hunit += y.unit.Data();
-  if (z.bins) hunit += z.unit.Data();
+  if (DIM1 <= dim) hunit += x.unit.Data();
+  if (DIM2 <= dim) hunit += y.unit.Data();
+  if (DIM3 == dim) hunit += z.unit.Data();
 
   UInt_t dim_cnt = 0;
-  if (x.bins) ++dim_cnt;
-  if (y.bins) ++dim_cnt;
-  if (z.bins) ++dim_cnt;
+  TString htitle;
+  if (DIM3 == dim) dim_cnt = 3;
+  if (DIM2 == dim) dim_cnt = 2;
+  if (DIM1 == dim) dim_cnt = 1;
 
-	TString htitle = TString::Format("d^{%d}%s/", dim_cnt, diff_var_name.Data());
-  if (x.bins) htitle += TString("d")+x.label.Data();
-  if (y.bins) htitle += TString("d")+y.label.Data();
-  if (z.bins) htitle += TString("d")+z.label.Data();
+  if (DIM1 < dim)
+    htitle = TString::Format("d^{%d}%s/", dim_cnt, diff_var_name.Data());
+  else
+    htitle = TString::Format("d%s/", diff_var_name.Data());
 
-	V.label = htitle;
-	V.unit = hunit;
+  if (DIM1 <= dim) htitle += TString("d")+x.label.Data();
+  if (DIM2 <= dim) htitle += TString("d")+y.label.Data();
+  if (DIM3 == dim) htitle += TString("d")+z.label.Data();
+
+	label = htitle;
+	unit = hunit;
 }
 
-MultiDimAnalysisContext::MultiDimAnalysisContext()
+DifferentialContext::DifferentialContext()
 {
-	// config
-	name = "Dummy";	// prefix for histograms
-
 	// basic
 	// x and y binning for full range
 
@@ -61,14 +63,14 @@ MultiDimAnalysisContext::MultiDimAnalysisContext()
 	// variable used for cuts when cutCut==kTRUE
 }
 
-MultiDimAnalysisContext::MultiDimAnalysisContext(const MultiDimAnalysisContext & ctx) : MultiDimDistributionContext(ctx)
+DifferentialContext::DifferentialContext(const DifferentialContext & ctx) : DistributionContext(ctx)
 {
 	*this = ctx;
 	name = ctx.name;
 }
 
 
-MultiDimAnalysisContext::~MultiDimAnalysisContext()
+DifferentialContext::~DifferentialContext()
 {}
 
 extern bool jsonReadTStringKey(const Json::Value & jsondata, const char * key, TString & target);
@@ -77,7 +79,7 @@ extern bool jsonReadUIntKey(const Json::Value & jsondata, const char * key, uint
 extern bool jsonReadFloatKey(const Json::Value & jsondata, const char * key, float & target);
 extern bool jsonReadDoubleKey(const Json::Value & jsondata, const char * key, double & target);
 
-bool MultiDimAnalysisContext::configureFromJson(const char * name)
+bool DifferentialContext::configureFromJson(const char * name)
 {
 	std::ifstream ifs(json_fn.Data());
 	if (!ifs.is_open())
@@ -129,7 +131,7 @@ bool MultiDimAnalysisContext::configureFromJson(const char * name)
 	return true;
 }
 
-bool MultiDimAnalysisContext::configureToJson(const char * name, const char * jsonfile)
+bool DifferentialContext::configureToJson(const char * name, const char * jsonfile)
 {
 	(void)jsonfile;
 
@@ -174,19 +176,19 @@ bool MultiDimAnalysisContext::configureToJson(const char * name, const char * js
 	return true;
 }
 
-MultiDimAnalysisContext & MultiDimAnalysisContext::operator=(const MultiDimAnalysisContext & ctx)
+DifferentialContext & DifferentialContext::operator=(const DifferentialContext & ctx)
 {
 // 	histPrefix = ctx.histPrefix;
-  MultiDimDistributionContext::operator=(ctx);
+  DistributionContext::operator=(ctx);
 	name = ctx.name;
 	V = ctx.V;
 
 	return *this;
 }
 
-bool MultiDimAnalysisContext::operator==(const MultiDimAnalysisContext & ctx)
+bool DifferentialContext::operator==(const DifferentialContext & ctx)
 {
-  bool res = (MultiDimDistributionContext)*this == (MultiDimDistributionContext)ctx;
+  bool res = (DistributionContext)*this == (DistributionContext)ctx;
   if (!res) return false;
 
 	if (this->V != ctx.V)
@@ -198,13 +200,13 @@ bool MultiDimAnalysisContext::operator==(const MultiDimAnalysisContext & ctx)
 	return true;
 }
 
-bool MultiDimAnalysisContext::operator!=(const MultiDimAnalysisContext & ctx)
+bool DifferentialContext::operator!=(const DifferentialContext & ctx)
 {
 	return !operator==(ctx);
 }
 
-void MultiDimAnalysisContext::print() const
+void DifferentialContext::print() const
 {
-  MultiDimDistributionContext::print();
+  DistributionContext::print();
   V.print();
 }

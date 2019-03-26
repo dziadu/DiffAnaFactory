@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "MultiDimDistributionContext.h"
+#include "DistributionContext.h"
 #include <json/json.h>
 
 #include <sys/stat.h>
@@ -25,11 +25,13 @@
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
-// AxisCfg::AxisCfg() : label(), unit(), bins(0), min(0), max(0), bins_arr(nullptr), delta(0), var(nullptr)
-// {
-// }
-
-AxisCfg::AxisCfg() : bins_arr(nullptr)
+AxisCfg::AxisCfg()
+  : bins(0)
+  , min(0)
+  , max(0)
+  , bins_arr(nullptr)
+  , delta(0.0)
+  , var(nullptr)
 {
 }
 
@@ -61,6 +63,15 @@ bool AxisCfg::operator==(const AxisCfg & ctx)
 bool AxisCfg::operator!=(const AxisCfg & ctx)
 {
 	return (this->bins != ctx.bins);
+}
+
+TString AxisCfg::format_hist_string(const char * title,
+                           const char * ylabel) const
+{
+    return TString::Format("%s;%s;%s",
+                           title,
+                           format_string().Data(),
+                           ylabel);
 }
 
 TString AxisCfg::format_unit() const
@@ -96,7 +107,7 @@ void AxisCfg::print() const
   else
   {
     TString buff;
-    for (int i = 0; i < bins; ++i)
+    for (uint i = 0; i < bins; ++i)
     {
       buff += "| ";
       buff += bins_arr[i];
@@ -108,25 +119,30 @@ void AxisCfg::print() const
   }
 }
 
-MultiDimDistributionContext::MultiDimDistributionContext()
+DistributionContext::DistributionContext()
   : TNamed()
-  , name("")
-  , hist_name("Dummy")
-  , diff_var_name("")
+  , dim(DIM0)
   , var_weight(nullptr)
   , json_found(false)
 {
-
 }
 
-MultiDimDistributionContext::MultiDimDistributionContext(const MultiDimDistributionContext & ctx)
+DistributionContext::DistributionContext(Dimensions dim)
+  : TNamed()
+  , dim(dim)
+  , var_weight(nullptr)
+  , json_found(false)
+{
+}
+
+DistributionContext::DistributionContext(const DistributionContext & ctx)
   : TNamed()
 {
 	*this = ctx;
 	name = ctx.name;
 }
 
-bool MultiDimDistributionContext::update()
+bool DistributionContext::update()
 {
 	x.delta = ((x.max - x.min)/x.bins);
 	y.delta = ((y.max - y.min)/y.bins);
@@ -134,6 +150,9 @@ bool MultiDimDistributionContext::update()
 
   if (0 == hist_name.Length())
     hist_name = name;
+
+  if (0 == dir_name.Length())
+    dir_name = hist_name;
 
   if (name.EndsWith("Ctx"))
     SetName(name);
@@ -143,18 +162,18 @@ bool MultiDimDistributionContext::update()
   return true;
 }
 
-bool MultiDimDistributionContext::validate() const
+int DistributionContext::validate() const
 {
-  if (0 == name.Length()) return false;
+  if (0 == name.Length()) return 1;
+  if (DIM1 <= dim && x.bins and !x.var) return 11;
+  if (DIM2 <= dim && y.bins and !y.var) return 12;
+  if (DIM3 == dim && z.bins and !z.var) return 13;
 
-  if (x.bins and !x.var) return false;
-  if (y.bins and !y.var) return false;
-  if (z.bins and !z.var) return false;
-
+  return 0;
 // 	return update();
 }
 
-MultiDimDistributionContext::~MultiDimDistributionContext()
+DistributionContext::~DistributionContext()
 {}
 
 bool jsonReadTStringKey(const Json::Value & jsondata, const char * key, TString & target)
@@ -212,7 +231,7 @@ bool jsonReadDoubleKey(const Json::Value & jsondata, const char * key, double & 
 	return false;
 }
 
-bool MultiDimDistributionContext::configureFromJson(const char * name)
+bool DistributionContext::configureFromJson(const char * name)
 {
 	std::ifstream ifs(json_fn.Data());
 	if (!ifs.is_open())
@@ -264,7 +283,7 @@ bool MultiDimDistributionContext::configureFromJson(const char * name)
 	return true;
 }
 
-bool MultiDimDistributionContext::configureToJson(const char * name, const char * jsonfile)
+bool DistributionContext::configureToJson(const char * name, const char * jsonfile)
 {
 	(void)jsonfile;
 
@@ -296,7 +315,7 @@ bool MultiDimDistributionContext::configureToJson(const char * name, const char 
 	return true;
 }
 
-bool MultiDimDistributionContext::findJsonFile(const char * initial_path, const char * filename, int search_depth)
+bool DistributionContext::findJsonFile(const char * initial_path, const char * filename, int search_depth)
 {
 	const size_t max_len = 1024*16;
 	int depth_counter = 0;
@@ -344,10 +363,12 @@ bool MultiDimDistributionContext::findJsonFile(const char * initial_path, const 
 	return json_found;
 }
 
-MultiDimDistributionContext & MultiDimDistributionContext::operator=(const MultiDimDistributionContext & ctx)
+DistributionContext & DistributionContext::operator=(const DistributionContext & ctx)
 {
+  dim = ctx.dim;
 // 	ctx_name = ctx.ctx_name;
 	hist_name = ctx.hist_name;
+  dir_name = ctx.dir_name;
 
   x = ctx.x;
 	y = ctx.y;
@@ -360,10 +381,16 @@ MultiDimDistributionContext & MultiDimDistributionContext::operator=(const Multi
 	return *this;
 }
 
-bool MultiDimDistributionContext::operator==(const MultiDimDistributionContext & ctx)
+bool DistributionContext::operator==(const DistributionContext & ctx)
 {
   if (this == &ctx)
     return true;
+
+  if (this->dim != ctx.dim)
+	{
+		fprintf(stderr, "Not the same dimensions: %d vs %d\n", this->dim, ctx.dim);
+		return false;
+	}
 
 	if (this->x != ctx.x)
 	{
@@ -386,29 +413,32 @@ bool MultiDimDistributionContext::operator==(const MultiDimDistributionContext &
 	return true;
 }
 
-bool MultiDimDistributionContext::operator!=(const MultiDimDistributionContext & ctx)
+bool DistributionContext::operator!=(const DistributionContext & ctx)
 {
 	return !operator==(ctx);
 }
 
-TString MultiDimDistributionContext::format_hist_axes(MultiDimDefinition::Dimensions dim) const {
-  if (MultiDimDefinition::DIM3 == dim)
-    return TString::Format(";%s%s%s;%s%s%s",
+TString DistributionContext::format_hist_axes(const char * title) const {
+  if (DIM3 == dim)
+    return TString::Format("%s;%s%s%s;%s%s%s",
+                           title,
                            x.label.Data(), x.format_unit().Data(),
                            y.label.Data(), y.format_unit().Data(),
                            z.label.Data(), z.format_unit().Data());
-  if (MultiDimDefinition::DIM2 == dim)
-    return TString::Format(";%s%s;%s%s",
+  if (DIM2 == dim)
+    return TString::Format("%s;%s%s;%s%s",
+                           title,
                            x.label.Data(), x.format_unit().Data(),
                            y.label.Data(), y.format_unit().Data());
-  if (MultiDimDefinition::DIM1 == dim)
-    return TString::Format(";%s;Counts [aux]",
+  if (DIM1 == dim)
+    return TString::Format("%s;%s%s;Counts [aux]",
+                           title,
                            x.label.Data(), x.format_unit().Data());
 
-  return TString(";;");
+  return TString::Format("%s;;", title);
 }
 
-void MultiDimDistributionContext::print() const
+void DistributionContext::print() const
 {
   printf("Context: %s   Hist name: %s\n", name.Data(), hist_name.Data());
   printf(" Var name: %s\n", diff_var_name.Data());

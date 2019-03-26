@@ -16,28 +16,30 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MULTIDIMANALYSISCONTEXT_H
-#define MULTIDIMANALYSISCONTEXT_H
+#ifndef DIFFERENTIALCONTEXT_H
+#define DIFFERENTIALCONTEXT_H
 
-#include "MultiDimDistributionContext.h"
+#include "DistributionContext.h"
 
-class MultiDimAnalysisContext : public MultiDimDistributionContext
+class DifferentialContext : public DistributionContext
 {
 public:
 	AxisCfg V;     // x, y are two dimensions, V is a final Variable axis
+	TString label;
+  TString unit;
 
-	MultiDimAnalysisContext();
-	MultiDimAnalysisContext(const MultiDimAnalysisContext & ctx);
-	virtual ~MultiDimAnalysisContext();
+	DifferentialContext();
+	DifferentialContext(const DifferentialContext & ctx);
+	virtual ~DifferentialContext();
 
-	MultiDimAnalysisContext & operator=(const MultiDimAnalysisContext & ctx);
-	bool operator==(const MultiDimAnalysisContext & ctx);
-	bool operator!=(const MultiDimAnalysisContext & ctx);
+	DifferentialContext & operator=(const DifferentialContext & ctx);
+	bool operator==(const DifferentialContext & ctx);
+	bool operator!=(const DifferentialContext & ctx);
 
 	// flags
 // 	virtual bool useCuts() const { return (cutMin or cutMax); }
 
-	virtual void format_V_axis();
+	virtual void format_diff_axis();
 
 	virtual bool configureFromJson(const char * name);
 	virtual bool configureToJson(const char * name, const char * jsonfile);
@@ -45,7 +47,7 @@ public:
   void print() const;
 private:
 	TString json_fn;
-	ClassDef(MultiDimAnalysisContext, 2);
+	ClassDef(DifferentialContext, 2);
 };
 
-#endif // MULTIDIMANALYSISCONTEXT_H
+#endif // DIFFERENTIALCONTEXT_H

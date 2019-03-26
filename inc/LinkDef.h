@@ -6,13 +6,9 @@
 
 #pragma link C++ class AxisCfg+;
 #pragma link C++ class ExtraDimensionMapper+;
-#pragma link C++ class MultiDimDistributionContext+;
-#pragma link C++ class MultiDimAnalysisContext+;
-#pragma link C++ class MultiDimAnalysisExtension+;
-#pragma link C++ class MultiDimDefinition+;
-#pragma link C++ class Dim2AnalysisFactory+;
-#pragma link C++ class Dim2DistributionFactory+;
-#pragma link C++ class Dim3AnalysisFactory+;
-#pragma link C++ class Dim3DistributionFactory+;
+#pragma link C++ class DistributionContext+;
+#pragma link C++ class DifferentialContext+;
+#pragma link C++ class DifferentialFactory+;
+#pragma link C++ class DistributionFactory+;
 
 #endif

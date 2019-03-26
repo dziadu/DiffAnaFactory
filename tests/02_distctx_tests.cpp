@@ -1,6 +1,6 @@
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "MultiDimDistributionContext.h"
+#include "DistributionContext.h"
 
 class DistCtxCase : public CPPUNIT_NS::TestFixture
 {
@@ -17,7 +17,7 @@ protected:
   int bins;
   float min, max;
   AxisCfg axis;
-	MultiDimDistributionContext d3ctx;
+	DistributionContext d3ctx;
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( DistCtxCase );
@@ -28,6 +28,7 @@ void DistCtxCase::setUp()
   min = 0;
   max = 10;
 
+  d3ctx.dim = DIM3;
   d3ctx.name = "test";
   d3ctx.x.label = "d2_x"; d3ctx.x.unit = "mm";
   d3ctx.y.label = "d2_y";
@@ -41,12 +42,12 @@ void DistCtxCase::MyTest()
   std::string output_string;
 
   output_string = d3ctx.z.format_unit();
-	CPPUNIT_ASSERT_EQUAL(std::string(" [cm]"), output_string);
+  CPPUNIT_ASSERT_EQUAL(std::string(" [cm]"), output_string);
 
-  MultiDimDistributionContext d3ctx_2 = d3ctx;
+  DistributionContext d3ctx_2 = d3ctx;
 
   output_string = d3ctx_2.z.format_unit();
-	CPPUNIT_ASSERT_EQUAL(std::string(" [cm]"), output_string);
+  CPPUNIT_ASSERT_EQUAL(std::string(" [cm]"), output_string);
 
   CPPUNIT_ASSERT_EQUAL(true, d3ctx == d3ctx_2);
 

@@ -1,8 +1,8 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "ExtraDimensionMapper.h"
-#include "Dim2AnalysisFactory.h"
-#include "Dim3AnalysisFactory.h"
+#include "DifferentialFactory.h"
+#include "DifferentialFactory.h"
 
 #include <TFile.h>
 
@@ -29,16 +29,17 @@ protected:
 
   int bins;
   float min, max;
-  MultiDimAnalysisContext a2ctx;
-  MultiDimAnalysisContext a3ctx;
-  Dim2AnalysisFactory * a2fac;
-  Dim3AnalysisFactory * a3fac;
+  DifferentialContext a2ctx;
+  DifferentialContext a3ctx;
+  DifferentialFactory * a2fac;
+  DifferentialFactory * a3fac;
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( AnaFacCase );
 
 void AnaFacCase::setUp()
 {
+  a3ctx.dim = DIM3;
   a3ctx.x.bins = 4; a3ctx.x.min = -10; a3ctx.x.max = 10; a3ctx.x.label = "a3_x"; a3ctx.x.unit = "cm";
   a3ctx.y.bins = 3; a3ctx.y.min = -10; a3ctx.y.max = 10; a3ctx.y.label = "a3_y"; a3ctx.y.unit = "mm";
   a3ctx.z.bins = 2; a3ctx.z.min = -10; a3ctx.z.max = 10; a3ctx.z.label = "a3_z"; a3ctx.z.unit = "um";
@@ -47,6 +48,7 @@ void AnaFacCase::setUp()
 
   a2ctx = a3ctx;
 
+  a2ctx.dim = DIM2;
   a2ctx.name = "a2fac";
   a2ctx.hist_name = "a2fac";
 
@@ -64,10 +66,10 @@ void AnaFacCase::InitializationTest()
 {
   ExtraDimensionMapper * edm;
 
-  a2fac = new Dim2AnalysisFactory(a2ctx);
+  a2fac = new DifferentialFactory(a2ctx);
   a2fac->init();
 
-  a3fac = new Dim3AnalysisFactory(a3ctx);
+  a3fac = new DifferentialFactory(a3ctx);
   a3fac->init();
 
   edm = a2fac->diffs;
@@ -85,13 +87,13 @@ void AnaFacCase::InitializationTest()
 
 void AnaFacCase::ScaleTest()
 {
-  a3fac = new Dim3AnalysisFactory(a3ctx);
+  a3fac = new DifferentialFactory(a3ctx);
   a3fac->init();
 
   TH1 * h = (*a3fac->diffs)[0];
   h->FillRandom("gaus");
 
-  a3ctx.format_V_axis();
+  a3ctx.format_diff_axis();
 
   int n1 = h->GetBinContent(5);
 
@@ -100,17 +102,17 @@ void AnaFacCase::ScaleTest()
 	CPPUNIT_ASSERT_EQUAL(n1*3, n2);
 
   std::string output_string;
-  output_string = a3ctx.V.label;
+  output_string = a3ctx.label;
   CPPUNIT_ASSERT_EQUAL(std::string("d^{3}/da3_xda3_yda3_z"), output_string);
   a3fac->finalize();
 }
 
 void AnaFacCase::FillTest()
 {
-  a2fac = new Dim2AnalysisFactory(a2ctx);
+  a2fac = new DifferentialFactory(a2ctx);
   a2fac->init();
 
-  a3fac = new Dim3AnalysisFactory(a3ctx);
+  a3fac = new DifferentialFactory(a3ctx);
   a3fac->init();
 
   ExtraDimensionMapper * edm;
@@ -130,14 +132,26 @@ void AnaFacCase::FillTest()
 
 void AnaFacCase::WriteTest()
 {
-  a3fac = new Dim3AnalysisFactory(a3ctx);
-  a3fac->init();
+  a2fac = new DifferentialFactory(a2ctx);
+  a2fac->init();
+  CPPUNIT_ASSERT_EQUAL(true, 0 != a2fac->ctx.validate());
+  CPPUNIT_ASSERT_EQUAL(true, a2fac->ctx.update());
+  (*a2fac->diffs)[0]->FillRandom("gaus", 1000);
 
+  a3fac = new DifferentialFactory(a3ctx);
+  a3fac->init();
+  CPPUNIT_ASSERT_EQUAL(true, 0 != a3fac->ctx.validate());
+  CPPUNIT_ASSERT_EQUAL(true, a3fac->ctx.update());
   (*a3fac->diffs)[0]->FillRandom("gaus", 1000);
+
   TFile * file = TFile::Open("/tmp/res.root", "RECREATE");
 
-  a3fac->MultiDimAnalysisExtension::mda_ctx.Write();
+  a2fac->ctx.Write();
+  a2fac->write(file, true);
+
+  a3fac->ctx.Write();
   a3fac->write(file, true);
+
   file->Close();
 }
 
@@ -150,22 +164,23 @@ void AnaFacCase::ReadTest()
     return;
   }
 
-  MultiDimAnalysisContext * dactx = nullptr;
+  DifferentialContext * dactx = nullptr;
 
   std::string tmpname = "a3fac";
   tmpname.append("Ctx");
-  dactx = (MultiDimAnalysisContext *)file->Get(tmpname.c_str());
+  file->ls();
+  dactx = (DifferentialContext *)file->Get(tmpname.c_str());
 
   CPPUNIT_ASSERT_EQUAL(true, dactx != nullptr);
   dactx->print();
 
-  Dim3AnalysisFactory * fac = nullptr;
-  fac = new Dim3AnalysisFactory(dactx);
+  DifferentialFactory * fac = nullptr;
+  fac = new DifferentialFactory(dactx);
   fac->setSource(file);
   fac->init();
 
-  fac->listRegisteredObjects();
-  fac->diffs->listRegisteredObjects();
+//   fac->listRegisteredObjects();
+//   fac->diffs->listRegisteredObjects();
 
   CPPUNIT_ASSERT_EQUAL(1000, (int)(*fac->diffs)[0]->GetEntries());
 

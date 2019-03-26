@@ -17,12 +17,12 @@
 */
 
 
-#ifndef DIM3DISTRIBUTIONFACTORY_H
-#define DIM3DISTRIBUTIONFACTORY_H
+#ifndef DISTRIBUTIONFACTORY_H
+#define DISTRIBUTIONFACTORY_H
 
 #include "RootTools.h"
 
-#include "MultiDimDistributionContext.h"
+#include "DistributionContext.h"
 #include "ExtraDimensionMapper.h"
 #include "SmartFactory.h"
 #include "FitterFactory.h"
@@ -31,16 +31,14 @@
 #include "TH2DA.h"
 #endif
 
-class Dim3DistributionFactory : public TObject, public SmartFactory, public MultiDimDefinition {
+class DistributionFactory : public TObject, public SmartFactory {
 public:
-	Dim3DistributionFactory();
-	Dim3DistributionFactory(const MultiDimDistributionContext & ctx);
-	Dim3DistributionFactory(const MultiDimDistributionContext * ctx);
-	virtual ~Dim3DistributionFactory();
+	DistributionFactory();
+	DistributionFactory(const DistributionContext & ctx);
+	DistributionFactory(const DistributionContext * ctx);
+	virtual ~DistributionFactory();
 
-	Dim3DistributionFactory & operator=(const Dim3DistributionFactory & fa);
-
-	void GetDiffs(bool with_canvases = true);
+	DistributionFactory & operator=(const DistributionFactory & fa);
 
   virtual void init();
 	virtual void proceed();
@@ -58,11 +56,11 @@ public:
 
 	virtual void prepareSigCanvas(bool flag_details = false);
 
-	void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
-	static void applyAngDists(TH2 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
+	virtual void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
+	static void applyAngDists(TH1 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
 
-	void applyBinomErrors(TH2 * N);
-	static void applyBinomErrors(TH2 * q, TH2 * N);
+	virtual void applyBinomErrors(TH1 * N);
+	static void applyBinomErrors(TH1 * q, TH1 * N);
 
 	virtual TH3 ** getSigsArray(size_t & size);
 
@@ -71,20 +69,20 @@ protected:
 	virtual bool copyHistogram(TH1 * src, TH1 * dst);
 
 public:
-	MultiDimDistributionContext ctx;		//||
+	DistributionContext ctx;		//||
 
 // #ifdef HAVE_HISTASYMMERRORS
 // 	TH2DA * hSignalCounter;
 // #else
 // 	TH2D * hSignalCounter;			//->	// discrete X-Y, signal extracted
 // #endif
-  TH3 * hSignalCounter;			//->	// discrete X-Y, signal extracted
+  TH1 * hSignalCounter;			//->	// discrete X-Y, signal extracted
 	TCanvas * cSignalCounter;			//->
 
 // 	TCanvas * cDiscreteXYSig;		//->
 // 	TCanvas * cDiscreteXYSigFull;	//->
 
-	ClassDef(Dim3DistributionFactory, 1);
+	ClassDef(DistributionFactory, 1);
 };
 
-#endif // DIM3DISTRIBUTIONFACTORY_H
+#endif // DISTRIBUTIONFACTORY_H
