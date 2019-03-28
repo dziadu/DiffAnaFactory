@@ -50,7 +50,7 @@ public:
 	static void niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 
 // 	void niceHists(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
-	void niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format);
+	virtual void niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format);
 
 	virtual const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
 

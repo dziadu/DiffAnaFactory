@@ -178,6 +178,7 @@ bool DifferentialContext::configureToJson(const char * name, const char * jsonfi
 
 DifferentialContext & DifferentialContext::operator=(const DifferentialContext & ctx)
 {
+  if (this == &ctx) return *this;
 // 	histPrefix = ctx.histPrefix;
   DistributionContext::operator=(ctx);
 	name = ctx.name;
@@ -209,4 +210,5 @@ void DifferentialContext::print() const
 {
   DistributionContext::print();
   V.print();
+  printf(" label: %s  unit: %s\n", label.Data(), unit.Data());
 }

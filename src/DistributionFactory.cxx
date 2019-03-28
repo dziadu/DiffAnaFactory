@@ -63,13 +63,18 @@ DistributionFactory::~DistributionFactory()
 
 DistributionFactory & DistributionFactory::operator=(const DistributionFactory & fa)
 {
-	DistributionFactory * nthis = this;//new DistributionFactory(fa.ctx);
+  if (this == &fa) return *this;
 
-	nthis->ctx = fa.ctx;
-	nthis->ctx.name = fa.ctx.name;
+  (SmartFactory)(*this) = (SmartFactory)fa;
+  DistributionFactory * nthis = this;//new DistributionFactory(fa.ctx);
 
-	copyHistogram(fa.hSignalCounter, hSignalCounter);
-  return *nthis;
+  nthis->ctx = fa.ctx;
+  nthis->ctx.name = fa.ctx.name;
+
+  init();
+
+  copyHistogram(fa.hSignalCounter, hSignalCounter);
+  return *this;
 }
 
 void DistributionFactory::prepare()

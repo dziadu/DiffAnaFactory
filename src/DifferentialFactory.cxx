@@ -32,6 +32,7 @@ const TString flags_fit_b = "";
 DifferentialFactory::DifferentialFactory()
   : DistributionFactory()
   , ctx(DifferentialContext())
+  , diffs(nullptr)
 {
   DistributionFactory::prepare();
   DifferentialFactory::prepare();
@@ -40,6 +41,7 @@ DifferentialFactory::DifferentialFactory()
 DifferentialFactory::DifferentialFactory(const DifferentialContext & context)
   : DistributionFactory(context)
   , ctx(context)
+  , diffs(nullptr)
 {
   DistributionFactory::prepare();
   DifferentialFactory::prepare();
@@ -48,6 +50,7 @@ DifferentialFactory::DifferentialFactory(const DifferentialContext & context)
 DifferentialFactory::DifferentialFactory(const DifferentialContext * context)
   : DistributionFactory(context)
   , ctx(*context)
+  , diffs(nullptr)
 {
   DistributionFactory::prepare();
   DifferentialFactory::prepare();
@@ -60,17 +63,16 @@ DifferentialFactory::~DifferentialFactory()
 
 DifferentialFactory & DifferentialFactory::operator=(const DifferentialFactory & fa)
 {
-	DifferentialFactory * nthis = this;//new DifferentialFactory(fa.ctx);
+  if (this == &fa) return *this;
 
-	nthis->ctx = fa.ctx;
-	nthis->ctx.name = fa.ctx.name;
+// 	nthis->objectsFits = new TObjArray();
+// 	nthis->objectsFits->SetName(ctx.name + "Fits");
 
-	nthis->objectsFits = new TObjArray();
+  (DistributionFactory)(*this) = (DistributionFactory)fa;
+  for (uint i = 0; i < diffs->nhists; ++i)
+    copyHistogram((*fa.diffs)[i], (*diffs)[i]);
 
-	nthis->objectsFits->SetName(ctx.name + "Fits");
-
-	*nthis = fa;
-	return *nthis;
+  return *this;
 }
 
 void DifferentialFactory::prepare()
@@ -84,6 +86,11 @@ void DifferentialFactory::init()
 {
   DistributionFactory::init();
 
+  init_diffs();
+}
+
+void DifferentialFactory::init_diffs()
+{
   diffs = new ExtraDimensionMapper(ctx.dim,
                                    ctx.name.Data(),
                                    hSignalCounter,
@@ -558,4 +565,22 @@ bool DifferentialFactory::fitDiffHist(TH1 * hist, HistFitParams & hfp, double mi
 	tfLambdaSig->SetBit(TF1::kNotDraw);
 
 	return res;
+}
+
+void DifferentialFactory::rename(const char* newname)
+{
+  DistributionFactory::rename(newname);
+  if (diffs) diffs->rename(newname);
+}
+
+void DifferentialFactory::chdir(const char* newdir)
+{
+  DistributionFactory::chdir(newdir);
+  if (diffs) diffs->chdir(newdir);
+}
+
+void DifferentialFactory::reset()
+{
+  DistributionFactory::reset();
+  if (diffs) diffs->reset();
 }

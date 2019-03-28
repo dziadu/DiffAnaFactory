@@ -42,6 +42,8 @@ AxisCfg::AxisCfg(const AxisCfg & a)
 
 AxisCfg & AxisCfg::operator=(const AxisCfg & a)
 {
+  if (this == &a) return *this;
+
 	label = a.label;
 	unit = a.unit;
 
@@ -102,7 +104,7 @@ TString AxisCfg::format_unit(const TString & unit)
 void AxisCfg::print() const
 {
   if (!bins_arr)
-    printf(" Axis: %d in [ %f; %f ] -- %s\n",
+    printf(" Axis: %d bins in [ %f; %f ] range -- %s\n",
            bins, min, max, format_string().Data());
   else
   {
@@ -365,6 +367,8 @@ bool DistributionContext::findJsonFile(const char * initial_path, const char * f
 
 DistributionContext & DistributionContext::operator=(const DistributionContext & ctx)
 {
+  if (this == &ctx) return *this;
+
   dim = ctx.dim;
 // 	ctx_name = ctx.ctx_name;
 	hist_name = ctx.hist_name;
@@ -440,7 +444,8 @@ TString DistributionContext::format_hist_axes(const char * title) const {
 
 void DistributionContext::print() const
 {
-  printf("Context: %s   Hist name: %s\n", name.Data(), hist_name.Data());
+  printf("Context: %s   Dimensions: %d\n", name.Data(), dim);
+  printf(" Name: %s   Hist name: %s   Dir Name: %s\n", name.Data(), hist_name.Data(), dir_name.Data());
   printf(" Var name: %s\n", diff_var_name.Data());
   x.print();
   y.print();

@@ -45,6 +45,9 @@ public:
 	virtual void init();
 	virtual void proceed();
 	virtual void finalize(bool flag_details = false);
+  virtual void rename(const char * newname);
+  virtual void chdir(const char * newdir);
+  virtual void reset();
 
 	virtual void binnorm();
 	virtual void scale(Float_t factor);
@@ -66,6 +69,7 @@ public:
 	virtual void prepareDiffCanvas();
 
 private:
+  virtual void init_diffs();
   virtual void proceed1();
   virtual void proceed2();
   virtual void proceed3();
