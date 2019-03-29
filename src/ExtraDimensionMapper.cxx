@@ -305,7 +305,7 @@ void ExtraDimensionMapper::Fill2D(Double_t x, Double_t y, Double_t v, Double_t w
   Int_t bx, by, bz;
   ref_hist->GetBinXYZ(bin, bx, by, bz);
   if (bx > 0 && bx <= (int)nbins_x
-    && by > 0 && by < (int)nbins_y)
+    && by > 0 && by <= (int)nbins_y)
     histograms[getBin(bx-1, by-1)]->Fill(v, w);
 }
 
@@ -315,7 +315,7 @@ void ExtraDimensionMapper::Fill3D(Double_t x, Double_t y, Double_t z, Double_t v
   Int_t bx, by, bz;
   ref_hist->GetBinXYZ(bin, bx, by, bz);
   if (bx > 0 && bx <= (int)nbins_x
-    && by > 0 && by < (int)nbins_y
-    && bz > 0 && bz < (int)nbins_z)
+    && by > 0 && by <= (int)nbins_y
+    && bz > 0 && bz <= (int)nbins_z)
     histograms[getBin(bx-1, by-1, bz-1)]->Fill(v, w);
 }

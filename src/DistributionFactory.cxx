@@ -168,7 +168,7 @@ void DistributionFactory::binnorm()
 // 	if (ctx.useClip())
 // 	{
 // 		if (hDiscreteXY) hDiscreteXY->Scale( 1.0 / ( hDiscreteXY->GetXaxis()->GetBinWidth(1) * hDiscreteXY->GetYaxis()->GetBinWidth(1) ) );
-// 		if (hDiscreteXYSig) hDiscreteXYSig->Scale( 1.0 / ( hDiscreteXYSig->GetXaxis()->GetBinWidth(1) * hDiscreteXYSig->GetYaxis()->GetBinWidth(1) ) );
+// 		if (hSignalCounter) hSignalCounter->Scale( 1.0 / ( hSignalCounter->GetXaxis()->GetBinWidth(1) * hSignalCounter->GetYaxis()->GetBinWidth(1) ) );
 // 
 // // 		if (ctx.useDiff())
 // // 		{
@@ -191,18 +191,7 @@ void DistributionFactory::scale(Float_t factor)
 
 void DistributionFactory::finalize(bool flag_details)
 {
-// 	switch (s)
-// 	{
-// 		case RECO:
-			prepareSigCanvas(flag_details);
-// 			break;
-// 		case SIG:
-			prepareSigCanvas(flag_details);
-// 			break;
-// 		case ALL:
-			prepareSigCanvas(flag_details);
-// 			break;
-// 	}
+  prepareSigCanvas(flag_details);
 }
 
 void DistributionFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
@@ -216,27 +205,6 @@ void DistributionFactory::niceHists(RootTools::PadFormat pf, const RootTools::Gr
 	RootTools::NicePad(cSignalCounter->cd(), pf);
 	RootTools::NiceHistogram(hSignalCounter, format);
 	hSignalCounter->GetYaxis()->CenterTitle(kTRUE);
-
-// 	// Signal with cut
-// 	if (ctx.useCuts())
-// 	{
-// 		RootTools::NicePad(cSignalWithCutsXY->cd(), pf);
-// 		RootTools::NiceHistogram(hSignalWithCutsXY, format);
-// 		hSignalWithCutsXY->GetYaxis()->CenterTitle(kTRUE);
-// 	}
-// 
-// 	if (ctx.useClip())
-// 	{
-// 		RootTools::NicePad(cDiscreteXY->cd(), pf);
-// 		RootTools::NicePad(cDiscreteXYFull->cd(), pf);
-// 		RootTools::NiceHistogram(hDiscreteXY, format);
-// 		hDiscreteXY->GetYaxis()->CenterTitle(kTRUE);
-// 
-// 		RootTools::NicePad(cDiscreteXYSig->cd(), pf);
-// 		RootTools::NicePad(cDiscreteXYSigFull->cd(), pf);
-// 		RootTools::NiceHistogram(hDiscreteXYSig, format);
-// 		hDiscreteXYSig->GetYaxis()->CenterTitle(kTRUE);
-// 	}
 }
 
 void DistributionFactory::prepareSigCanvas(bool flag_details)
@@ -250,51 +218,14 @@ void DistributionFactory::prepareSigCanvas(bool flag_details)
 	hSignalCounter->GetYaxis()->SetTitle(ctx.y.format_string());
 	hSignalCounter->GetZaxis()->SetTitle(ctx.z.format_string());
 
-	cSignalCounter->cd(0);
+	cSignalCounter->cd();
 	hSignalCounter->Draw("colz");
+  hSignalCounter->SetMarkerColor(kWhite);
+  hSignalCounter->SetMarkerSize(1.6);
+
 	RootTools::NicePalette((TH2*)hSignalCounter, 0.05);
 	RootTools::NoPalette((TH2*)hSignalCounter);
 	gPad->Update();
-
-// 	if (cDiscreteXY)
-// 	{
-// 		hDiscreteXY->GetXaxis()->SetTitle(haxx);
-// 		hDiscreteXY->GetYaxis()->SetTitle(haxy);
-// 		hDiscreteXY->GetZaxis()->SetTitle(haxz);
-// 
-// 		cDiscreteXY->cd(0);
-// 		hDiscreteXY->Draw(colzopts);
-// 		RootTools::NicePalette(hDiscreteXY, 0.05);
-// 		hDiscreteXY->SetMarkerSize(1.6);
-// 		gPad->Update();
-// 
-// 		cDiscreteXYFull->cd(0);
-// 		TH2I * h1 = (TH2I *)hSignalXY->DrawCopy("colz"); FIXME
-// 		hDiscreteXY->Draw(coltopts+",same");
-// 		RootTools::NoPalette(h1);
-// 		gPad->Update();
-// 	}
-
-// 	if (cDiscreteXYSig)
-// 	{
-// 		hDiscreteXYSig->GetXaxis()->SetTitle(haxx);
-// 		hDiscreteXYSig->GetYaxis()->SetTitle(haxy);
-// 		hDiscreteXYSig->GetZaxis()->SetTitle(haxz);
-// 
-// 		hDiscreteXYSig->SetMarkerColor(kWhite);
-// 		hDiscreteXYSig->SetMarkerSize(1.6);
-// 
-// 		cDiscreteXYSig->cd(0);
-// 		hDiscreteXYSig->Draw(colzopts);
-// 		RootTools::NicePalette(hDiscreteXYSig, 0.05);
-// 		gPad->Update();
-// 
-// 		cDiscreteXYSigFull->cd(0);
-// 		TH2I * h2 = (TH2I *)hSignalWithCutsXY->DrawCopy("colz");
-// 		hDiscreteXYSig->Draw(coltopts+",same");
-// 		RootTools::NoPalette(h2);
-// 		gPad->Update();
-// 	}
 
 // 	float qa_min = 0.;
 // 	float qa_max = 0.;
@@ -366,17 +297,17 @@ void DistributionFactory::prepareSigCanvas(bool flag_details)
 // 		{
 // 			cSliceXYprojX->cd();
 // 
-// 			int bmaxx, bmaxy, bmaxz; hDiscreteXYSig->GetMaximumBin(bmaxx, bmaxy, bmaxz);
-// 			int bminx, bminy, bminz; hDiscreteXYSig->GetMinimumBin(bminx, bminy, bminz);
-// 			double max = hDiscreteXYSig->GetBinContent(bmaxx, bmaxy, bmaxz);
-// 			double min = hDiscreteXYSig->GetBinContent(bminx, bminy, bminz);
+// 			int bmaxx, bmaxy, bmaxz; hSignalCounter->GetMaximumBin(bmaxx, bmaxy, bmaxz);
+// 			int bminx, bminy, bminz; hSignalCounter->GetMinimumBin(bminx, bminy, bminz);
+// 			double max = hSignalCounter->GetBinContent(bmaxx, bmaxy, bmaxz);
+// 			double min = hSignalCounter->GetBinContent(bminx, bminy, bminz);
 // 			double ddelta = (max - min) * 0.1;
 // 
 // 			char buff[1000];
 // 			for (uint j = 0; j < ctx.cy.bins; ++j)
 // 			{
 // 				sprintf(buff, "h_%s_xysig_proj_%d", ctx.histPrefix.Data(), j);
-// 				TH1 * h = hDiscreteXYSig->ProjectionX(buff, 1+j, 1+j);
+// 				TH1 * h = hSignalCounter->ProjectionX(buff, 1+j, 1+j);
 // 				h->SetLineWidth(1);
 // 				h->SetLineColor(j*4);
 // 				h->SetMarkerStyle(j+20);
@@ -499,7 +430,7 @@ TH3** DistributionFactory::getSigsArray(size_t & size)
 	hmap[0] = (TH3*)hSignalCounter;
 // 	hmap[1] = hSignalWithCutsXY;
 // 	hmap[2] = hDiscreteXY;
-// 	hmap[3] = hDiscreteXYSig;
+// 	hmap[3] = hSignalCounter;
 
 	return hmap;
 }

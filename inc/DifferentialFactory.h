@@ -44,7 +44,7 @@ public:
   virtual void prepare();
 	virtual void init();
 	virtual void proceed();
-	virtual void finalize(bool flag_details = false);
+// 	virtual void finalize(bool flag_details = false);
   virtual void rename(const char * newname);
   virtual void chdir(const char * newdir);
   virtual void reset();
