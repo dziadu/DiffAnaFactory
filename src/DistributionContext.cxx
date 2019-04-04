@@ -161,6 +161,8 @@ bool DistributionContext::update()
   else
     SetName(name+"Ctx");
 
+  format_diff_axis();
+
   return true;
 }
 
@@ -420,6 +422,37 @@ bool DistributionContext::operator==(const DistributionContext & ctx)
 bool DistributionContext::operator!=(const DistributionContext & ctx)
 {
 	return !operator==(ctx);
+}
+
+void DistributionContext::format_diff_axis()
+{
+	TString hunit = "1/";
+  if (DIM1 <= dim) hunit += x.unit.Data();
+  if (DIM2 <= dim) hunit += y.unit.Data();
+  if (DIM3 == dim) hunit += z.unit.Data();
+
+  UInt_t dim_cnt = 0;
+  TString htitle;
+  if (DIM3 == dim) dim_cnt = 3;
+  if (DIM2 == dim) dim_cnt = 2;
+  if (DIM1 == dim) dim_cnt = 1;
+
+  if (DIM1 < dim)
+    htitle = TString::Format("d^{%d}%s/", dim_cnt, diff_var_name.Data());
+  else
+    htitle = TString::Format("d%s/", diff_var_name.Data());
+
+  if (DIM1 <= dim) htitle += TString("d")+x.label.Data();
+  if (DIM2 <= dim) htitle += TString("d")+y.label.Data();
+  if (DIM3 == dim) htitle += TString("d")+z.label.Data();
+
+	label = htitle;
+	unit = hunit;
+
+  if (unit.Length())
+		axis_text = label + " [" + unit + "]";
+  else
+    axis_text = label;
 }
 
 TString DistributionContext::format_hist_axes(const char * title) const {

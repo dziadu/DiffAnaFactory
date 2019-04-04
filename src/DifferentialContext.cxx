@@ -24,32 +24,6 @@
 
 #define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
 
-void DifferentialContext::format_diff_axis()
-{
-	TString hunit = "1/";
-  if (DIM1 <= dim) hunit += x.unit.Data();
-  if (DIM2 <= dim) hunit += y.unit.Data();
-  if (DIM3 == dim) hunit += z.unit.Data();
-
-  UInt_t dim_cnt = 0;
-  TString htitle;
-  if (DIM3 == dim) dim_cnt = 3;
-  if (DIM2 == dim) dim_cnt = 2;
-  if (DIM1 == dim) dim_cnt = 1;
-
-  if (DIM1 < dim)
-    htitle = TString::Format("d^{%d}%s/", dim_cnt, diff_var_name.Data());
-  else
-    htitle = TString::Format("d%s/", diff_var_name.Data());
-
-  if (DIM1 <= dim) htitle += TString("d")+x.label.Data();
-  if (DIM2 <= dim) htitle += TString("d")+y.label.Data();
-  if (DIM3 == dim) htitle += TString("d")+z.label.Data();
-
-	label = htitle;
-	unit = hunit;
-}
-
 DifferentialContext::DifferentialContext()
 {
 	// basic

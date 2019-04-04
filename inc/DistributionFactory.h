@@ -66,7 +66,6 @@ public:
 
 protected:
 	virtual void prepare();
-	virtual bool copyHistogram(TH1 * src, TH1 * dst);
 
 public:
 	DistributionContext ctx;		//||
@@ -84,5 +83,7 @@ public:
 
 	ClassDef(DistributionFactory, 1);
 };
+
+bool copyHistogram(TH1 * src, TH1 * dst, bool with_functions = true);
 
 #endif // DISTRIBUTIONFACTORY_H

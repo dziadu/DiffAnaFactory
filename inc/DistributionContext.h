@@ -73,6 +73,10 @@ public:
 	TString hist_name;         // name for histograms
 	TString diff_var_name;
 
+  TString label;
+  TString unit;
+  TString axis_text;
+
 	AxisCfg x, y, z;     // x, y are two dimensions, V is a final Variable axis
 
 	// cut range when useCut==kTRUE
@@ -95,7 +99,8 @@ public:
 	virtual bool update();
 	virtual int validate() const;
 
-  TString format_hist_axes(const char * title = nullptr) const;
+	virtual void format_diff_axis();
+  virtual TString format_hist_axes(const char * title = nullptr) const;
 
 	virtual const char * AnaName() const { return name.Data(); }
 

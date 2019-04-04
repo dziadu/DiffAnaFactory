@@ -18,8 +18,9 @@
 
 #ifndef __CINT__
 
-#include "TCanvas.h"
-#include "TSystem.h"
+#include <TCanvas.h>
+#include <TList.h>
+#include <TSystem.h>
 
 #endif /* __CINT__ */
 
@@ -203,7 +204,7 @@ void DistributionFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, flo
 void DistributionFactory::niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format)
 {
 	RootTools::NicePad(cSignalCounter->cd(), pf);
-	RootTools::NiceHistogram(hSignalCounter, format);
+	RootTools::NiceHistogram((TH2*)hSignalCounter, format);
 	hSignalCounter->GetYaxis()->CenterTitle(kTRUE);
 }
 
@@ -214,12 +215,27 @@ void DistributionFactory::prepareSigCanvas(bool flag_details)
 		colzopts += ",text";
 	TString coltopts = "col,text";
 
-	hSignalCounter->GetXaxis()->SetTitle(ctx.x.format_string());
-	hSignalCounter->GetYaxis()->SetTitle(ctx.y.format_string());
-	hSignalCounter->GetZaxis()->SetTitle(ctx.z.format_string());
+  hSignalCounter->GetXaxis()->SetTitle(ctx.x.format_string());
+  if (DIM1 == ctx.dim)
+  {
+    hSignalCounter->GetYaxis()->SetTitle(ctx.axis_text.Data());
+    hSignalCounter->SetTitle("");
+  }
+  else if (DIM2 == ctx.dim)
+  {
+    hSignalCounter->GetYaxis()->SetTitle(ctx.y.format_string());
+    hSignalCounter->GetZaxis()->SetTitle(ctx.axis_text.Data());
+    hSignalCounter->SetTitle("");
+  }
+  else if (DIM3 == ctx.dim)
+  {
+    hSignalCounter->GetYaxis()->SetTitle(ctx.y.format_string());
+    hSignalCounter->GetZaxis()->SetTitle(ctx.z.format_string());
+    hSignalCounter->SetTitle(ctx.axis_text);
+  }
 
 	cSignalCounter->cd();
-	hSignalCounter->Draw("colz");
+	hSignalCounter->Draw(colzopts);
   hSignalCounter->SetMarkerColor(kWhite);
   hSignalCounter->SetMarkerSize(1.6);
 
@@ -435,7 +451,7 @@ TH3** DistributionFactory::getSigsArray(size_t & size)
 	return hmap;
 }
 
-bool DistributionFactory::copyHistogram(TH1 * src, TH1 * dst)
+bool copyHistogram(TH1 * src, TH1 * dst, bool with_functions)
 {
 	if (!src or !dst)
 		return false;
@@ -453,6 +469,19 @@ bool DistributionFactory::copyHistogram(TH1 * src, TH1 * dst)
 			dst->SetBinError(x, y, be);
 		}
 	}
+
+	if (!with_functions) return true;
+
+	TList * l = src->GetListOfFunctions();
+	if (l->GetEntries())
+  {
+    dst->GetListOfFunctions()->Clear();
+    for (int i = 0; i < l->GetEntries(); ++i)
+    {
+      TF1 * f = (TF1*)l->At(i);
+      dst->GetListOfFunctions()->Add(l->At(i)->Clone());
+    }
+  }
 
 	return true;
 }

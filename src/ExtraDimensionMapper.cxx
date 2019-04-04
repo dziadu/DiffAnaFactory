@@ -109,7 +109,7 @@ bool ExtraDimensionMapper::reverseBin(UInt_t bin, UInt_t& x) const
 
 bool ExtraDimensionMapper::reverseBin(UInt_t bin, UInt_t& x, UInt_t& y) const
 {
-  if (dim < DIM2) return reverseBin(bin, x);
+  if (dim < DIM2) { y = 0; return reverseBin(bin, x); }
   if (dim != DIM2) return false;
   if (bin >= nhists) return false;
   x = bin % nbins_x;
@@ -119,7 +119,7 @@ bool ExtraDimensionMapper::reverseBin(UInt_t bin, UInt_t& x, UInt_t& y) const
 
 bool ExtraDimensionMapper::reverseBin(UInt_t bin, UInt_t& x, UInt_t& y, UInt_t& z) const
 {
-  if (dim < DIM3) return reverseBin(bin, x, y);
+  if (dim < DIM3) { z = 0; return reverseBin(bin, x, y); }
   if (dim != DIM3) return false;
   if (bin >= nhists) return false;
   x = bin % nbins_x;

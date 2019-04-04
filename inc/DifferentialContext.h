@@ -25,8 +25,6 @@ class DifferentialContext : public DistributionContext
 {
 public:
 	AxisCfg V;     // x, y are two dimensions, V is a final Variable axis
-	TString label;
-  TString unit;
 
 	DifferentialContext();
 	DifferentialContext(const DifferentialContext & ctx);
@@ -38,8 +36,6 @@ public:
 
 	// flags
 // 	virtual bool useCuts() const { return (cutMin or cutMax); }
-
-	virtual void format_diff_axis();
 
 	virtual bool configureFromJson(const char * name);
 	virtual bool configureToJson(const char * name, const char * jsonfile);

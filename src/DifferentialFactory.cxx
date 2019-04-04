@@ -489,7 +489,7 @@ void DifferentialFactory::fitDiffHists(DistributionFactory * sigfac, FitterFacto
     // 				hDiscreteXYSig->SetBinError(1+i, 1+j, res.signal_err);
 
             if (fitCallback)
-              (*fitCallback)(this, 0, -1, hfit, bx, by, bz);
+              (*fitCallback)(this, sigfac, -1, hfit, bx, by, bz);
           }
 
           Double_t hmax = hfit->GetBinContent(hfit->GetMaximumBin());
@@ -556,18 +556,15 @@ bool DifferentialFactory::fitDiffHist(TH1 * hist, HistFitParams & hfp, double mi
 
 	// if fit converged retrieve fit functions from histogram
 	// otherwise nothing to do here
-	if (res)
-	{
-// 		tfLambdaSum = (TF1*)hist->GetListOfFunctions()->At(0);
-		tfLambdaSig = (TF1*)hist->GetListOfFunctions()->At(1);
-	}
-	else
-		return false;
+	if (!res)  return false;
+
+// 	tfLambdaSum = (TF1*)hist->GetListOfFunctions()->At(0);
+	tfLambdaSig = (TF1*)hist->GetListOfFunctions()->At(1);
 
 	// do not draw Sig function in the histogram
 	tfLambdaSig->SetBit(TF1::kNotDraw);
 
-	return res;
+	return true;
 }
 
 void DifferentialFactory::rename(const char* newname)
