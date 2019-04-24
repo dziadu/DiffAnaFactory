@@ -43,10 +43,10 @@ public:
 
   virtual void prepare();
 	virtual void init();
+  virtual void reinit();
 	virtual void proceed();
 // 	virtual void finalize(bool flag_details = false);
-  virtual void rename(const char * newname);
-  virtual void chdir(const char * newdir);
+
   virtual void reset();
 
 	virtual void binnorm();
@@ -67,6 +67,10 @@ public:
 
   void setFitCallback(FitCallback * cb) { fitCallback = cb; }
 	virtual void prepareDiffCanvas();
+
+protected:
+  virtual void rename(const char * newname);
+  virtual void chdir(const char * newdir);
 
 private:
   virtual void init_diffs();

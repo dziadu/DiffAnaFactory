@@ -41,6 +41,7 @@ public:
 	DistributionFactory & operator=(const DistributionFactory & fa);
 
   virtual void init();
+  virtual void reinit();
 	virtual void proceed();
 	virtual void finalize(bool flag_details = false);
 
@@ -52,9 +53,7 @@ public:
 // 	void niceHists(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 	virtual void niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format);
 
-	virtual const char * GetName() const { return ("Factory"/* + ctx.histPrefix*/); }
-
-	virtual void prepareSigCanvas(bool flag_details = false);
+	virtual void prepareCanvas(bool flag_details = false);
 
 	virtual void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
 	static void applyAngDists(TH1 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
@@ -62,10 +61,10 @@ public:
 	virtual void applyBinomErrors(TH1 * N);
 	static void applyBinomErrors(TH1 * q, TH1 * N);
 
-	virtual TH3 ** getSigsArray(size_t & size);
-
 protected:
 	virtual void prepare();
+  virtual void rename(const char * newname);
+  virtual void chdir(const char * newdir);
 
 public:
 	DistributionContext ctx;		//||

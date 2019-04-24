@@ -73,6 +73,7 @@ public:
 	TString hist_name;         // name for histograms
 	TString diff_var_name;
 
+  TString title;
   TString label;
   TString unit;
   TString axis_text;

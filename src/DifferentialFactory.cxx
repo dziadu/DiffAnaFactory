@@ -99,6 +99,19 @@ void DifferentialFactory::init_diffs()
                                    this);
 }
 
+void DifferentialFactory::reinit()
+{
+  DistributionFactory::ctx = (DistributionContext) ctx;
+  DistributionFactory::reinit();
+
+  if (diffs)
+  {
+    diffs->prefix_name = ctx.hist_name;
+    diffs->rename(ctx.hist_name);
+    diffs->chdir(ctx.dir_name);
+  }
+}
+
 // void DifferentialFactory::getDiffs(bool with_canvases)
 // {
 // 	Int_t can_width = 800, can_height = 600;

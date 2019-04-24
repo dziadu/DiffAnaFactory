@@ -373,16 +373,20 @@ DistributionContext & DistributionContext::operator=(const DistributionContext &
 
   dim = ctx.dim;
 // 	ctx_name = ctx.ctx_name;
-	hist_name = ctx.hist_name;
   dir_name = ctx.dir_name;
+	hist_name = ctx.hist_name;
+	diff_var_name = ctx.diff_var_name;
+
+  title = ctx.title;
+  label = ctx.label;
+  unit = ctx.unit;
+  axis_text = ctx.axis_text;
 
   x = ctx.x;
 	y = ctx.y;
   z = ctx.z;
 
 	var_weight = ctx.var_weight;
-
-	diff_var_name = ctx.diff_var_name;
 
 	return *this;
 }

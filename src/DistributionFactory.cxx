@@ -87,39 +87,69 @@ void DistributionFactory::prepare()
 
 void DistributionFactory::init()
 {
-	Int_t can_width = 800, can_height = 600;
 	TString htitle = ctx.format_hist_axes();
 	TString htitlez = ctx.z.format_string();
 
   if (DIM0 == ctx.dim) {
-    std::cerr << "No dimension specifiedn" << std::endl;
+    std::cerr << "No dimension specified." << std::endl;
     abort();
   }
 
 	// input histograms
 	if (DIM3 == ctx.dim && !hSignalCounter)
 	{
-		hSignalCounter = RegTH3<TH3D>("@@@d/h_@@@a_Signal", htitle,
+		hSignalCounter = RegTH3<TH3D>("@@@d/h_@@@a", htitle,
 				ctx.x.bins, ctx.x.min, ctx.x.max,
 				ctx.y.bins, ctx.y.min, ctx.y.max,
         ctx.z.bins, ctx.z.min, ctx.z.max);
+    hSignalCounter->SetTitle(ctx.title);
   }
 
   if (DIM2 == ctx.dim && !hSignalCounter)
 	{
-		hSignalCounter = RegTH2<TH2D>("@@@d/h_@@@a_Signal", htitle,
+#ifdef HAVE_HISTASYMMERRORS
+		hSignalCounter = RegTH2<TH2DA>("@@@d/h_@@@a", htitle,
+#else
+    hSignalCounter = RegTH2<TH2D>("@@@d/h_@@@a", htitle,
+#endif
 				ctx.x.bins, ctx.x.min, ctx.x.max,
 				ctx.y.bins, ctx.y.min, ctx.y.max);
+    hSignalCounter->SetTitle(ctx.title);
   }
 
   if (DIM1 == ctx.dim && !hSignalCounter)
 	{
-		hSignalCounter = RegTH1<TH1D>("@@@d/h_@@@a_Signal", htitle,
+		hSignalCounter = RegTH1<TH1D>("@@@d/h_@@@a", htitle,
 				ctx.x.bins, ctx.x.min, ctx.x.max);
+    hSignalCounter->SetTitle(ctx.title);
   }
 
+	Int_t can_width = 800, can_height = 600;
+
   if (!cSignalCounter)
-    cSignalCounter = RegCanvas("@@@d/c_@@@a_Signal", htitle, can_width, can_height);
+  {
+    cSignalCounter = RegCanvas("@@@d/c_@@@a", htitle, can_width, can_height);
+
+    cSignalCounter->SetTitle(ctx.title);
+  }
+}
+
+void DistributionFactory::reinit()
+{
+  if (!hSignalCounter) init();
+
+  TString htitle_y = ctx.y.format_string();
+  TString htitle_z = ctx.z.format_string();
+
+  hSignalCounter->SetXTitle(ctx.x.format_string());
+  hSignalCounter->SetYTitle(ctx.y.format_string());
+  hSignalCounter->SetZTitle(ctx.z.format_string());
+  hSignalCounter->SetTitle(ctx.title);
+
+  cSignalCounter->SetTitle(ctx.title);
+
+  rename(ctx.dir_name);
+  rename(ctx.hist_name);
 }
 
 void DistributionFactory::proceed()
@@ -192,7 +222,7 @@ void DistributionFactory::scale(Float_t factor)
 
 void DistributionFactory::finalize(bool flag_details)
 {
-  prepareSigCanvas(flag_details);
+  prepareCanvas(flag_details);
 }
 
 void DistributionFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
@@ -208,7 +238,7 @@ void DistributionFactory::niceHists(RootTools::PadFormat pf, const RootTools::Gr
 	hSignalCounter->GetYaxis()->CenterTitle(kTRUE);
 }
 
-void DistributionFactory::prepareSigCanvas(bool flag_details)
+void DistributionFactory::prepareCanvas(bool flag_details)
 {
 	TString colzopts = "colz";
 	if (flag_details)
@@ -219,13 +249,11 @@ void DistributionFactory::prepareSigCanvas(bool flag_details)
   if (DIM1 == ctx.dim)
   {
     hSignalCounter->GetYaxis()->SetTitle(ctx.axis_text.Data());
-    hSignalCounter->SetTitle("");
   }
   else if (DIM2 == ctx.dim)
   {
     hSignalCounter->GetYaxis()->SetTitle(ctx.y.format_string());
     hSignalCounter->GetZaxis()->SetTitle(ctx.axis_text.Data());
-    hSignalCounter->SetTitle("");
   }
   else if (DIM3 == ctx.dim)
   {
@@ -438,19 +466,6 @@ void DistributionFactory::applyBinomErrors(TH1* q, TH1* N)
 	RootTools::calcBinomialErrors(q, N);
 }
 
-TH3** DistributionFactory::getSigsArray(size_t & size)
-{
-	size = 4;
-
-	TH3 ** hmap = new TH3*[size];
-	hmap[0] = (TH3*)hSignalCounter;
-// 	hmap[1] = hSignalWithCutsXY;
-// 	hmap[2] = hDiscreteXY;
-// 	hmap[3] = hSignalCounter;
-
-	return hmap;
-}
-
 bool copyHistogram(TH1 * src, TH1 * dst, bool with_functions)
 {
 	if (!src or !dst)
@@ -484,4 +499,14 @@ bool copyHistogram(TH1 * src, TH1 * dst, bool with_functions)
   }
 
 	return true;
+}
+
+void DistributionFactory::rename(const char* newname)
+{
+  SmartFactory::rename(newname);
+}
+
+void DistributionFactory::chdir(const char* newdir)
+{
+  SmartFactory::chdir(newdir);
 }
