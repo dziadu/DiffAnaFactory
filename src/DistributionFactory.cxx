@@ -90,7 +90,7 @@ void DistributionFactory::init()
 	TString htitle = ctx.format_hist_axes();
 	TString htitlez = ctx.z.format_string();
 
-  if (DIM0 == ctx.dim) {
+  if (NOINIT == ctx.dim) {
     std::cerr << "No dimension specified." << std::endl;
     abort();
   }
@@ -118,13 +118,20 @@ void DistributionFactory::init()
   }
 
   if (DIM1 == ctx.dim && !hSignalCounter)
-	{
-		hSignalCounter = RegTH1<TH1D>("@@@d/h_@@@a", htitle,
-				ctx.x.bins, ctx.x.min, ctx.x.max);
+  {
+    hSignalCounter = RegTH1<TH1D>("@@@d/h_@@@a", htitle,
+                                  ctx.x.bins, ctx.x.min, ctx.x.max);
     hSignalCounter->SetTitle(ctx.title);
   }
 
-	Int_t can_width = 800, can_height = 600;
+  if (DIM0 == ctx.dim && !hSignalCounter)
+  {
+      hSignalCounter = RegTH1<TH1D>("@@@d/h_@@@a", htitle,
+                                    ctx.x.bins, ctx.x.min, ctx.x.max);
+      hSignalCounter->SetTitle(ctx.title);
+  }
+
+  Int_t can_width = 800, can_height = 600;
 
   if (!cSignalCounter)
   {
@@ -161,6 +168,9 @@ void DistributionFactory::proceed()
     ((TH2*)hSignalCounter)->Fill(*ctx.x.var, *ctx.y.var, *ctx.var_weight);
 
   if (DIM1 == ctx.dim)
+    ((TH1*)hSignalCounter)->Fill(*ctx.x.var, *ctx.var_weight);
+
+  if (DIM0 == ctx.dim)
     ((TH1*)hSignalCounter)->Fill(*ctx.x.var, *ctx.var_weight);
 
 // 	if (ctx.useClip() and
@@ -246,7 +256,11 @@ void DistributionFactory::prepareCanvas(bool flag_details)
 	TString coltopts = "col,text";
 
   hSignalCounter->GetXaxis()->SetTitle(ctx.x.format_string());
-  if (DIM1 == ctx.dim)
+  if (DIM0 == ctx.dim)
+  {
+    hSignalCounter->GetYaxis()->SetTitle(ctx.axis_text.Data());
+  }
+  else if (DIM1 == ctx.dim)
   {
     hSignalCounter->GetYaxis()->SetTitle(ctx.axis_text.Data());
   }

@@ -60,7 +60,7 @@ public:
 };
 
 enum Dimensions {
-  DIM0, DIM1, DIM2, DIM3
+  NOINIT, DIM0, DIM1, DIM2, DIM3
 };
 
 class DistributionContext : public TNamed

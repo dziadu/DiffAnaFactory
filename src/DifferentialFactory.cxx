@@ -69,6 +69,8 @@ DifferentialFactory & DifferentialFactory::operator=(const DifferentialFactory &
 // 	nthis->objectsFits->SetName(ctx.name + "Fits");
 
   (DistributionFactory)(*this) = (DistributionFactory)fa;
+  if (!diffs) return *this;
+
   for (uint i = 0; i < diffs->nhists; ++i)
     copyHistogram((*fa.diffs)[i], (*diffs)[i]);
 
@@ -91,6 +93,8 @@ void DifferentialFactory::init()
 
 void DifferentialFactory::init_diffs()
 {
+  if (DIM0 == ctx.dim) return;
+
   diffs = new ExtraDimensionMapper(ctx.dim,
                                    ctx.name.Data(),
                                    hSignalCounter,
@@ -249,15 +253,14 @@ void DifferentialFactory::applyBinomErrors(TH1* N)
 bool DifferentialFactory::write(const char* filename, bool verbose)
 {
   return DistributionFactory::write(filename, verbose)
-      && diffs->write(filename, verbose);
+      && diffs ? diffs->write(filename, verbose) : true;
 }
 
 bool DifferentialFactory::write(TFile* f, bool verbose)
 {
   return DistributionFactory::write(f, verbose)
-      && diffs->write(f, verbose);
+      && diffs? diffs->write(f, verbose) : true;
 }
-
 
 void DifferentialFactory::niceDiffs(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
 {
@@ -290,6 +293,8 @@ void DifferentialFactory::niceSlices(float mt, float mr, float mb, float ml, int
 
 void DifferentialFactory::prepareDiffCanvas()
 {
+    if (DIM0 == ctx.dim) return;
+
 	TLatex * latex = new TLatex();
 	latex->SetNDC();
 	latex->SetTextSize(0.07);
@@ -384,6 +389,8 @@ void DifferentialFactory::prepareDiffCanvas()
 
 void DifferentialFactory::fitDiffHists(DistributionFactory * sigfac, FitterFactory & ff, HistFitParams & stdfit, bool integral_only)
 {
+    if (DIM0 == ctx.dim) return;
+
 // 	FitResultData res;
 	bool res;
 

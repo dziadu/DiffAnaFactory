@@ -123,7 +123,7 @@ void AxisCfg::print() const
 
 DistributionContext::DistributionContext()
   : TNamed()
-  , dim(DIM0)
+  , dim(NOINIT)
   , var_weight(nullptr)
   , json_found(false)
 {
@@ -169,6 +169,7 @@ bool DistributionContext::update()
 int DistributionContext::validate() const
 {
   if (0 == name.Length()) return 1;
+  if (DIM0 <= dim && x.bins and !x.var) return 11;
   if (DIM1 <= dim && x.bins and !x.var) return 11;
   if (DIM2 <= dim && y.bins and !y.var) return 12;
   if (DIM3 == dim && z.bins and !z.var) return 13;
@@ -430,7 +431,8 @@ bool DistributionContext::operator!=(const DistributionContext & ctx)
 
 void DistributionContext::format_diff_axis()
 {
-	TString hunit = "1/";
+  TString hunit = "1/";
+  if (DIM0 <= dim) hunit += x.unit.Data();
   if (DIM1 <= dim) hunit += x.unit.Data();
   if (DIM2 <= dim) hunit += y.unit.Data();
   if (DIM3 == dim) hunit += z.unit.Data();
@@ -440,11 +442,14 @@ void DistributionContext::format_diff_axis()
   if (DIM3 == dim) dim_cnt = 3;
   if (DIM2 == dim) dim_cnt = 2;
   if (DIM1 == dim) dim_cnt = 1;
+  if (DIM0 == dim) dim_cnt = 0;
 
   if (DIM1 < dim)
     htitle = TString::Format("d^{%d}%s/", dim_cnt, diff_var_name.Data());
-  else
+  else if (DIM1 == dim)
     htitle = TString::Format("d%s/", diff_var_name.Data());
+  else
+    htitle = TString::Format("%s", diff_var_name.Data());
 
   if (DIM1 <= dim) htitle += TString("d")+x.label.Data();
   if (DIM2 <= dim) htitle += TString("d")+y.label.Data();
@@ -466,12 +471,17 @@ TString DistributionContext::format_hist_axes(const char * title) const {
                            x.label.Data(), x.format_unit().Data(),
                            y.label.Data(), y.format_unit().Data(),
                            z.label.Data(), z.format_unit().Data());
-  if (DIM2 == dim)
+  else if (DIM2 == dim)
     return TString::Format("%s;%s%s;%s%s",
                            title,
                            x.label.Data(), x.format_unit().Data(),
                            y.label.Data(), y.format_unit().Data());
-  if (DIM1 == dim)
+  else if (DIM1 == dim)
+    return TString::Format("%s;%s%s;Counts [aux]",
+                           title,
+                           x.label.Data(), x.format_unit().Data());
+
+  else if (DIM0 == dim)
     return TString::Format("%s;%s%s;Counts [aux]",
                            title,
                            x.label.Data(), x.format_unit().Data());
