@@ -10,34 +10,34 @@ set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 # find_package(jsoncpp REQUIRED)
 if (NOT jsoncpp_FOUND)
-  message(STATUS "Using custom jsoncpp")
-	include_directories(/usr/include/jsoncpp/)
-	set(jsoncpp_dep jsoncpp)
+    message(STATUS "Using custom jsoncpp")
+    include_directories(/usr/include/jsoncpp/)
+    set(jsoncpp_dep jsoncpp)
 else()
-		set(jsoncpp_dep jsoncpp_lib)
+    set(jsoncpp_dep jsoncpp_lib)
 endif()
 
 find_package(SmartFactory)
 find_package(FitterFactory)
 find_package(RootTools)
-find_package(HistAsymmErrors)
+# find_package(HistAsymmErrors QUIET)
 if (HistAsymmErrors_FOUND)
-	add_definitions("-DHAVE_HISTASYMMERRORS=1")
+    add_definitions("-DHAVE_HISTASYMMERRORS=1")
 endif()
 
 include(GNUInstallDirs)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 else()
-	set(CMAKE_INSTALL_LIBDIR lib32)
-	set(FIND_LIBRARY_USE_LIB64_PATHS OFF)
+    set(CMAKE_INSTALL_LIBDIR lib32)
+    set(FIND_LIBRARY_USE_LIB64_PATHS OFF)
 endif()
 
 ##### set paths
 if(WIN32 AND NOT CYGWIN)
-	set(DEF_CMAKE_INSTALL_CMAKEDIR cmake)
+    set(DEF_CMAKE_INSTALL_CMAKEDIR cmake)
 else()
-	set(DEF_CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME})
+    set(DEF_CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME})
 endif()
 set(CMAKE_INSTALL_CMAKEDIR ${DEF_CMAKE_INSTALL_CMAKEDIR} CACHE PATH "Installation directory for CMake files")
 
@@ -47,39 +47,39 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 ##### find ROOT
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 find_package(ROOT QUIET
-	REQUIRED COMPONENTS Core  RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread
-	OPTIONAL_COMPONENTS Cling Cint)
+    REQUIRED COMPONENTS Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread
+    OPTIONAL_COMPONENTS Cling Cint)
 
 include(${ROOT_USE_FILE})
 
 ##### directories
 include_directories(
-	${ROOT_INCLUDE_DIR}
-	${ROOTTOOLS_INCLUDE_DIR}
-	${SMARTFACTORY_INCLUDE_DIR}
-	${FITTERFACTORY_INCLUDE_DIR}
-	${HISTASYMMERRORS_INCLUDE_DIR}
-	inc
+    BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/inc
+)
+include_directories(
+    ${ROOT_INCLUDE_DIR}
+    ${ROOTTOOLS_INCLUDE_DIR}
+    ${SMARTFACTORY_INCLUDE_DIR}
+    ${FITTERFACTORY_INCLUDE_DIR}
+    ${HISTASYMMERRORS_INCLUDE_DIR}
 )
 
 link_directories(
-	${ROOT_LIBRARIES_DIR}
-	${ROOTTOOLS_LIBRARY_DIR}
-	${SMARTFACTORY_LIBRARY_DIR}
-	${FITTERFACTORY_LIBRARY_DIR}
-	${HISTASYMMERRORS_LIBRARY_DIR}
+    ${ROOT_LIBRARIES_DIR}
+    ${ROOTTOOLS_LIBRARY_DIR}
+    ${SMARTFACTORY_LIBRARY_DIR}
+    ${FITTERFACTORY_LIBRARY_DIR}
+    ${HISTASYMMERRORS_LIBRARY_DIR}
 )
 
 ##### make targets
 ROOT_STANDARD_LIBRARY_PACKAGE(MultiDimensionalFactory
-	DEPENDENCIES
-		${jsoncpp_dep} ${ROOT_LIBRARIES} ${ROOTTOOLS_LIBRARIES}
-		${HISTASYMMERRORS_LIBRARIES}
-		SmartFactory FitterFactory
+    DEPENDENCIES
+        ${HISTASYMMERRORS_LIBRARIES}
 )
 
-# add_subdirectory(examples)
-#add_subdirectory(tests)
+enable_testing()
+add_subdirectory(tests)
 
 # Export the package for use from the build-tree
 # (this registers the build-tree with a global CMake-registry)
@@ -87,48 +87,48 @@ export(PACKAGE ${CMAKE_PROJECT_NAME})
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(Config.cmake.in ${CMAKE_PROJECT_NAME}Config.cmake
-	INSTALL_DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
-	PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR CMAKE_INSTALL_BINDIR)
+    INSTALL_DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
+    PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR CMAKE_INSTALL_BINDIR)
 
 write_basic_package_version_file(${CMAKE_PROJECT_NAME}ConfigVersion.cmake
-	VERSION ${PROJECT_VERSION}
-	COMPATIBILITY SameMajorVersion)
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
 
 install(FILES 
-	${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake
-	${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}ConfigVersion.cmake
-	DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
+    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}ConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 
 # Add all targets to the build-tree export set
 export(TARGETS MultiDimensionalFactory
-	FILE ${CMAKE_PROJECT_NAME}Targets.cmake)
+    FILE ${CMAKE_PROJECT_NAME}Targets.cmake)
 
 # Install the export set for use with the install-tree
 install(TARGETS MultiDimensionalFactory
-	EXPORT ${CMAKE_PROJECT_NAME}Targets
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	COMPONENT shlib COMPONENT dev)
+    EXPORT ${CMAKE_PROJECT_NAME}Targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT shlib COMPONENT dev)
 
 install(EXPORT ${CMAKE_PROJECT_NAME}Targets
-	DESTINATION ${CMAKE_INSTALL_CMAKEDIR} COMPONENT dev)
+    DESTINATION ${CMAKE_INSTALL_CMAKEDIR} COMPONENT dev)
 
 # messages
 MESSAGE(STATUS "<<< Configuration >>>
-Project:	${CMAKE_PROJECT_NAME}
+Project:        ${CMAKE_PROJECT_NAME}
 
-Build type	${CMAKE_BUILD_TYPE}
-Install path	${CMAKE_INSTALL_PREFIX}
+Build type      ${CMAKE_BUILD_TYPE}
+Install path    ${CMAKE_INSTALL_PREFIX}
 
 Compiler:
-C		${CMAKE_C_COMPILER}
-C++		${CMAKE_CXX_COMPILER}
+C               ${CMAKE_C_COMPILER}
+C++             ${CMAKE_CXX_COMPILER}
 
 Linker:
-Ld		${CMAKE_LINKER}
+Ld              ${CMAKE_LINKER}
 
 Compiler flags:
-C		${CMAKE_C_FLAGS}
-C++		${CMAKE_CXX_FLAGS}
+C               ${CMAKE_C_FLAGS}
+C++             ${CMAKE_CXX_FLAGS}
 
 Linker flags:
 Executable      ${CMAKE_EXE_LINKER_FLAGS}
@@ -136,7 +136,7 @@ Module          ${CMAKE_MODULE_LINKER_FLAGS}
 Shared          ${CMAKE_SHARED_LINKER_FLAGS}\n")
 
 foreach(p LIB BIN INCLUDE CMAKE)
-	message(STATUS "CMAKE_INSTALL_${p}DIR: ${CMAKE_INSTALL_${p}DIR}")
+    message(STATUS "CMAKE_INSTALL_${p}DIR: ${CMAKE_INSTALL_${p}DIR}")
 endforeach()
 
 # unset  (ELOG CACHE)

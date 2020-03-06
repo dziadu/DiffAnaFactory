@@ -35,6 +35,7 @@ DistributionFactory::DistributionFactory()
   , ctx(DistributionContext())
   , hSignalCounter(nullptr)
   , cSignalCounter(nullptr)
+  , drawOpts("colz")
 {
   prepare();
 }
@@ -44,6 +45,7 @@ DistributionFactory::DistributionFactory(const DistributionContext & context)
   , ctx(context)
   , hSignalCounter(nullptr)
   , cSignalCounter(nullptr)
+  , drawOpts("colz")
 {
   prepare();
 }
@@ -53,6 +55,7 @@ DistributionFactory::DistributionFactory(const DistributionContext * context)
   , ctx(*context)
   , hSignalCounter(nullptr)
   , cSignalCounter(nullptr)
+  , drawOpts("colz")
 {
   prepare();
 }
@@ -230,30 +233,28 @@ void DistributionFactory::scale(Float_t factor)
 	if (hSignalCounter) hSignalCounter->Scale(factor);
 }
 
-void DistributionFactory::finalize(bool flag_details)
+void DistributionFactory::finalize(const char * draw_opts)
 {
-  prepareCanvas(flag_details);
+  prepareCanvas(draw_opts);
 }
 
 void DistributionFactory::niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY, bool centerX)
 {
-	RootTools::NicePad(pad, mt, mr, mb, ml);
-	RootTools::NiceHistogram(hist, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
+  RootTools::NicePad(pad, mt, mr, mb, ml);
+  RootTools::NiceHistogram(hist, ndivx, ndivy, xls, 0.005, xts, xto, yls, 0.005, yts, yto, centerY, centerX);
 }
 
 void DistributionFactory::niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format)
 {
-	RootTools::NicePad(cSignalCounter->cd(), pf);
-	RootTools::NiceHistogram((TH2*)hSignalCounter, format);
-	hSignalCounter->GetYaxis()->CenterTitle(kTRUE);
+  RootTools::NicePad(cSignalCounter->cd(), pf);
+  RootTools::NiceHistogram((TH2*)hSignalCounter, format);
+  hSignalCounter->GetYaxis()->CenterTitle(kTRUE);
 }
 
-void DistributionFactory::prepareCanvas(bool flag_details)
+void DistributionFactory::prepareCanvas(const char * draw_opts)
 {
-	TString colzopts = "colz";
-	if (flag_details)
-		colzopts += ",text";
-	TString coltopts = "col,text";
+  TString colzopts = draw_opts ? TString(draw_opts) : drawOpts;
+  TString coltopts = "col,text";
 
   hSignalCounter->GetXaxis()->SetTitle(ctx.x.format_string());
   if (DIM0 == ctx.dim)

@@ -6,25 +6,25 @@
 
 class BasicCase : public CPPUNIT_NS::TestFixture
 {
-	CPPUNIT_TEST_SUITE( BasicCase );
-	CPPUNIT_TEST( IndexTest );
+  CPPUNIT_TEST_SUITE( BasicCase );
+  CPPUNIT_TEST( IndexTest );
   CPPUNIT_TEST( FillTest );
   CPPUNIT_TEST( ReverseTest );
-	CPPUNIT_TEST_SUITE_END();
+  CPPUNIT_TEST_SUITE_END();
 
 public:
-	void setUp() override;
+  void setUp() override;
   void tearDown() override;
 
 protected:
-	void IndexTest();
+  void IndexTest();
   void FillTest();
   void ReverseTest();
 
   uint bins;
   float min, max;
   AxisCfg axis;
-	ExtraDimensionMapper * edm1, * edm2, *edm3;
+  ExtraDimensionMapper * edm1, * edm2, *edm3;
   TH1D * h1;
   TH2D * h2;
   TH3D * h3;

@@ -33,36 +33,37 @@
 
 class DistributionFactory : public TObject, public SmartFactory {
 public:
-	DistributionFactory();
-	DistributionFactory(const DistributionContext & ctx);
-	DistributionFactory(const DistributionContext * ctx);
-	virtual ~DistributionFactory();
+  DistributionFactory();
+  DistributionFactory(const DistributionContext & ctx);
+  DistributionFactory(const DistributionContext * ctx);
+  virtual ~DistributionFactory();
 
-	DistributionFactory & operator=(const DistributionFactory & fa);
+  DistributionFactory & operator=(const DistributionFactory & fa);
 
   virtual void init();
   virtual void reinit();
-	virtual void proceed();
-	virtual void finalize(bool flag_details = false);
+  virtual void proceed();
+  virtual void finalize(const char * draw_opts = nullptr);
 
-	virtual void binnorm();
-	virtual void scale(Float_t factor);
+  virtual void binnorm();
+  virtual void scale(Float_t factor);
 
-	static void niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
+  static void niceHisto(TVirtualPad * pad, TH1 * hist, float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
 
 // 	void niceHists(float mt, float mr, float mb, float ml, int ndivx, int ndivy, float xls, float xts, float xto, float yls, float yts, float yto, bool centerY = false, bool centerX = false);
-	virtual void niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format);
+  virtual void niceHists(RootTools::PadFormat pf, const RootTools::GraphFormat & format);
 
-	virtual void prepareCanvas(bool flag_details = false);
+  virtual void prepareCanvas(const char * draw_opts = nullptr);
 
-	virtual void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
-	static void applyAngDists(TH1 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
+  virtual void applyAngDists(double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
+  static void applyAngDists(TH1 * h, double a2, double a4, double corr_a2 = 0.0, double corr_a4 = 0.0);
 
-	virtual void applyBinomErrors(TH1 * N);
-	static void applyBinomErrors(TH1 * q, TH1 * N);
+  virtual void applyBinomErrors(TH1 * N);
+  static void applyBinomErrors(TH1 * q, TH1 * N);
 
+  void setDrawOptions(const char * draw_opts) { drawOpts = draw_opts; }
 protected:
-	virtual void prepare();
+  virtual void prepare();
   virtual void rename(const char * newname);
   virtual void chdir(const char * newdir);
 
@@ -80,7 +81,10 @@ public:
 // 	TCanvas * cDiscreteXYSig;		//->
 // 	TCanvas * cDiscreteXYSigFull;	//->
 
-	ClassDef(DistributionFactory, 1);
+protected:
+  TString drawOpts;
+
+ ClassDef(DistributionFactory, 1);
 };
 
 bool copyHistogram(TH1 * src, TH1 * dst, bool with_functions = true);

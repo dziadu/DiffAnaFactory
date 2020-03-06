@@ -1,23 +1,26 @@
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(cppunit)
-# find_package(MultiDimAnalysisFactory)
-include_directories(../inc)
 
 file(GLOB UnitTests_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*_tests.cpp" )
 
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
+
 add_executable(UnitTester test_runner.cpp ${UnitTests_SRCS})
-target_link_libraries(UnitTester MultiDimensionalFactory ${CPPUNIT_LIBRARIES})
+target_link_libraries(UnitTester
+    MultiDimensionalFactory
+    ${ROOT_LIBRARIES}
+    ${ROOTTOOLS_LIBRARIES}
+    ${SMARTFACTORY_LIBRARIES}
+    ${FITTERFACTORY_LIBRARIES}
+    ${HISTASYMMERRORS_LIBRARIES}
+    jsoncpp
+    ${CPPUNIT_LIBRARIES}
+)
 
 foreach(test ${UnitTests_SRCS})
-	get_filename_component(TestName ${test} NAME_WE)
-	add_test(${TestName} UnitTester ${TestName})
+    file(READ ${test} test_file)
+    string(REGEX MATCH "CPPUNIT_TEST_SUITE\(.([A-Za-z0-9 ]+).\)" _ ${test_file})
+    string(STRIP ${CMAKE_MATCH_2} suite_name)
+        get_filename_component(TestName ${test} NAME_WE)
+    add_test(NAME ${suite_name} COMMAND UnitTester ${suite_name})
 endforeach(test)
-
-enable_testing()
-add_test(NAME "BasicCase" COMMAND UnitTester)
-
-add_custom_command(TARGET MainTest
-	POST_BUILD
-	COMMAND ctest --output-on-failure)
-
-add_custom_target(MainTest ALL UnitTester)
